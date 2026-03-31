@@ -10,6 +10,18 @@ const BASE_URL = process.env.WOOCOMMERCE_URL!;
 const CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY!;
 const CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
+/** Error enriquecido con el código y mensaje originales de WooCommerce. */
+export class WooCommerceError extends Error {
+  constructor(
+    public readonly code: string,
+    message: string,
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = "WooCommerceError";
+  }
+}
+
 function getAuthParams(): string {
   return `consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`;
 }
@@ -35,7 +47,18 @@ async function wooFetch<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`WooCommerce API error: ${res.status} ${res.statusText}`);
+    // Intentar preservar el error estructurado de WooCommerce
+    try {
+      const err = await res.json() as { code?: string; message?: string };
+      throw new WooCommerceError(
+        err.code ?? "woocommerce_error",
+        err.message ?? `Error ${res.status}`,
+        res.status
+      );
+    } catch (e) {
+      if (e instanceof WooCommerceError) throw e;
+      throw new WooCommerceError("woocommerce_error", `Error ${res.status} ${res.statusText}`, res.status);
+    }
   }
 
   const data = await res.json();

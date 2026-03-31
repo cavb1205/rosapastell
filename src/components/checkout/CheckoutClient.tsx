@@ -182,7 +182,18 @@ export function CheckoutClient() {
         body: JSON.stringify(orderPayload),
       });
 
-      if (!res.ok) throw new Error("Error al crear la orden");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (errData.stockError) {
+          setError(
+            "Uno o más productos de tu pedido se agotaron justo antes de confirmar. " +
+            "Por favor revisa tu carrito y vuelve a intentarlo."
+          );
+        } else {
+          setError("Ocurrió un error al procesar tu pedido. Por favor intenta de nuevo.");
+        }
+        return;
+      }
 
       const order = await res.json();
       clearCart();
@@ -208,7 +219,7 @@ export function CheckoutClient() {
         router.push(`/checkout/pago?order_id=${order.id}&total=${total}`);
       }
     } catch {
-      setError("Ocurrió un error. Por favor intenta de nuevo.");
+      setError("Ocurrió un error de conexión. Por favor intenta de nuevo.");
     } finally {
       setLoading(false);
     }
