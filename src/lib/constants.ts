@@ -57,6 +57,7 @@ export const NAV_LINKS = [
 ] as const;
 
 export const SOCIAL_LINKS = {
-  facebook: "https://www.facebook.com/rosapastell",
-  instagram: "https://www.instagram.com/rosapastell",
+  facebook: "https://www.facebook.com/tiendarosapastell",
+  instagram: "https://www.instagram.com/rosapastell_/",
+  tiktok: "https://www.tiktok.com/@rosapastell1",
 } as const;

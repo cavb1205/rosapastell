@@ -1,6 +1,7 @@
+import Link from "next/link";
 import type { WooOrder } from "@/types/order";
 import { formatPrice } from "@/lib/formatters";
-import { Package } from "lucide-react";
+import { Package, ChevronRight } from "lucide-react";
 
 const STATUS_MAP: Record<string, { label: string; dot: string; badge: string }> = {
   pending:    { label: "Pendiente",    dot: "bg-yellow-400",  badge: "bg-yellow-50 text-yellow-700 border-yellow-200" },
@@ -63,11 +64,12 @@ export async function OrderHistory({ userId }: OrderHistoryProps) {
         const extra = order.line_items.length > 2 ? ` +${order.line_items.length - 2} más` : "";
 
         return (
-          <div
+          <Link
             key={order.id}
-            className="bg-white rounded-2xl border border-warm-200 px-6 py-5 shadow-sm hover:border-rose-300 hover:shadow-md transition-all"
+            href={`/cuenta/pedidos/${order.id}`}
+            className="group bg-white rounded-2xl border border-warm-200 px-6 py-5 shadow-sm hover:border-rose-300 hover:shadow-md transition-all flex items-center gap-4"
           >
-            <div className="flex items-start justify-between gap-6">
+            <div className="flex items-start justify-between gap-6 flex-1">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <p className="font-semibold text-warm-800 text-sm">
@@ -106,7 +108,8 @@ export async function OrderHistory({ userId }: OrderHistoryProps) {
                 </p>
               </div>
             </div>
-          </div>
+            <ChevronRight className="h-4 w-4 text-warm-300 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+          </Link>
         );
       })}
     </div>

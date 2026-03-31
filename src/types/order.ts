@@ -43,8 +43,16 @@ export interface WooOrder {
   number: string;
   status: string;
   total: string;
+  subtotal?: string;
+  shipping_total: string;
+  discount_total: string;
   currency: string;
   date_created: string;
+  date_modified: string;
+  customer_id: number;
+  customer_note: string;
+  payment_method: string;
+  payment_method_title: string;
   billing: OrderBilling;
   shipping: OrderShipping;
   line_items: {
@@ -57,5 +65,6 @@ export interface WooOrder {
     subtotal: string;
     total: string;
     image: { src: string };
+    meta_data: { key: string; display_key: string; display_value: string }[];
   }[];
 }
