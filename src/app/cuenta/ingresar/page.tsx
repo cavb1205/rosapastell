@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { Logo } from "@/components/ui/Logo";
 import { SITE_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -31,9 +32,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <Link href="/" className="font-heading text-2xl text-rose-100 tracking-wide hover:text-white transition-colors">
-            {SITE_NAME}
-          </Link>
+          <Logo instanceId="login-panel" markSize={30} light />
         </div>
 
         {/* Quote central */}
@@ -59,10 +58,8 @@ export default function LoginPage() {
         <div className="w-full max-w-[420px]">
 
           {/* Logo móvil */}
-          <div className="lg:hidden text-center mb-10">
-            <Link href="/" className="font-heading text-3xl text-burgundy-500 hover:text-burgundy-600 transition-colors">
-              {SITE_NAME}
-            </Link>
+          <div className="lg:hidden flex justify-center mb-10">
+            <Logo instanceId="login-mobile" markSize={38} />
           </div>
 
           {/* Encabezado */}

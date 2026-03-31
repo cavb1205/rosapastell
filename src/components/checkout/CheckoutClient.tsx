@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Tag, X, Loader2, CheckCircle2 } from "lucide-react";
 import { useCartStore } from "@/store/cart";
+import { useAuthStore } from "@/store/auth";
 import { formatPrice } from "@/lib/formatters";
-import { COLOMBIAN_DEPARTMENTS, WHATSAPP_NUMBER } from "@/lib/constants";
+import { COLOMBIAN_DEPARTMENTS } from "@/lib/constants";
 import { useHydration } from "@/hooks/useHydration";
 import Link from "next/link";
-import type { CreateOrderPayload } from "@/types/order";
+import type { CreateOrderPayload, WooCoupon } from "@/types/order";
 
 const schema = z.object({
   firstName: z.string().min(2, "Nombre requerido"),
@@ -27,10 +29,28 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+type AppliedCoupon = Pick<WooCoupon, "code" | "discount_type" | "amount" | "minimum_amount">;
+
+function calcDiscount(coupon: AppliedCoupon, subtotal: number): number {
+  const amount = parseFloat(coupon.amount);
+  if (coupon.discount_type === "percent") return (subtotal * amount) / 100;
+  if (coupon.discount_type === "fixed_cart") return Math.min(amount, subtotal);
+  return 0;
+}
+
 export function CheckoutClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Cupón
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
   const { items, getTotal, clearCart } = useCartStore();
+  const { user } = useAuthStore();
   const hydrated = useHydration();
   const router = useRouter();
 
@@ -38,6 +58,7 @@ export function CheckoutClient() {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -45,24 +66,73 @@ export function CheckoutClient() {
   });
 
   const paymentMethod = watch("paymentMethod");
-  const total = getTotal();
+  const subtotal = getTotal();
+  const discount = appliedCoupon ? calcDiscount(appliedCoupon, subtotal) : 0;
+  const total = subtotal - discount;
 
-  if (!hydrated) {
-    return <div className="animate-pulse h-96 bg-warm-100 rounded-xl" />;
+  // Pre-llenado desde el perfil
+  useEffect(() => {
+    if (!user || prefilled) return;
+
+    fetch("/api/cuenta/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((customer) => {
+        if (!customer) return;
+        const s = customer.shipping;
+        const b = customer.billing;
+
+        reset({
+          paymentMethod: "whatsapp",
+          firstName: s?.first_name || b?.first_name || "",
+          lastName: s?.last_name || b?.last_name || "",
+          email: b?.email || user.email || "",
+          phone: b?.phone || s?.phone || "",
+          department: s?.state || b?.state || "",
+          city: s?.city || b?.city || "",
+          address: s?.address_1 || b?.address_1 || "",
+        });
+        setPrefilled(true);
+      })
+      .catch(() => {});
+  }, [user, prefilled, reset]);
+
+  // Aplicar cupón
+  async function handleApplyCoupon() {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponLoading(true);
+    setCouponError("");
+    setAppliedCoupon(null);
+
+    try {
+      const res = await fetch(`/api/checkout/coupon?code=${encodeURIComponent(code)}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setCouponError(data.error || "Cupón no válido");
+        return;
+      }
+
+      // Validar monto mínimo
+      if (data.minimum_amount && parseFloat(data.minimum_amount) > subtotal) {
+        setCouponError(
+          `Este cupón requiere un mínimo de ${formatPrice(parseFloat(data.minimum_amount))}`
+        );
+        return;
+      }
+
+      setAppliedCoupon(data);
+      setCouponInput("");
+    } catch {
+      setCouponError("Error al validar el cupón");
+    } finally {
+      setCouponLoading(false);
+    }
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-warm-500 mb-4">Tu carrito está vacío.</p>
-        <Link
-          href="/categorias/pijama-victoria"
-          className="inline-flex rounded-full bg-burgundy-500 px-6 py-3 text-sm font-semibold text-white hover:bg-burgundy-600 transition-colors"
-        >
-          Ver Productos
-        </Link>
-      </div>
-    );
+  function removeCoupon() {
+    setAppliedCoupon(null);
+    setCouponError("");
   }
 
   async function onSubmit(data: FormData) {
@@ -102,6 +172,7 @@ export function CheckoutClient() {
           variation_id: item.variationId,
           quantity: item.quantity,
         })),
+        ...(appliedCoupon && { coupon_lines: [{ code: appliedCoupon.code }] }),
         customer_note: data.notes,
       };
 
@@ -124,13 +195,15 @@ export function CheckoutClient() {
           )
           .join("\n");
 
+        const couponLine = appliedCoupon
+          ? `\nCupón aplicado: ${appliedCoupon.code} (-${formatPrice(discount)})`
+          : "";
+
         const msg = encodeURIComponent(
-          `Hola Rosa Pastell! Mi pedido #${order.number}.\n\n${itemLines}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}\n\nAdjunto comprobante.`
+          `Hola Rosa Pastell! Mi pedido #${order.number}.\n\n${itemLines}${couponLine}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}\n\nAdjunto comprobante.`
         );
 
-        router.push(
-          `/checkout/whatsapp?order=${order.number}&msg=${msg}`
-        );
+        router.push(`/checkout/whatsapp?order=${order.number}&msg=${msg}`);
       } else {
         router.push(`/checkout/pago?order_id=${order.id}&total=${total}`);
       }
@@ -141,17 +214,47 @@ export function CheckoutClient() {
     }
   }
 
+  if (!hydrated) {
+    return <div className="animate-pulse h-96 bg-warm-100 rounded-xl" />;
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-warm-500 mb-4">Tu carrito está vacío.</p>
+        <Link
+          href="/colecciones"
+          className="inline-flex rounded-full bg-burgundy-500 px-6 py-3 text-sm font-semibold text-white hover:bg-burgundy-600 transition-colors"
+        >
+          Ver Colecciones
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Shipping info */}
-          <section className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="font-heading text-xl text-warm-900 mb-5">
-              Información de Envío
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* ── Formulario ── */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Aviso pre-llenado */}
+          {prefilled && (
+            <div className="flex items-center gap-3 rounded-xl bg-sage-50 border border-sage-200 px-5 py-3.5">
+              <CheckCircle2 className="h-4 w-4 text-sage-500 flex-shrink-0" />
+              <p className="text-sm text-sage-700">
+                Datos pre-llenados desde tu perfil. Revisa y ajusta si es necesario.
+              </p>
+            </div>
+          )}
+
+          {/* Información de envío */}
+          <section className="bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden">
+            <div className="px-7 py-5 bg-warm-50 border-b border-warm-100">
+              <h2 className="font-heading text-xl text-warm-900">Información de Envío</h2>
+            </div>
+            <div className="px-7 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Nombre" error={errors.firstName?.message}>
                 <input {...register("firstName")} placeholder="Tu nombre" className={inputClass(!!errors.firstName)} />
               </Field>
@@ -188,13 +291,13 @@ export function CheckoutClient() {
             </div>
           </section>
 
-          {/* Payment */}
-          <section className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="font-heading text-xl text-warm-900 mb-5">
-              Método de Pago
-            </h2>
-            <div className="space-y-3">
-              <label className={`flex gap-4 items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === "whatsapp" ? "border-burgundy-400 bg-burgundy-50" : "border-warm-100 hover:border-warm-200"}`}>
+          {/* Método de pago */}
+          <section className="bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden">
+            <div className="px-7 py-5 bg-warm-50 border-b border-warm-100">
+              <h2 className="font-heading text-xl text-warm-900">Método de Pago</h2>
+            </div>
+            <div className="px-7 py-6 space-y-3">
+              <label className={`flex gap-4 items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === "whatsapp" ? "border-burgundy-400 bg-burgundy-50" : "border-warm-200 hover:border-warm-300"}`}>
                 <input
                   type="radio"
                   value="whatsapp"
@@ -208,7 +311,7 @@ export function CheckoutClient() {
                   </p>
                 </div>
               </label>
-              <label className={`flex gap-4 items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === "wompi" ? "border-burgundy-400 bg-burgundy-50" : "border-warm-100 hover:border-warm-200"}`}>
+              <label className={`flex gap-4 items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === "wompi" ? "border-burgundy-400 bg-burgundy-50" : "border-warm-200 hover:border-warm-300"}`}>
                 <input
                   type="radio"
                   value="wompi"
@@ -226,17 +329,19 @@ export function CheckoutClient() {
           </section>
         </div>
 
-        {/* Order summary */}
+        {/* ── Resumen del pedido ── */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="font-heading text-xl text-warm-900 mb-4">
-              Tu Pedido
-            </h2>
-            <div className="space-y-3 border-b border-warm-100 pb-4 mb-4">
+          <div className="sticky top-24 bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 bg-warm-50 border-b border-warm-100">
+              <h2 className="font-heading text-xl text-warm-900">Tu Pedido</h2>
+            </div>
+
+            {/* Productos */}
+            <div className="px-6 py-4 space-y-3 border-b border-warm-100">
               {items.map((item) => (
                 <div
                   key={`${item.productId}-${item.variationId}`}
-                  className="flex gap-3"
+                  className="flex gap-3 items-center"
                 >
                   <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-cream-100">
                     {item.image && (
@@ -253,26 +358,101 @@ export function CheckoutClient() {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between font-bold text-warm-900 text-lg mb-6">
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
+
+            {/* Cupón */}
+            <div className="px-6 py-4 border-b border-warm-100">
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between rounded-xl bg-sage-50 border border-sage-200 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-sage-500" />
+                    <span className="text-sm font-semibold text-sage-700 uppercase">
+                      {appliedCoupon.code}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="text-sage-400 hover:text-sage-700 transition-colors"
+                    aria-label="Quitar cupón"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => {
+                        setCouponInput(e.target.value.toUpperCase());
+                        setCouponError("");
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())}
+                      placeholder="Código de cupón"
+                      className="flex-1 rounded-xl border border-warm-300 bg-warm-50 px-3.5 py-2.5 text-sm text-warm-800 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="flex items-center gap-1.5 rounded-xl bg-warm-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-warm-900 disabled:opacity-40 transition-all"
+                    >
+                      {couponLoading
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <Tag className="h-3.5 w-3.5" />}
+                      Aplicar
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-xs text-red-500">{couponError}</p>
+                  )}
+                </div>
+              )}
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500 mb-3 bg-red-50 rounded-lg p-3">
-                {error}
-              </p>
-            )}
+            {/* Totales */}
+            <div className="px-6 py-4 space-y-2.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-warm-500">Subtotal</span>
+                <span className="text-warm-800">{formatPrice(subtotal)}</span>
+              </div>
+              {appliedCoupon && discount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-sage-600">
+                    Descuento{" "}
+                    {appliedCoupon.discount_type === "percent" &&
+                      `(${appliedCoupon.amount}%)`}
+                  </span>
+                  <span className="text-sage-600 font-medium">−{formatPrice(discount)}</span>
+                </div>
+              )}
+              <div className="h-px bg-warm-100" />
+              <div className="flex justify-between font-bold text-warm-900 text-lg">
+                <span>Total</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-burgundy-500 px-6 py-4 text-sm font-semibold text-white hover:bg-burgundy-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? "Procesando..." : "Confirmar Pedido"}
-            </button>
+            {/* Error y botón */}
+            <div className="px-6 pb-6 space-y-3">
+              {error && (
+                <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 rounded-full bg-burgundy-500 px-6 py-4 text-sm font-semibold text-white hover:bg-burgundy-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {loading ? "Procesando..." : "Confirmar Pedido"}
+              </button>
+            </div>
           </div>
         </div>
+
       </div>
     </form>
   );
@@ -289,17 +469,19 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-warm-700 mb-1.5">
+      <label className="block text-xs font-semibold uppercase tracking-widest text-warm-500 mb-2">
         {label}
       </label>
       {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
     </div>
   );
 }
 
 function inputClass(hasError: boolean) {
-  return `w-full rounded-lg border px-3.5 py-2.5 text-sm text-warm-800 bg-white focus:outline-none focus:ring-2 focus:ring-rose-300 transition-colors ${
-    hasError ? "border-red-300" : "border-warm-200 hover:border-warm-300"
+  return `w-full rounded-xl border px-4 py-3.5 text-sm text-warm-800 bg-warm-50 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:bg-white transition-all ${
+    hasError
+      ? "border-red-300 focus:border-red-300"
+      : "border-warm-300 hover:border-warm-400 focus:border-rose-300"
   }`;
 }

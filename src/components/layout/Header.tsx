@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Search, Menu, X, User, Crown, LogOut, Package } from "lucide-react";
-import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
+import { NAV_LINKS } from "@/lib/constants";
+import { Logo } from "@/components/ui/Logo";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useHydration } from "@/hooks/useHydration";
@@ -52,11 +53,7 @@ export function Header() {
           </button>
 
           {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <span className="font-heading text-2xl md:text-3xl text-burgundy-500 tracking-tight">
-              {SITE_NAME}
-            </span>
-          </Link>
+          <Logo instanceId="header" markSize={34} />
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">

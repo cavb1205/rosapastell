@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
-import {
-  SITE_NAME,
-  WHATSAPP_NUMBER,
-  SOCIAL_LINKS,
-} from "@/lib/constants";
+import { WHATSAPP_NUMBER, SOCIAL_LINKS, SITE_NAME } from "@/lib/constants";
+import { Logo } from "@/components/ui/Logo";
 
 export function Footer() {
   return (
@@ -13,10 +10,8 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <h3 className="font-heading text-2xl text-white mb-3">
-              {SITE_NAME}
-            </h3>
-            <p className="text-sm text-warm-300 leading-relaxed">
+            <Logo instanceId="footer" markSize={36} light className="mb-3" />
+            <p className="text-sm text-warm-300 leading-relaxed mt-3">
               Más de 10 años vistiendo tus sueños. Pijamas con estilo y
               comodidad para toda Colombia.
             </p>

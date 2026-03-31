@@ -34,6 +34,11 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} | Pijamas para Mujer en Colombia`,
     description: SITE_DESCRIPTION,
   },
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
   robots: {
     index: true,
     follow: true,

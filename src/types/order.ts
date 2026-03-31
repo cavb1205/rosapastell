@@ -35,7 +35,20 @@ export interface CreateOrderPayload {
   billing: OrderBilling;
   shipping: OrderShipping;
   line_items: OrderLineItem[];
+  coupon_lines?: { code: string }[];
   customer_note?: string;
+}
+
+export interface WooCoupon {
+  id: number;
+  code: string;
+  discount_type: "percent" | "fixed_cart" | "fixed_product";
+  amount: string;
+  date_expires: string | null;
+  usage_count: number;
+  usage_limit: number | null;
+  minimum_amount: string;
+  description: string;
 }
 
 export interface WooOrder {
