@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/checkout/", "/carrito", "/cuenta/", "/api/"],
     },
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: `${SITE_URL.replace(/\/$/, "")}/sitemap.xml`,
   };
 }

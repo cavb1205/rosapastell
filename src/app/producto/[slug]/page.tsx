@@ -49,17 +49,18 @@ export default async function ProductPage({ params }: PageProps) {
 
   if (!product) notFound();
 
+  const category = product.categories[0];
+
   const [variations, relatedResult] = await Promise.all([
     product.type === "variable" ? getProductVariations(product.id) : Promise.resolve([]),
     product.related_ids.length > 0
-      ? getProducts({
-          include: product.related_ids.slice(0, 4).join(","),
-          per_page: 4,
-        })
-      : Promise.resolve({ data: [], totalPages: 0, total: 0 }),
+      ? getProducts({ include: product.related_ids.slice(0, 4).join(","), per_page: 4 })
+      : category
+        ? getProducts({ category: String(category.id), per_page: 5, exclude: String(product.id) })
+        : Promise.resolve({ data: [], totalPages: 0, total: 0 }),
   ]);
 
-  const category = product.categories[0];
+  const relatedProducts = relatedResult.data.slice(0, 4);
 
   return (
     <>
@@ -104,12 +105,31 @@ export default async function ProductPage({ params }: PageProps) {
           <ProductDetail product={product} variations={variations} />
         </div>
 
-        {relatedResult.data.length > 0 && (
-          <section className="mt-16 pt-16 border-t border-warm-100">
-            <h2 className="font-heading text-2xl text-warm-900 mb-8">
-              Productos Relacionados
-            </h2>
-            <ProductGrid products={relatedResult.data} />
+        {relatedProducts.length > 0 && (
+          <section className="mt-16 pt-14 border-t border-warm-100">
+            <div className="flex items-end justify-between gap-4 mb-8">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-rose-400 mb-1.5">
+                  También te puede gustar
+                </p>
+                <h2 className="font-heading text-2xl sm:text-3xl text-warm-900">
+                  {product.related_ids.length > 0
+                    ? "Productos Relacionados"
+                    : category
+                      ? `Más de ${category.name}`
+                      : "Más Productos"}
+                </h2>
+              </div>
+              {category && (
+                <a
+                  href={`/categorias/${category.slug}`}
+                  className="flex-shrink-0 text-sm font-medium text-burgundy-500 hover:text-burgundy-700 transition-colors underline underline-offset-4"
+                >
+                  Ver colección →
+                </a>
+              )}
+            </div>
+            <ProductGrid products={relatedProducts} />
           </section>
         )}
       </div>

@@ -1,51 +1,68 @@
 import type { MetadataRoute } from "next";
-import { getAllProductSlugs, getAllCategorySlugs } from "@/lib/woocommerce";
+import { getProducts, getCategories } from "@/lib/woocommerce";
 import { SITE_URL } from "@/lib/constants";
 
-// Regenerar sitemap cada hora
+// Regenerar sitemap cada hora via ISR
 export const revalidate = 3600;
-export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [productSlugs, categorySlugs] = await Promise.all([
-    getAllProductSlugs().catch(() => [] as string[]),
-    getAllCategorySlugs().catch(() => [] as string[]),
-  ]);
+  const base = SITE_URL.replace(/\/$/, "");
+  const now = new Date();
 
-  const staticRoutes: MetadataRoute.Sitemap = [
-    {
-      url: SITE_URL,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1,
-    },
-    {
-      url: `${SITE_URL}/nosotros`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/como-comprar`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
+  // ── Páginas estáticas ─────────────────────────────────────────────
+  const staticPages: MetadataRoute.Sitemap = [
+    { url: base,                      lastModified: now, changeFrequency: "daily",   priority: 1.0 },
+    { url: `${base}/colecciones`,     lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${base}/nosotros`,        lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/como-comprar`,    lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/buscar`,          lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
 
-  const categoryRoutes: MetadataRoute.Sitemap = categorySlugs.map((slug) => ({
-    url: `${SITE_URL}/categorias/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
+  // ── Categorías ────────────────────────────────────────────────────
+  let categoryPages: MetadataRoute.Sitemap = [];
+  try {
+    const categories = await getCategories({ hide_empty: 1 });
+    categoryPages = categories
+      .filter((c) => c.slug !== "uncategorized" && c.count > 0)
+      .map((c) => ({
+        url: `${base}/categorias/${c.slug}`,
+        lastModified: now,
+        changeFrequency: "daily" as const,
+        priority: 0.8,
+      }));
+  } catch {
+    // API no disponible en build — continuar sin categorías
+  }
 
-  const productRoutes: MetadataRoute.Sitemap = productSlugs.map((slug) => ({
-    url: `${SITE_URL}/producto/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  // ── Productos (con date_modified real) ────────────────────────────
+  let productPages: MetadataRoute.Sitemap = [];
+  try {
+    let page = 1;
+    let totalPages = 1;
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+    while (page <= totalPages) {
+      const result = await getProducts({
+        per_page: 100,
+        page,
+        status: "publish",
+        _fields: "slug,date_modified",
+      });
+
+      for (const p of result.data) {
+        productPages.push({
+          url: `${base}/producto/${p.slug}`,
+          lastModified: p.date_modified ? new Date(p.date_modified) : now,
+          changeFrequency: "weekly",
+          priority: 0.7,
+        });
+      }
+
+      totalPages = result.totalPages;
+      page++;
+    }
+  } catch {
+    // API no disponible en build — continuar sin productos
+  }
+
+  return [...staticPages, ...categoryPages, ...productPages];
 }
