@@ -1,0 +1,118 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import {
+  getProductBySlug,
+  getProductVariations,
+  getProducts,
+} from "@/lib/woocommerce";
+import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductDetail } from "@/components/product/ProductDetail";
+import { ProductGrid } from "@/components/product/ProductGrid";
+import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
+import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
+import { formatPrice } from "@/lib/formatters";
+import { SITE_NAME } from "@/lib/constants";
+
+// ISR: páginas generadas bajo demanda en el primer request, cacheadas 60s
+// No usamos generateStaticParams para evitar sobrecargar WordPress en el build
+export const revalidate = 60;
+export const dynamicParams = true;
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  if (!product) return {};
+
+  const description = `Compra ${product.name} en ${SITE_NAME}. ${formatPrice(product.price)} COP. Envíos a toda Colombia.`;
+
+  return {
+    title: product.name,
+    description,
+    openGraph: {
+      title: `${product.name} | ${SITE_NAME}`,
+      description,
+      images: product.images.map((img) => ({
+        url: img.src,
+        alt: img.alt || product.name,
+      })),
+    },
+  };
+}
+
+export default async function ProductPage({ params }: PageProps) {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+
+  if (!product) notFound();
+
+  const [variations, relatedResult] = await Promise.all([
+    product.type === "variable" ? getProductVariations(product.id) : Promise.resolve([]),
+    product.related_ids.length > 0
+      ? getProducts({
+          include: product.related_ids.slice(0, 4).join(","),
+          per_page: 4,
+        })
+      : Promise.resolve({ data: [], totalPages: 0, total: 0 }),
+  ]);
+
+  const category = product.categories[0];
+
+  return (
+    <>
+      <ProductJsonLd product={product} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Inicio", href: "/" },
+          ...(category
+            ? [{ name: category.name, href: `/categorias/${category.slug}` }]
+            : []),
+          { name: product.name, href: `/producto/${slug}` },
+        ]}
+      />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="text-sm text-warm-400 mb-6" aria-label="Ruta de navegación">
+          <ol className="flex items-center gap-2 flex-wrap">
+            <li><a href="/" className="hover:text-burgundy-500 transition-colors">Inicio</a></li>
+            {category && (
+              <>
+                <li aria-hidden>/</li>
+                <li>
+                  <a
+                    href={`/categorias/${category.slug}`}
+                    className="hover:text-burgundy-500 transition-colors"
+                  >
+                    {category.name}
+                  </a>
+                </li>
+              </>
+            )}
+            <li aria-hidden>/</li>
+            <li className="text-warm-700 font-medium truncate max-w-[200px]">
+              {product.name}
+            </li>
+          </ol>
+        </nav>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+          <ProductGallery images={product.images} productName={product.name} />
+          <ProductDetail product={product} variations={variations} />
+        </div>
+
+        {relatedResult.data.length > 0 && (
+          <section className="mt-16 pt-16 border-t border-warm-100">
+            <h2 className="font-heading text-2xl text-warm-900 mb-8">
+              Productos Relacionados
+            </h2>
+            <ProductGrid products={relatedResult.data} />
+          </section>
+        )}
+      </div>
+    </>
+  );
+}
