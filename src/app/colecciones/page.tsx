@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: `Todas las Colecciones | ${SITE_NAME}`,
     description: `Más de 18 colecciones de pijamas para mujer. Encuentra la tuya.`,
+    url: "/colecciones",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Colecciones de Pijamas | ${SITE_NAME}`,
+    description: `Explora nuestras colecciones de pijamas para mujer. Envíos a toda Colombia.`,
   },
 };
 

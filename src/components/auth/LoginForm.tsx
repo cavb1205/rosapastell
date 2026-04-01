@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
@@ -14,6 +14,8 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const { setAuth } = useAuthStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/cuenta";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +37,7 @@ export function LoginForm() {
       }
 
       setAuth(data.user, "");
-      router.push("/cuenta");
+      router.push(redirectTo);
       router.refresh();
     } catch {
       setError("Error de conexión. Intenta de nuevo.");

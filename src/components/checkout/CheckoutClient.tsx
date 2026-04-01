@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Tag, X, Loader2, CheckCircle2 } from "lucide-react";
+import { Tag, X, Loader2, CheckCircle2, LogIn } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { formatPrice } from "@/lib/formatters";
@@ -50,7 +50,7 @@ export function CheckoutClient() {
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   const { items, getTotal, clearCart } = useCartStore();
-  const { user } = useAuthStore();
+  const { user, isLoading: authLoading } = useAuthStore();
   const hydrated = useHydration();
   const router = useRouter();
 
@@ -214,7 +214,10 @@ export function CheckoutClient() {
           `Hola Rosa Pastell! Mi pedido #${order.number}.\n\n${itemLines}${couponLine}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}\n\nAdjunto comprobante.`
         );
 
-        router.push(`/checkout/whatsapp?order=${order.number}&msg=${msg}`);
+        const guestParams = !user
+          ? `&guestEmail=${encodeURIComponent(data.email)}&guestName=${encodeURIComponent(data.firstName)}&guestLastName=${encodeURIComponent(data.lastName)}`
+          : "";
+        router.push(`/checkout/whatsapp?order=${order.number}&msg=${msg}${guestParams}`);
       } else {
         router.push(`/checkout/pago?order_id=${order.id}&total=${total}`);
       }
@@ -249,6 +252,31 @@ export function CheckoutClient() {
 
         {/* ── Formulario ── */}
         <div className="lg:col-span-2 space-y-6">
+
+          {/* Banner de login para invitados */}
+          {!authLoading && !user && (
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-warm-200 bg-white px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-3 min-w-0">
+                <LogIn className="h-4 w-4 text-rose-400 flex-shrink-0" />
+                <p className="text-sm text-warm-700">
+                  ¿Ya tienes cuenta?{" "}
+                  <Link
+                    href={`/cuenta/ingresar?redirect=/checkout`}
+                    className="font-semibold text-burgundy-500 hover:text-burgundy-700 underline underline-offset-2 transition-colors"
+                  >
+                    Inicia sesión
+                  </Link>{" "}
+                  para autocompletar tus datos.
+                </p>
+              </div>
+              <Link
+                href={`/cuenta/registro?redirect=/checkout`}
+                className="flex-shrink-0 text-xs font-semibold text-warm-400 hover:text-warm-600 transition-colors whitespace-nowrap"
+              >
+                Crear cuenta
+              </Link>
+            </div>
+          )}
 
           {/* Aviso pre-llenado */}
           {prefilled && (

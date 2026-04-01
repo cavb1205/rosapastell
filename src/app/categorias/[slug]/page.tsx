@@ -31,12 +31,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!category) return {};
 
+  const description = `Compra ${category.name} en ${SITE_NAME}. ${category.count} estilos disponibles. Envíos a toda Colombia.`;
   return {
     title: `${category.name} | ${SITE_NAME}`,
-    description: `Compra ${category.name} en ${SITE_NAME}. ${category.count} estilos disponibles. Envíos a toda Colombia.`,
+    description,
     openGraph: {
       title: `${category.name} | ${SITE_NAME}`,
-      images: category.image ? [category.image.src] : [],
+      description,
+      url: `/categorias/${slug}`,
+      images: category.image
+        ? [{ url: category.image.src, alt: category.name }]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${category.name} | ${SITE_NAME}`,
+      description,
     },
   };
 }

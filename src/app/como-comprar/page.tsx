@@ -5,6 +5,16 @@ import { SITE_NAME } from "@/lib/constants";
 export const metadata: Metadata = {
   title: `Cómo Comprar | ${SITE_NAME}`,
   description: `Aprende cómo comprar en ${SITE_NAME}. Proceso de compra fácil y seguro con envíos a toda Colombia.`,
+  openGraph: {
+    title: `¿Cómo Comprar? | ${SITE_NAME}`,
+    description: `Comprar en Rosa Pastell es fácil: elige tu pijama, selecciona talla, paga online o por WhatsApp. Envíos a todo Colombia.`,
+    url: "/como-comprar",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `¿Cómo Comprar? | ${SITE_NAME}`,
+    description: `Proceso de compra sencillo con envíos a toda Colombia. Paga online o por transferencia.`,
+  },
 };
 
 const steps = [

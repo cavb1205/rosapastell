@@ -4,6 +4,16 @@ import { SITE_NAME } from "@/lib/constants";
 export const metadata: Metadata = {
   title: `Nosotros | ${SITE_NAME}`,
   description: `Conoce la historia de ${SITE_NAME}, más de 10 años vistiendo los sueños de las mujeres colombianas con pijamas de calidad.`,
+  openGraph: {
+    title: `Nuestra Historia | ${SITE_NAME}`,
+    description: `Somos una tienda colombiana de pijamas en Ibagué con más de 10 años de experiencia. Conoce quiénes somos.`,
+    url: "/nosotros",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Nuestra Historia | ${SITE_NAME}`,
+    description: `Más de 10 años vistiendo los sueños de mujeres colombianas con pijamas de calidad.`,
+  },
 };
 
 export default function NosotrosPage() {

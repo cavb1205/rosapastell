@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { MessageCircle, CheckCircle, Copy } from "lucide-react";
+import { MessageCircle, CheckCircle, Copy, UserPlus, X } from "lucide-react";
 import { Suspense } from "react";
+import Link from "next/link";
+import { useAuthStore } from "@/store/auth";
 
 const BANK_INFO = {
   bank: "Bancolombia",
@@ -18,6 +20,18 @@ function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
   const msg = searchParams.get("msg");
+  const guestEmail = searchParams.get("guestEmail");
+  const guestName = searchParams.get("guestName");
+  const guestLastName = searchParams.get("guestLastName");
+
+  const { user } = useAuthStore();
+  const [saveCardDismissed, setSaveCardDismissed] = useState(false);
+
+  const showSaveCard = !user && !!guestEmail && !saveCardDismissed;
+
+  const registerHref = guestEmail
+    ? `/cuenta/registro?email=${encodeURIComponent(guestEmail)}${guestName ? `&firstName=${encodeURIComponent(guestName)}` : ""}${guestLastName ? `&lastName=${encodeURIComponent(guestLastName)}` : ""}`
+    : "/cuenta/registro";
 
   function openWhatsApp() {
     const text = msg || `Hola Rosa Pastell! Pedido #${orderNumber}`;
@@ -98,6 +112,34 @@ function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
         <MessageCircle className="h-5 w-5" />
         Enviar comprobante por WhatsApp
       </button>
+
+      {/* Tarjeta: guardar datos */}
+      {showSaveCard && (
+        <div className="mt-6 flex items-start gap-4 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-left">
+          <UserPlus className="h-5 w-5 text-rose-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-warm-800">
+              ¿Quieres recordar tus datos?
+            </p>
+            <p className="text-xs text-warm-500 mt-0.5">
+              Crea una cuenta y la próxima vez tu dirección y datos se autocompletarán.
+            </p>
+            <Link
+              href={registerHref}
+              className="inline-block mt-2 rounded-full bg-burgundy-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-burgundy-600 transition-colors"
+            >
+              Crear cuenta gratis
+            </Link>
+          </div>
+          <button
+            onClick={() => setSaveCardDismissed(true)}
+            className="text-warm-300 hover:text-warm-500 transition-colors flex-shrink-0"
+            aria-label="Cerrar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <a
         href="/"

@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 
 export function RegisterForm() {
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
+    firstName: searchParams.get("firstName") || "",
+    lastName: searchParams.get("lastName") || "",
+    email: searchParams.get("email") || "",
     phone: "",
     password: "",
     confirmPassword: "",

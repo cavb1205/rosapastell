@@ -13,11 +13,24 @@ export function SizeSelector({
   selectedVariation,
   onSelect,
 }: SizeSelectorProps) {
+  const lowStockThreshold = 5;
+  const selectedStock = selectedVariation?.stock_quantity ?? null;
+  const showLowStock =
+    selectedVariation &&
+    selectedVariation.stock_status !== "outofstock" &&
+    selectedStock !== null &&
+    selectedStock <= lowStockThreshold &&
+    selectedStock > 0;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-warm-700">Talla</h3>
-        {selectedVariation && (
+        {showLowStock ? (
+          <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+            {selectedStock === 1 ? "¡Última unidad!" : `Solo quedan ${selectedStock}`}
+          </span>
+        ) : selectedVariation ? (
           <span className="text-sm text-warm-500">
             {
               selectedVariation.attributes.find(
@@ -26,7 +39,7 @@ export function SizeSelector({
             }{" "}
             seleccionada
           </span>
-        )}
+        ) : null}
       </div>
       <div className="flex flex-wrap gap-2">
         {variations.map((variation) => {
