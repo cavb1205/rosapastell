@@ -27,7 +27,6 @@ export default async function Image({
           height: "100%",
           display: "flex",
           background: "#FFF5F0",
-          fontFamily: "Georgia, serif",
         }}
       >
         {/* Left — product info */}
@@ -37,7 +36,7 @@ export default async function Image({
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            padding: "56px 56px",
+            padding: "56px",
           }}
         >
           {/* Top: brand */}
@@ -51,38 +50,42 @@ export default async function Image({
                 display: "flex",
               }}
             />
-            <span
+            <div
               style={{
                 fontSize: "13px",
                 letterSpacing: "5px",
-                textTransform: "uppercase",
                 color: "#8B3B5E",
                 fontFamily: "Arial, sans-serif",
               }}
             >
-              Rosa Pastell
-            </span>
+              ROSA PASTELL
+            </div>
           </div>
 
-          {/* Middle: product name + category */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Middle: category + name + price */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+            }}
+          >
             {category ? (
-              <span
+              <div
                 style={{
                   fontSize: "14px",
                   letterSpacing: "4px",
-                  textTransform: "uppercase",
                   color: "#B07070",
                   fontFamily: "Arial, sans-serif",
                 }}
               >
-                {category}
-              </span>
+                {category.toUpperCase()}
+              </div>
             ) : null}
 
             <div
               style={{
-                fontSize: productName.length > 30 ? "44px" : "56px",
+                fontSize: productName.length > 30 ? "42px" : "54px",
                 fontWeight: "400",
                 color: "#3D2B2B",
                 lineHeight: "1.15",
@@ -95,10 +98,10 @@ export default async function Image({
             {price ? (
               <div
                 style={{
-                  fontSize: "32px",
+                  fontSize: "30px",
                   color: "#8B3B5E",
-                  fontWeight: "700",
                   fontFamily: "Arial, sans-serif",
+                  fontWeight: "700",
                 }}
               >
                 {price}
@@ -106,19 +109,17 @@ export default async function Image({
             ) : null}
           </div>
 
-          {/* Bottom: shipping badge */}
+          {/* Bottom: shipping */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              background: "#F5EBE8",
+              background: "#F0E8E5",
               padding: "10px 20px",
               borderRadius: "999px",
-              width: "fit-content",
             }}
           >
-            <span
+            <div
               style={{
                 fontSize: "14px",
                 color: "#7A5050",
@@ -126,7 +127,7 @@ export default async function Image({
               }}
             >
               🚚 Envíos a toda Colombia
-            </span>
+            </div>
           </div>
         </div>
 
@@ -135,7 +136,6 @@ export default async function Image({
           style={{
             width: "480px",
             display: "flex",
-            alignItems: "stretch",
             position: "relative",
             overflow: "hidden",
           }}
@@ -164,7 +164,7 @@ export default async function Image({
             >
               <div
                 style={{
-                  fontSize: "80px",
+                  fontSize: "72px",
                   color: "#C4A0A0",
                   fontFamily: "Georgia, serif",
                 }}
@@ -174,12 +174,15 @@ export default async function Image({
             </div>
           )}
 
-          {/* Overlay gradient at the left edge */}
+          {/* Left-to-right gradient overlay */}
           <div
             style={{
               position: "absolute",
-              inset: "0",
-              background: "linear-gradient(to right, #FFF5F0 0%, transparent 30%)",
+              top: "0",
+              left: "0",
+              bottom: "0",
+              width: "120px",
+              background: "linear-gradient(to right, #FFF5F0, transparent)",
               display: "flex",
             }}
           />

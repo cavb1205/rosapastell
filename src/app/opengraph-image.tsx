@@ -13,7 +13,6 @@ export default function Image() {
           height: "100%",
           display: "flex",
           background: "#FFF5F0",
-          fontFamily: "Georgia, serif",
         }}
       >
         {/* Left — content */}
@@ -24,78 +23,82 @@ export default function Image() {
             flexDirection: "column",
             justifyContent: "center",
             padding: "72px 64px",
+            gap: "32px",
           }}
         >
           {/* Brand mark */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginBottom: "48px",
-            }}
-          >
-            {/* Simple petal mark */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
-                width: "36px",
-                height: "36px",
+                width: "12px",
+                height: "12px",
                 borderRadius: "50%",
                 background: "#D4A0A0",
                 display: "flex",
               }}
             />
-            <span
+            <div
               style={{
-                fontSize: "14px",
-                letterSpacing: "6px",
-                textTransform: "uppercase",
+                fontSize: "13px",
+                letterSpacing: "5px",
                 color: "#8B3B5E",
+                fontFamily: "Arial, sans-serif",
+              }}
+            >
+              ROSA PASTELL
+            </div>
+          </div>
+
+          {/* Main heading — no <br>, separate divs */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
+            <div
+              style={{
+                fontSize: "74px",
+                fontWeight: "400",
+                color: "#3D2B2B",
+                lineHeight: "1.1",
                 fontFamily: "Georgia, serif",
               }}
             >
-              Rosa Pastell
-            </span>
-          </div>
-
-          {/* Main heading */}
-          <div
-            style={{
-              fontSize: "72px",
-              fontWeight: "400",
-              color: "#3D2B2B",
-              lineHeight: "1.1",
-              marginBottom: "24px",
-              fontFamily: "Georgia, serif",
-            }}
-          >
-            Pijamas para
-            <br />
-            <span style={{ color: "#8B3B5E" }}>Mujer</span>
+              Pijamas para
+            </div>
+            <div
+              style={{
+                fontSize: "74px",
+                fontWeight: "400",
+                color: "#8B3B5E",
+                lineHeight: "1.1",
+                fontFamily: "Georgia, serif",
+              }}
+            >
+              Mujer
+            </div>
           </div>
 
           {/* Tagline */}
-          <div
-            style={{
-              fontSize: "22px",
-              color: "#8B6B6B",
-              lineHeight: "1.5",
-              marginBottom: "40px",
-            }}
-          >
-            Más de 10 años vistiendo tus sueños.
-            <br />
-            Envíos a toda Colombia 🇨🇴
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div
+              style={{
+                fontSize: "21px",
+                color: "#8B6B6B",
+                fontFamily: "Arial, sans-serif",
+              }}
+            >
+              Más de 10 años vistiendo tus sueños.
+            </div>
+            <div
+              style={{
+                fontSize: "21px",
+                color: "#8B6B6B",
+                fontFamily: "Arial, sans-serif",
+              }}
+            >
+              Envíos a toda Colombia 🇨🇴
+            </div>
           </div>
 
-          {/* CTA pill */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
+          {/* URL pill */}
+          <div style={{ display: "flex" }}>
             <div
               style={{
                 background: "#8B3B5E",
@@ -112,24 +115,24 @@ export default function Image() {
           </div>
         </div>
 
-        {/* Right — decorative */}
+        {/* Right — decorative panel */}
         <div
           style={{
-            width: "420px",
+            width: "400px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            position: "relative",
             background: "#8B3B5E",
+            position: "relative",
             overflow: "hidden",
           }}
         >
-          {/* Decorative circles */}
+          {/* Decorative circle top-right */}
           <div
             style={{
               position: "absolute",
-              top: "-80px",
-              right: "-80px",
+              top: "-90px",
+              right: "-90px",
               width: "340px",
               height: "340px",
               borderRadius: "50%",
@@ -137,11 +140,12 @@ export default function Image() {
               display: "flex",
             }}
           />
+          {/* Decorative circle bottom-left */}
           <div
             style={{
               position: "absolute",
-              bottom: "-60px",
-              left: "-60px",
+              bottom: "-70px",
+              left: "-70px",
               width: "260px",
               height: "260px",
               borderRadius: "50%",
@@ -150,20 +154,21 @@ export default function Image() {
             }}
           />
 
-          {/* Center text */}
+          {/* Center mark */}
           <div
             style={{
               position: "relative",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "16px",
+              gap: "14px",
             }}
           >
+            {/* Petal circle */}
             <div
               style={{
-                width: "80px",
-                height: "80px",
+                width: "72px",
+                height: "72px",
                 borderRadius: "50%",
                 background: "#D4A0A0",
                 display: "flex",
@@ -173,27 +178,47 @@ export default function Image() {
             >
               <div
                 style={{
-                  width: "40px",
-                  height: "40px",
+                  width: "36px",
+                  height: "36px",
                   borderRadius: "50%",
                   background: "#FFF5F0",
                   display: "flex",
                 }}
               />
             </div>
+
+            {/* Brand name — separate divs instead of <br> */}
             <div
               style={{
-                fontSize: "32px",
-                color: "white",
-                fontFamily: "Georgia, serif",
-                textAlign: "center",
-                letterSpacing: "2px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "0px",
               }}
             >
-              Rosa
-              <br />
-              Pastell
+              <div
+                style={{
+                  fontSize: "32px",
+                  color: "white",
+                  fontFamily: "Georgia, serif",
+                  letterSpacing: "2px",
+                }}
+              >
+                Rosa
+              </div>
+              <div
+                style={{
+                  fontSize: "32px",
+                  color: "white",
+                  fontFamily: "Georgia, serif",
+                  letterSpacing: "2px",
+                }}
+              >
+                Pastell
+              </div>
             </div>
+
+            {/* Divider */}
             <div
               style={{
                 width: "40px",
@@ -202,16 +227,16 @@ export default function Image() {
                 display: "flex",
               }}
             />
+
             <div
               style={{
-                fontSize: "13px",
+                fontSize: "12px",
                 color: "#F8C5C5",
                 letterSpacing: "4px",
-                textTransform: "uppercase",
                 fontFamily: "Arial, sans-serif",
               }}
             >
-              Colombia
+              COLOMBIA
             </div>
           </div>
         </div>
