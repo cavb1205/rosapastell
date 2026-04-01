@@ -48,6 +48,9 @@ export interface WooProduct {
   date_created: string;
   date_modified: string;
   permalink: string;
+  // Precios mayoristas — parseados de _role_based_price en meta_data
+  wholesalePrice: number | null;
+  wholesaleSalePrice: number | null;
 }
 
 export interface WooVariation {
@@ -66,6 +69,9 @@ export interface WooVariation {
     option: string;
   }[];
   image: WooImage;
+  // Precios mayoristas — parseados de _role_based_price en meta_data
+  wholesalePrice: number | null;
+  wholesaleSalePrice: number | null;
 }
 
 export interface WooPaginatedResponse<T> {

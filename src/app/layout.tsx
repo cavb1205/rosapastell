@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
+
+// NEXT_PUBLIC_SITE_URL se configura en Vercel solo para el entorno "Production"
+// (con el dominio real). En Preview no se define → cae a VERCEL_URL (la URL del deployment).
+const metadataBaseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+  : process.env.VERCEL_URL
+  ? new URL(`https://${process.env.VERCEL_URL}`)
+  : new URL(SITE_URL);
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
@@ -21,7 +29,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: metadataBaseUrl,
   title: {
     default: `${SITE_NAME} | Pijamas para Mujer en Colombia`,
     template: `%s | ${SITE_NAME}`,

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ShoppingBag, Check, Minus, Plus } from "lucide-react";
 import { useCartStore } from "@/store/cart";
+import { useAuthStore } from "@/store/auth";
 import type { WooProduct, WooVariation } from "@/types/product";
 
 interface AddToCartProps {
@@ -19,6 +20,7 @@ export function AddToCart({
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
 
   // Reset quantity when the user switches size
   useEffect(() => {
@@ -41,9 +43,11 @@ export function AddToCart({
   function handleAddToCart() {
     if (isDisabled || outOfStock) return;
 
-    const price = selectedVariation
-      ? parseFloat(selectedVariation.price)
-      : parseFloat(product.price);
+    const source = selectedVariation ?? product;
+    const price =
+      isWholesale && source.wholesalePrice !== null
+        ? (source.wholesaleSalePrice ?? source.wholesalePrice)
+        : parseFloat(source.price);
 
     addItem({
       productId: product.id,

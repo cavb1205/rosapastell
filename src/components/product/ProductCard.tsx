@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { WooProduct } from "@/types/product";
 import { formatPrice } from "@/lib/formatters";
+import { useAuthStore } from "@/store/auth";
 
 interface ProductCardProps {
   product: WooProduct;
@@ -9,8 +12,23 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
+  const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
+
   const mainImage = product.images[0];
-  const hasDiscount = product.on_sale && product.sale_price;
+
+  // Precio efectivo según rol
+  const displayPrice = isWholesale && product.wholesalePrice !== null
+    ? product.wholesaleSalePrice ?? product.wholesalePrice
+    : product.on_sale && product.sale_price
+    ? product.sale_price
+    : product.price;
+
+  const crossedPrice = isWholesale && product.wholesalePrice !== null
+    ? product.wholesaleSalePrice !== null ? String(product.wholesalePrice) : null
+    : product.on_sale && product.sale_price ? product.regular_price : null;
+
+  const showWholesaleBadge = isWholesale && product.wholesalePrice !== null;
+  const showSaleBadge = !isWholesale && product.on_sale && product.sale_price;
 
   return (
     <Link
@@ -32,7 +50,12 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             <span className="text-sm">Sin imagen</span>
           </div>
         )}
-        {hasDiscount && (
+        {showWholesaleBadge && (
+          <span className="absolute top-3 left-3 bg-burgundy-700 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+            Mayorista
+          </span>
+        )}
+        {showSaleBadge && (
           <span className="absolute top-3 left-3 bg-burgundy-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
             Oferta
           </span>
@@ -44,11 +67,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         </h3>
         <div className="mt-2 flex items-center gap-2">
           <span className="text-base font-semibold text-burgundy-500">
-            {formatPrice(product.price)}
+            {formatPrice(displayPrice)}
           </span>
-          {hasDiscount && (
+          {crossedPrice && (
             <span className="text-sm text-warm-400 line-through">
-              {formatPrice(product.regular_price)}
+              {formatPrice(crossedPrice)}
             </span>
           )}
         </div>

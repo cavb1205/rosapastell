@@ -5,6 +5,42 @@ import type {
   WooPaginatedResponse,
 } from "@/types/product";
 import type { CreateOrderPayload, WooOrder } from "@/types/order";
+import { WHOLESALE_ROLES } from "@/types/auth";
+
+// Tipo interno para la respuesta cruda de la API (incluye meta_data)
+type WooMetaItem = { key: string; value: unknown };
+type WithMeta<T> = T & { meta_data?: WooMetaItem[] };
+
+/** Lee _role_based_price de meta_data y devuelve los precios mayoristas parseados. */
+function parseWholesalePrice(meta_data?: WooMetaItem[]): {
+  wholesalePrice: number | null;
+  wholesaleSalePrice: number | null;
+} {
+  if (!meta_data) return { wholesalePrice: null, wholesaleSalePrice: null };
+
+  const meta = meta_data.find((m) => m.key === "_role_based_price");
+  if (!meta || typeof meta.value !== "object" || !meta.value) {
+    return { wholesalePrice: null, wholesaleSalePrice: null };
+  }
+
+  const rolePrices = meta.value as Record<
+    string,
+    { regular_price?: string; selling_price?: string }
+  >;
+
+  for (const role of WHOLESALE_ROLES) {
+    const entry = rolePrices[role];
+    if (entry) {
+      const wholesalePrice =
+        entry.regular_price ? parseFloat(entry.regular_price) : null;
+      const wholesaleSalePrice =
+        entry.selling_price ? parseFloat(entry.selling_price) : null;
+      return { wholesalePrice, wholesaleSalePrice };
+    }
+  }
+
+  return { wholesalePrice: null, wholesaleSalePrice: null };
+}
 
 const BASE_URL = process.env.WOOCOMMERCE_URL!;
 const CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY!;
@@ -70,7 +106,7 @@ async function wooFetch<T>(
 export async function getProducts(
   params: Record<string, string | number> = {}
 ): Promise<WooPaginatedResponse<WooProduct>> {
-  const { data, headers } = await wooFetch<WooProduct[]>("products", {
+  const { data, headers } = await wooFetch<WithMeta<WooProduct>[]>("products", {
     per_page: 16,
     status: "publish",
     stock_status: "instock",
@@ -78,7 +114,10 @@ export async function getProducts(
   });
 
   return {
-    data,
+    data: data.map(({ meta_data, ...p }) => ({
+      ...p,
+      ...parseWholesalePrice(meta_data),
+    })),
     totalPages: Number(headers.get("x-wp-totalpages") || 1),
     total: Number(headers.get("x-wp-total") || 0),
   };
@@ -87,22 +126,27 @@ export async function getProducts(
 export async function getProductBySlug(
   slug: string
 ): Promise<WooProduct | null> {
-  const { data } = await wooFetch<WooProduct[]>("products", {
+  const { data } = await wooFetch<WithMeta<WooProduct>[]>("products", {
     slug,
     status: "publish",
     stock_status: "instock",
   });
-  return data[0] || null;
+  if (!data[0]) return null;
+  const { meta_data, ...p } = data[0];
+  return { ...p, ...parseWholesalePrice(meta_data) };
 }
 
 export async function getProductVariations(
   productId: number
 ): Promise<WooVariation[]> {
-  const { data } = await wooFetch<WooVariation[]>(
+  const { data } = await wooFetch<WithMeta<WooVariation>[]>(
     `products/${productId}/variations`,
     { per_page: 100 }
   );
-  return data;
+  return data.map(({ meta_data, ...v }) => ({
+    ...v,
+    ...parseWholesalePrice(meta_data),
+  }));
 }
 
 export async function getAllProductSlugs(): Promise<string[]> {

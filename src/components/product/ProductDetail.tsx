@@ -7,6 +7,7 @@ import { SizeSelector } from "./SizeSelector";
 import { AddToCart } from "./AddToCart";
 import { WHATSAPP_URL } from "@/lib/constants";
 import { MessageCircle } from "lucide-react";
+import { useAuthStore } from "@/store/auth";
 
 interface ProductDetailProps {
   product: WooProduct;
@@ -16,15 +17,35 @@ interface ProductDetailProps {
 export function ProductDetail({ product, variations }: ProductDetailProps) {
   const [selectedVariation, setSelectedVariation] = useState<WooVariation | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
+  const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
 
   function handleSizeSelect(variation: WooVariation, size: string) {
     setSelectedVariation(variation);
     setSelectedSize(size);
   }
 
-  const displayPrice = selectedVariation?.price || product.price;
-  const regularPrice = selectedVariation?.regular_price || product.regular_price;
-  const onSale = selectedVariation?.on_sale ?? product.on_sale;
+  // Fuente de precios: variación seleccionada o producto base
+  const source = selectedVariation ?? product;
+
+  // Precio mayorista efectivo (oferta mayorista > precio mayorista > null)
+  const wholesaleEffective =
+    isWholesale && source.wholesalePrice !== null
+      ? (source.wholesaleSalePrice ?? source.wholesalePrice)
+      : null;
+
+  const displayPrice = wholesaleEffective !== null
+    ? wholesaleEffective
+    : parseFloat(source.price) || 0;
+
+  // Precio tachado: precio regular cuando hay descuento (mayorista o normal)
+  const crossedPrice: string | null =
+    wholesaleEffective !== null && source.wholesaleSalePrice !== null
+      ? String(source.wholesalePrice)                        // oferta mayorista: tacha precio mayorista base
+      : wholesaleEffective !== null
+      ? source.price                                         // precio mayorista: tacha precio minorista
+      : source.on_sale && source.sale_price
+      ? (selectedVariation?.regular_price || product.regular_price)
+      : null;
 
   return (
     <div className="flex flex-col">
@@ -33,13 +54,18 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
       </h1>
 
       {/* Price */}
-      <div className="mt-4 flex items-baseline gap-3">
+      <div className="mt-4 flex flex-wrap items-baseline gap-3">
         <span className="text-3xl font-bold text-burgundy-500">
           {formatPrice(displayPrice)}
         </span>
-        {onSale && regularPrice && regularPrice !== displayPrice && (
+        {crossedPrice && (
           <span className="text-lg text-warm-400 line-through">
-            {formatPrice(regularPrice)}
+            {formatPrice(crossedPrice)}
+          </span>
+        )}
+        {isWholesale && source.wholesalePrice !== null && (
+          <span className="text-xs font-semibold bg-burgundy-700 text-white px-2.5 py-1 rounded-full">
+            Precio Mayorista
           </span>
         )}
       </div>
