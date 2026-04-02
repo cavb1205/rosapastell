@@ -8,6 +8,10 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      drawerOpen: false,
+
+      openDrawer: () => set({ drawerOpen: true }),
+      closeDrawer: () => set({ drawerOpen: false }),
 
       addItem: (item: CartItem) => {
         set((state) => {

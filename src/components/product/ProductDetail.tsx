@@ -8,6 +8,7 @@ import { AddToCart } from "./AddToCart";
 import { WHATSAPP_URL } from "@/lib/constants";
 import { MessageCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { ShareButtons } from "./ShareButtons";
 
 interface ProductDetailProps {
   product: WooProduct;
@@ -96,7 +97,7 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
           selectedVariation={selectedVariation}
           selectedSize={selectedSize}
         />
-        <a
+        {/* <a
           href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Hola! Estoy interesada en: ${product.name}`)}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -104,7 +105,7 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
         >
           <MessageCircle className="h-5 w-5" />
           Consultar por WhatsApp
-        </a>
+        </a> */}
       </div>
 
       {/* Description accordion */}
@@ -125,6 +126,11 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
       {product.sku && (
         <p className="mt-6 text-xs text-warm-400">SKU: {product.sku}</p>
       )}
+
+      {/* Share */}
+      <div className="mt-6 pt-6 border-t border-warm-100">
+        <ShareButtons slug={product.slug} name={product.name} />
+      </div>
     </div>
   );
 }

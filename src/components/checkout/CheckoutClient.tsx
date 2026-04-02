@@ -23,7 +23,7 @@ const schema = z.object({
   department: z.string().min(1, "Selecciona tu departamento"),
   city: z.string().min(2, "Ciudad requerida"),
   address: z.string().min(5, "Dirección requerida"),
-  paymentMethod: z.enum(["wompi", "whatsapp"]),
+  paymentMethod: z.literal("whatsapp"),
   notes: z.string().optional(),
 });
 
@@ -65,7 +65,11 @@ export function CheckoutClient() {
     defaultValues: { paymentMethod: "whatsapp" },
   });
 
-  const paymentMethod = watch("paymentMethod");
+  const watchedCity = watch("city") ?? "";
+  const isIbague = watchedCity.trim().toLowerCase().replace(/[áàä]/g, "a") === "ibague";
+  const shippingType: "local" | "national" | null =
+    watchedCity.trim().length >= 2 ? (isIbague ? "local" : "national") : null;
+
   const subtotal = getTotal();
   const discount = appliedCoupon ? calcDiscount(appliedCoupon, subtotal) : 0;
   const total = subtotal - discount;
@@ -141,13 +145,10 @@ export function CheckoutClient() {
 
     try {
       const orderPayload: CreateOrderPayload = {
-        payment_method: data.paymentMethod,
-        payment_method_title:
-          data.paymentMethod === "wompi"
-            ? "Pago en línea (Wompi)"
-            : "Transferencia / WhatsApp",
+        payment_method: "whatsapp",
+        payment_method_title: "Transferencia / WhatsApp",
         set_paid: false,
-        status: data.paymentMethod === "wompi" ? "pending" : "on-hold",
+        status: "on-hold",
         billing: {
           first_name: data.firstName,
           last_name: data.lastName,
@@ -198,29 +199,25 @@ export function CheckoutClient() {
       const order = await res.json();
       clearCart();
 
-      if (data.paymentMethod === "whatsapp") {
-        const itemLines = items
-          .map(
-            (i) =>
-              `- ${i.name} (Talla ${i.size}) x${i.quantity} - ${formatPrice(i.price * i.quantity)}`
-          )
-          .join("\n");
+      const itemLines = items
+        .map(
+          (i) =>
+            `- ${i.name} (Talla ${i.size}) x${i.quantity} - ${formatPrice(i.price * i.quantity)}`
+        )
+        .join("\n");
 
-        const couponLine = appliedCoupon
-          ? `\nCupón aplicado: ${appliedCoupon.code} (-${formatPrice(discount)})`
-          : "";
+      const couponLine = appliedCoupon
+        ? `\nCupón aplicado: ${appliedCoupon.code} (-${formatPrice(discount)})`
+        : "";
 
-        const msg = encodeURIComponent(
-          `Hola Rosa Pastell! Mi pedido #${order.number}.\n\n${itemLines}${couponLine}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}\n\nAdjunto comprobante.`
-        );
+      const msg = encodeURIComponent(
+        `Hola Rosa Pastell! Mi pedido #${order.number}.\n\n${itemLines}${couponLine}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}\n\nAdjunto comprobante.`
+      );
 
-        const guestParams = !user
-          ? `&guestEmail=${encodeURIComponent(data.email)}&guestName=${encodeURIComponent(data.firstName)}&guestLastName=${encodeURIComponent(data.lastName)}`
-          : "";
-        router.push(`/checkout/whatsapp?order=${order.number}&msg=${msg}${guestParams}`);
-      } else {
-        router.push(`/checkout/pago?order_id=${order.id}&total=${total}`);
-      }
+      const guestParams = !user
+        ? `&guestEmail=${encodeURIComponent(data.email)}&guestName=${encodeURIComponent(data.firstName)}&guestLastName=${encodeURIComponent(data.lastName)}`
+        : "";
+      router.push(`/checkout/whatsapp?order=${order.number}&msg=${msg}${guestParams}`);
     } catch {
       setError("Ocurrió un error de conexión. Por favor intenta de nuevo.");
     } finally {
@@ -330,42 +327,38 @@ export function CheckoutClient() {
             </div>
           </section>
 
-          {/* Método de pago */}
-          <section className="bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden">
-            <div className="px-7 py-5 bg-warm-50 border-b border-warm-100">
-              <h2 className="font-heading text-xl text-warm-900">Método de Pago</h2>
+          {/* Info de envío */}
+          {shippingType && (
+            <div className={`flex gap-3 rounded-xl border px-5 py-4 ${
+              shippingType === "local"
+                ? "bg-sage-50 border-sage-200"
+                : "bg-blue-50 border-blue-200"
+            }`}>
+              <span className="text-xl flex-shrink-0">
+                {shippingType === "local" ? "🛵" : "📦"}
+              </span>
+              <div>
+                {shippingType === "local" ? (
+                  <>
+                    <p className="text-sm font-semibold text-sage-800">Envío local — Ibagué</p>
+                    <p className="text-sm text-sage-700 mt-0.5">
+                      Entregamos en tu dirección dentro de Ibagué. El costo del envío lo pagas al recibir tu pedido.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-blue-800">Envío nacional — Transportadora Envía</p>
+                    <p className="text-sm text-blue-700 mt-0.5">
+                      Tu pedido llega a cualquier ciudad de Colombia vía Envía. El flete lo pagas directamente a la transportadora al recibir.
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="px-7 py-6 space-y-3">
-              <label className={`flex gap-4 items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === "whatsapp" ? "border-burgundy-400 bg-burgundy-50" : "border-warm-200 hover:border-warm-300"}`}>
-                <input
-                  type="radio"
-                  value="whatsapp"
-                  {...register("paymentMethod")}
-                  className="mt-1 accent-burgundy-500"
-                />
-                <div>
-                  <p className="font-semibold text-warm-800">Transferencia / WhatsApp</p>
-                  <p className="text-sm text-warm-500 mt-0.5">
-                    Paga por transferencia bancaria o Nequi y envía tu comprobante por WhatsApp.
-                  </p>
-                </div>
-              </label>
-              <label className={`flex gap-4 items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === "wompi" ? "border-burgundy-400 bg-burgundy-50" : "border-warm-200 hover:border-warm-300"}`}>
-                <input
-                  type="radio"
-                  value="wompi"
-                  {...register("paymentMethod")}
-                  className="mt-1 accent-burgundy-500"
-                />
-                <div>
-                  <p className="font-semibold text-warm-800">Pago en línea</p>
-                  <p className="text-sm text-warm-500 mt-0.5">
-                    Tarjeta de crédito/débito, PSE, Nequi o Bancolombia a través de Wompi.
-                  </p>
-                </div>
-              </label>
-            </div>
-          </section>
+          )}
+
+          {/* Método de pago — campo oculto, siempre whatsapp */}
+          <input type="hidden" {...register("paymentMethod")} value="whatsapp" />
         </div>
 
         {/* ── Resumen del pedido ── */}

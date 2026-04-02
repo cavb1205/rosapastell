@@ -130,11 +130,16 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-warm-700 pt-6 text-center">
+        <div className="mt-10 border-t border-warm-700 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
           <p className="text-xs text-warm-400">
-            &copy; {new Date().getFullYear()} {SITE_NAME}. Todos los derechos
-            reservados.
+            &copy; {new Date().getFullYear()} {SITE_NAME}. Todos los derechos reservados.
           </p>
+          <Link
+            href="/politica-de-privacidad"
+            className="text-xs text-warm-400 hover:text-warm-200 transition-colors"
+          >
+            Política de privacidad
+          </Link>
         </div>
       </div>
     </footer>

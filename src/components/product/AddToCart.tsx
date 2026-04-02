@@ -20,6 +20,7 @@ export function AddToCart({
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const openDrawer = useCartStore((s) => s.openDrawer);
   const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
 
   // Reset quantity when the user switches size
@@ -60,6 +61,7 @@ export function AddToCart({
       slug: product.slug,
     });
 
+    openDrawer();
     setAdded(true);
     setQuantity(1);
     setTimeout(() => setAdded(false), 2000);

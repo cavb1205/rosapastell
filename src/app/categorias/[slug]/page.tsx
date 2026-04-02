@@ -10,6 +10,7 @@ import {
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Pagination } from "@/components/catalog/Pagination";
 import { SortSelector } from "@/components/catalog/SortSelector";
+import { SizeFilter } from "@/components/catalog/SizeFilter";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { SITE_NAME } from "@/lib/constants";
 
@@ -17,7 +18,7 @@ export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string; orderby?: string }>;
+  searchParams: Promise<{ page?: string; orderby?: string; talla?: string }>;
 }
 
 export async function generateStaticParams() {
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { page: pageParam, orderby = "popularity" } = await searchParams;
+  const { page: pageParam, orderby = "popularity", talla } = await searchParams;
   const page = Math.max(1, Number(pageParam || 1));
 
   const [category, allCategories] = await Promise.all([
@@ -72,12 +73,24 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   const sortParams = sortMap[orderby] || sortMap.popularity;
 
-  const { data: products, totalPages } = await getProducts({
+  const { data: rawProducts, totalPages } = await getProducts({
     category: String(category.id),
     page,
-    per_page: 16,
+    // Cuando hay filtro de talla traemos más para compensar el filtrado client
+    per_page: talla ? 100 : 16,
     ...sortParams,
   });
+
+  // Filtrar por talla sobre los resultados (atributo local de WooCommerce)
+  const products = talla
+    ? rawProducts.filter((p) =>
+        p.attributes.some(
+          (a) =>
+            a.name.toLowerCase() === "talla" &&
+            a.options.some((o) => o.toLowerCase() === talla.toLowerCase())
+        )
+      )
+    : rawProducts;
 
   return (
     <>
@@ -133,20 +146,32 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           </div>
         </div>
 
-        <div className="flex justify-end mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <Suspense>
+            <SizeFilter />
+          </Suspense>
           <Suspense>
             <SortSelector />
           </Suspense>
         </div>
 
-        <ProductGrid products={products} />
+        {products.length === 0 ? (
+          <div className="py-20 text-center text-warm-400">
+            <p className="text-lg font-medium mb-2">Sin resultados</p>
+            <p className="text-sm">No hay productos disponibles en talla {talla}.</p>
+          </div>
+        ) : (
+          <ProductGrid products={products} />
+        )}
 
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          basePath={`/categorias/${slug}`}
-          searchParams={orderby !== "popularity" ? { orderby } : {}}
-        />
+        {!talla && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            basePath={`/categorias/${slug}`}
+            searchParams={orderby !== "popularity" ? { orderby } : {}}
+          />
+        )}
       </div>
     </>
   );

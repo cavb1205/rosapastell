@@ -37,8 +37,10 @@ export function LoginForm() {
       }
 
       setAuth(data.user, "");
+      // Mantener loading durante la navegación — setLoading(false) nunca se llama en éxito
       router.push(redirectTo);
       router.refresh();
+      return;
     } catch {
       setError("Error de conexión. Intenta de nuevo.");
     } finally {
@@ -70,7 +72,15 @@ export function LoginForm() {
 
       {/* Contraseña */}
       <div>
-        <label className={labelClass}>Contraseña</label>
+        <div className="flex items-center justify-between mb-2.5">
+          <label className={labelClass} style={{ marginBottom: 0 }}>Contraseña</label>
+          <Link
+            href="/cuenta/recuperar"
+            className="text-xs text-warm-400 hover:text-burgundy-500 transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
@@ -104,9 +114,17 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-full bg-burgundy-500 px-6 py-4 text-sm font-semibold tracking-wide text-white shadow-sm hover:bg-burgundy-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 rounded-full bg-burgundy-500 px-6 py-4 text-sm font-semibold tracking-wide text-white shadow-sm hover:bg-burgundy-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Ingresando..." : "Ingresar"}
+          {loading ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Ingresando...
+            </>
+          ) : "Ingresar"}
         </button>
       </div>
 

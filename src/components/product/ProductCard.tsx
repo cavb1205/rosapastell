@@ -30,6 +30,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const showWholesaleBadge = isWholesale && product.wholesalePrice !== null;
   const showSaleBadge = !isWholesale && product.on_sale && product.sale_price;
 
+  const stock = product.stock_quantity;
+  const lowStock = stock !== null && stock > 0 && stock <= 3;
+  const lastUnit = stock === 1;
+
   return (
     <Link
       href={`/producto/${product.slug}`}
@@ -50,6 +54,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             <span className="text-sm">Sin imagen</span>
           </div>
         )}
+        {/* Badges top-left: prioridad mayorista > oferta */}
         {showWholesaleBadge && (
           <span className="absolute top-3 left-3 bg-burgundy-700 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
             Mayorista
@@ -58,6 +63,12 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         {showSaleBadge && (
           <span className="absolute top-3 left-3 bg-burgundy-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
             Oferta
+          </span>
+        )}
+        {/* Badge stock bajo — esquina inferior izquierda */}
+        {lowStock && (
+          <span className="absolute bottom-3 left-3 bg-amber-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+            {lastUnit ? "¡Última unidad!" : `Solo quedan ${stock}`}
           </span>
         )}
       </div>

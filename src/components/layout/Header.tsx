@@ -15,6 +15,7 @@ export function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const itemCount = useCartStore((s) => s.getItemCount());
+  const openDrawer = useCartStore((s) => s.openDrawer);
   const { user, clearAuth } = useAuthStore();
   const hydrated = useHydration();
   const router = useRouter();
@@ -148,8 +149,8 @@ export function Header() {
               </div>
             )}
 
-            <Link
-              href="/carrito"
+            <button
+              onClick={openDrawer}
               className="relative p-2 text-warm-600 hover:text-warm-800 transition-colors"
               aria-label="Carrito de compras"
             >
@@ -159,7 +160,7 @@ export function Header() {
                   {itemCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
       </div>

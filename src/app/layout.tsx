@@ -13,6 +13,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const dmSerif = DM_Serif_Display({
@@ -76,6 +78,8 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <WhatsAppButton />
+          <CartDrawer />
+          <Analytics />
         </AuthProvider>
       </body>
     </html>
