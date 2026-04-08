@@ -9,9 +9,10 @@ import { useAuthStore } from "@/store/auth";
 interface RegisterFormProps {
   initialValues?: { firstName?: string; lastName?: string; email?: string };
   onSuccess?: () => void;
+  onLoginClick?: () => void;
 }
 
-export function RegisterForm({ initialValues, onSuccess }: RegisterFormProps) {
+export function RegisterForm({ initialValues, onSuccess, onLoginClick }: RegisterFormProps) {
   const searchParams = useSearchParams();
   const [form, setForm] = useState({
     firstName: initialValues?.firstName ?? searchParams.get("firstName") ?? "",
@@ -201,12 +202,22 @@ export function RegisterForm({ initialValues, onSuccess }: RegisterFormProps) {
           <p className="text-sm text-burgundy-700 font-medium">
             Este email ya tiene una cuenta registrada.
           </p>
-          <Link
-            href="/cuenta/ingresar"
-            className="inline-block text-sm font-semibold text-burgundy-500 underline underline-offset-2 hover:text-burgundy-700 transition-colors"
-          >
-            Ingresar con este email →
-          </Link>
+          {onLoginClick ? (
+            <button
+              type="button"
+              onClick={onLoginClick}
+              className="inline-block text-sm font-semibold text-burgundy-500 underline underline-offset-2 hover:text-burgundy-700 transition-colors"
+            >
+              Ingresar con este email →
+            </button>
+          ) : (
+            <Link
+              href="/cuenta/ingresar"
+              className="inline-block text-sm font-semibold text-burgundy-500 underline underline-offset-2 hover:text-burgundy-700 transition-colors"
+            >
+              Ingresar con este email →
+            </Link>
+          )}
         </div>
       )}
 
@@ -235,12 +246,22 @@ export function RegisterForm({ initialValues, onSuccess }: RegisterFormProps) {
         <span className="flex-1 h-px bg-warm-200" />
       </div>
 
-      <Link
-        href="/cuenta/ingresar"
-        className="block w-full text-center rounded-full border-2 border-warm-200 px-6 py-3.5 text-sm font-semibold text-warm-600 hover:border-burgundy-300 hover:text-burgundy-500 transition-all"
-      >
-        Ingresar
-      </Link>
+      {onLoginClick ? (
+        <button
+          type="button"
+          onClick={onLoginClick}
+          className="block w-full text-center rounded-full border-2 border-warm-200 px-6 py-3.5 text-sm font-semibold text-warm-600 hover:border-burgundy-300 hover:text-burgundy-500 transition-all"
+        >
+          Ingresar
+        </button>
+      ) : (
+        <Link
+          href="/cuenta/ingresar"
+          className="block w-full text-center rounded-full border-2 border-warm-200 px-6 py-3.5 text-sm font-semibold text-warm-600 hover:border-burgundy-300 hover:text-burgundy-500 transition-all"
+        >
+          Ingresar
+        </Link>
+      )}
 
     </form>
   );

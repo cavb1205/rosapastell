@@ -3,11 +3,18 @@
 import { useEffect, Suspense } from "react";
 import { X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUIStore } from "@/store/ui";
 import { RegisterForm } from "./RegisterForm";
 
 export function RegisterModal() {
   const { registerModalOpen, registerPrefill, closeRegisterModal } = useUIStore();
+  const router = useRouter();
+
+  function handleLoginClick() {
+    closeRegisterModal();
+    router.push("/cuenta/ingresar");
+  }
 
   useEffect(() => {
     if (!registerModalOpen) return;
@@ -63,6 +70,7 @@ export function RegisterModal() {
             <RegisterForm
               initialValues={registerPrefill}
               onSuccess={closeRegisterModal}
+              onLoginClick={handleLoginClick}
             />
           </Suspense>
         </div>

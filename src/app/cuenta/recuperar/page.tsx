@@ -14,15 +14,15 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex">
 
       {/* Panel decorativo izquierdo */}
-      <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 relative overflow-hidden bg-burgundy-900 flex-col items-start justify-between p-14">
+      <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 relative overflow-hidden bg-burgundy-500 flex-col items-start justify-between p-14">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-burgundy-700 opacity-50" />
-          <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-rose-900 opacity-30" />
-          <div className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/3 w-80 h-80 rounded-full bg-burgundy-600 opacity-40" />
+          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-white/20 opacity-100" />
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-burgundy-300/40 opacity-100" />
+          <div className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/3 w-80 h-80 rounded-full bg-white/10 opacity-100" />
           <div
             className="absolute inset-0 opacity-20"
             style={{
-              backgroundImage: `radial-gradient(circle, rgba(212,160,160,0.4) 1px, transparent 1px)`,
+              backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.25) 1px, transparent 1px)`,
               backgroundSize: "28px 28px",
             }}
           />
@@ -36,15 +36,15 @@ export default function ForgotPasswordPage() {
           <p className="font-heading text-4xl xl:text-5xl text-white leading-[1.2]">
             Recupera el acceso a tu cuenta.
           </p>
-          <p className="mt-6 text-rose-300/80 text-sm leading-relaxed">
+          <p className="mt-6 text-white/80 text-sm leading-relaxed">
             Te enviaremos un enlace a tu email para que puedas crear una nueva contraseña.
           </p>
         </div>
 
         <div className="relative z-10 flex items-center gap-2">
-          <span className="block h-[2px] w-10 rounded-full bg-rose-400" />
-          <span className="block h-[2px] w-4 rounded-full bg-rose-600" />
-          <span className="block h-[2px] w-2 rounded-full bg-rose-700" />
+          <span className="block h-[2px] w-10 rounded-full bg-white/70" />
+          <span className="block h-[2px] w-4 rounded-full bg-white/40" />
+          <span className="block h-[2px] w-2 rounded-full bg-white/20" />
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
 
           {/* Encabezado */}
           <div className="mb-8">
-            <p className="text-xs font-semibold uppercase tracking-widest text-rose-400 mb-2">Cuenta</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-2">Cuenta</p>
             <h1 className="font-heading text-3xl text-warm-900">¿Olvidaste tu contraseña?</h1>
             <p className="mt-2 text-sm text-warm-400">
               Ingresa tu email y te enviamos un enlace para recuperarla.
