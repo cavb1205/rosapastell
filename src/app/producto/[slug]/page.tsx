@@ -8,6 +8,7 @@ import {
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductDetail } from "@/components/product/ProductDetail";
 import { ProductGrid } from "@/components/product/ProductGrid";
+import { ProductReviews } from "@/components/product/ProductReviews";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { formatPrice } from "@/lib/formatters";
@@ -112,6 +113,8 @@ export default async function ProductPage({ params }: PageProps) {
           <ProductGallery images={product.images} productName={product.name} />
           <ProductDetail product={product} variations={variations} />
         </div>
+
+        <ProductReviews productId={product.id} />
 
         {relatedProducts.length > 0 && (
           <section className="mt-16 pt-14 border-t border-warm-100">
