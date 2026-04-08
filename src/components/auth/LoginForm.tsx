@@ -140,7 +140,7 @@ export function LoginForm() {
       {/* Register link */}
       <button
         type="button"
-        onClick={openRegisterModal}
+        onClick={() => openRegisterModal()}
         className="block w-full text-center rounded-full border-2 border-warm-200 px-6 py-3.5 text-sm font-semibold text-warm-600 hover:border-burgundy-300 hover:text-burgundy-500 transition-all"
       >
         Crear una cuenta
