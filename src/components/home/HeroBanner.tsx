@@ -1,39 +1,33 @@
-import Link from "next/link";
+"use client";
+
+import Image from "next/image";
+import { useUIStore } from "@/store/ui";
+
+const WHOLESALE_BANNER = "/banner-rosapastell.com-2021.webp";
 
 export function HeroBanner() {
+  const openRegisterModal = useUIStore((s) => s.openRegisterModal);
+
   return (
-    <section className="relative bg-gradient-to-br from-rose-50 via-cream-100 to-rose-100 overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
-        <div className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-widest text-rose-500 mb-3">
-            Más de 10 años vistiendo tus sueños
-          </p>
-          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-warm-900 leading-tight">
-            Pijamas con estilo y comodidad
-          </h1>
-          <p className="mt-4 text-lg text-warm-600 max-w-lg leading-relaxed">
-            Descubre nuestra colección de pijamas diseñadas para tu descanso.
-            Envíos a toda Colombia.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/colecciones"
-              className="inline-flex items-center justify-center rounded-full bg-burgundy-500 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-burgundy-600 transition-colors"
-            >
-              Ver Colecciones
-            </Link>
-            <Link
-              href="/como-comprar"
-              className="inline-flex items-center justify-center rounded-full border-2 border-burgundy-500 px-8 py-3.5 text-sm font-semibold text-burgundy-500 hover:bg-burgundy-50 transition-colors"
-            >
-              Cómo Comprar
-            </Link>
-          </div>
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      <button
+        onClick={() => openRegisterModal()}
+        className="block relative w-full overflow-hidden rounded-2xl shadow-md hover:shadow-[0_8px_32px_rgba(248,155,187,0.4)] transition-all duration-300 group cursor-pointer"
+        aria-label="Regístrate para precios mayoristas"
+      >
+        <Image
+          src={WHOLESALE_BANNER}
+          alt="¿Quieres ser Mayorista? Regístrate con tus datos — Rosa Pastell"
+          width={1024}
+          height={577}
+          className="w-full h-auto max-h-105 object-contain group-hover:scale-[1.01] transition-transform duration-500"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1280px"
+          priority
+        />
+        <div className="absolute bottom-4 right-4 bg-burgundy-500 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-md opacity-90 group-hover:opacity-100 transition-opacity">
+          Regístrate →
         </div>
-      </div>
-      {/* Decorative element */}
-      <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-rose-200/30 blur-3xl" />
-      <div className="absolute -right-10 bottom-0 h-60 w-60 rounded-full bg-cream-200/40 blur-2xl" />
+      </button>
     </section>
   );
 }

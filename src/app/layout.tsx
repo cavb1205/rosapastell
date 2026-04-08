@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Serif_Display } from "next/font/google";
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
 
 // NEXT_PUBLIC_SITE_URL se configura en Vercel solo para el entorno "Production"
@@ -14,6 +14,7 @@ import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { RegisterModal } from "@/components/auth/RegisterModal";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -24,11 +25,6 @@ const dmSerif = DM_Serif_Display({
   display: "swap",
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-plus-jakarta",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: metadataBaseUrl,
@@ -70,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${dmSerif.variable} ${plusJakarta.variable} h-full antialiased`}
+      className={`${dmSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
@@ -79,6 +75,7 @@ export default function RootLayout({
           <Footer />
           <WhatsAppButton />
           <CartDrawer />
+          <RegisterModal />
           <Analytics />
         </AuthProvider>
       </body>

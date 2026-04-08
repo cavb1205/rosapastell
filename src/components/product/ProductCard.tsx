@@ -37,7 +37,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   return (
     <Link
       href={`/producto/${product.slug}`}
-      className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+      className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-[0_8px_30px_rgba(248,155,187,0.35)] transition-shadow duration-300"
     >
       <div className="relative aspect-square overflow-hidden bg-cream-100">
         {mainImage ? (

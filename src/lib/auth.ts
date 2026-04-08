@@ -84,10 +84,17 @@ export async function wpRegister(payload: {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    const msg = err?.message || "Error al crear la cuenta";
-    // WooCommerce devuelve este error si el email ya existe
-    if (msg.includes("already registered")) {
-      throw new Error("Este email ya está registrado");
+    // Limpiar HTML que WooCommerce a veces incluye en los mensajes de error
+    const rawMsg: string = err?.message || "Error al crear la cuenta";
+    const msg = rawMsg.replace(/<[^>]+>/g, "").trim();
+
+    if (
+      msg.includes("already registered") ||
+      msg.includes("ya hay una cuenta") ||
+      msg.includes("ya existe") ||
+      msg.includes("registrada con")
+    ) {
+      throw new Error("EMAIL_ALREADY_REGISTERED");
     }
     throw new Error(msg);
   }

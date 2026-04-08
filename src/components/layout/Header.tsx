@@ -8,6 +8,7 @@ import { NAV_LINKS } from "@/lib/constants";
 import { Logo } from "@/components/ui/Logo";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
+import { useUIStore } from "@/store/ui";
 import { useHydration } from "@/hooks/useHydration";
 
 export function Header() {
@@ -17,6 +18,7 @@ export function Header() {
   const itemCount = useCartStore((s) => s.getItemCount());
   const openDrawer = useCartStore((s) => s.openDrawer);
   const { user, clearAuth } = useAuthStore();
+  const openRegisterModal = useUIStore((s) => s.openRegisterModal);
   const hydrated = useHydration();
   const router = useRouter();
 
@@ -62,7 +64,7 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-warm-600 hover:text-burgundy-500 transition-colors"
+                className="text-sm font-medium text-warm-600 hover:text-burgundy-600 transition-colors"
               >
                 {link.label}
               </Link>
@@ -173,7 +175,7 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="block text-base font-medium text-warm-700 hover:text-burgundy-500 transition-colors py-2.5 border-b border-warm-50 last:border-0"
+                className="block text-base font-medium text-warm-700 hover:text-burgundy-600 transition-colors py-2.5 border-b border-warm-50 last:border-0"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}
@@ -192,7 +194,7 @@ export function Header() {
                   </div>
                   <Link
                     href="/cuenta"
-                    className="block text-sm text-warm-600 hover:text-burgundy-500 py-2"
+                    className="block text-sm text-warm-600 hover:text-burgundy-600 py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Mi cuenta y pedidos
@@ -205,13 +207,22 @@ export function Header() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/cuenta/ingresar"
-                  className="block text-sm font-medium text-burgundy-500 py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Ingresar / Registrarse
-                </Link>
+                <div className="flex gap-3">
+                  <Link
+                    href="/cuenta/ingresar"
+                    className="text-sm font-medium text-warm-600 py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Ingresar
+                  </Link>
+                  <button
+                    type="button"
+                    className="text-sm font-medium text-burgundy-500 py-2"
+                    onClick={() => { setMobileMenuOpen(false); openRegisterModal(); }}
+                  >
+                    Registrarse
+                  </button>
+                </div>
               )}
             </div>
           </nav>

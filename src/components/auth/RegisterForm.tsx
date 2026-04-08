@@ -6,18 +6,24 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 
-export function RegisterForm() {
+interface RegisterFormProps {
+  initialValues?: { firstName?: string; lastName?: string; email?: string };
+  onSuccess?: () => void;
+}
+
+export function RegisterForm({ initialValues, onSuccess }: RegisterFormProps) {
   const searchParams = useSearchParams();
   const [form, setForm] = useState({
-    firstName: searchParams.get("firstName") || "",
-    lastName: searchParams.get("lastName") || "",
-    email: searchParams.get("email") || "",
+    firstName: initialValues?.firstName ?? searchParams.get("firstName") ?? "",
+    lastName: initialValues?.lastName ?? searchParams.get("lastName") ?? "",
+    email: initialValues?.email ?? searchParams.get("email") ?? "",
     phone: "",
     password: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
   const [loading, setLoading] = useState(false);
   const { setAuth } = useAuthStore();
   const router = useRouter();
@@ -29,6 +35,7 @@ export function RegisterForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setEmailExists(false);
 
     if (form.password !== form.confirmPassword) {
       setError("Las contraseñas no coinciden");
@@ -56,13 +63,21 @@ export function RegisterForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Error al crear la cuenta");
+        if (data.error === "EMAIL_ALREADY_REGISTERED") {
+          setEmailExists(true);
+        } else {
+          setError(data.error || "Error al crear la cuenta");
+        }
         return;
       }
 
       setAuth(data.user, "");
-      router.push("/cuenta");
-      router.refresh();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/cuenta");
+        router.refresh();
+      }
     } catch {
       setError("Error de conexión. Intenta de nuevo.");
     } finally {
@@ -180,7 +195,22 @@ export function RegisterForm() {
         </div>
       </div>
 
-      {/* Error */}
+      {/* Email ya registrado */}
+      {emailExists && (
+        <div className="rounded-xl bg-burgundy-50 border border-burgundy-200 px-4 py-3 space-y-2">
+          <p className="text-sm text-burgundy-700 font-medium">
+            Este email ya tiene una cuenta registrada.
+          </p>
+          <Link
+            href="/cuenta/ingresar"
+            className="inline-block text-sm font-semibold text-burgundy-500 underline underline-offset-2 hover:text-burgundy-700 transition-colors"
+          >
+            Ingresar con este email →
+          </Link>
+        </div>
+      )}
+
+      {/* Error genérico */}
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3">
           <p className="text-sm text-red-500">{error}</p>

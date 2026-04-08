@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { useUIStore } from "@/store/ui";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { setAuth } = useAuthStore();
+  const openRegisterModal = useUIStore((s) => s.openRegisterModal);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/cuenta";
@@ -136,12 +138,13 @@ export function LoginForm() {
       </div>
 
       {/* Register link */}
-      <Link
-        href="/cuenta/registro"
+      <button
+        type="button"
+        onClick={openRegisterModal}
         className="block w-full text-center rounded-full border-2 border-warm-200 px-6 py-3.5 text-sm font-semibold text-warm-600 hover:border-burgundy-300 hover:text-burgundy-500 transition-all"
       >
         Crear una cuenta
-      </Link>
+      </button>
 
     </form>
   );
