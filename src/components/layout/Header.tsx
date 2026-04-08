@@ -4,8 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Search, Menu, X, User, Crown, LogOut, Package } from "lucide-react";
-import { NAV_LINKS } from "@/lib/constants";
-import { Logo } from "@/components/ui/Logo";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useUIStore } from "@/store/ui";
@@ -54,22 +52,6 @@ export function Header() {
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
-
-          {/* Logo */}
-          <Logo instanceId="header" markSize={34} />
-
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-warm-600 hover:text-burgundy-600 transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-1">

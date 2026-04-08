@@ -97,13 +97,13 @@ export default async function PedidoDetallePage({
     <div className="min-h-screen bg-warm-50">
 
       {/* ── Header ── */}
-      <div className="relative overflow-hidden bg-burgundy-900">
+      <div className="relative overflow-hidden bg-burgundy-500">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-burgundy-700 opacity-40" />
+          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
           <div
             className="absolute inset-0 opacity-10"
             style={{
-              backgroundImage: `radial-gradient(circle, rgba(212,160,160,0.5) 1px, transparent 1px)`,
+              backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)`,
               backgroundSize: "32px 32px",
             }}
           />
@@ -111,16 +111,16 @@ export default async function PedidoDetallePage({
         <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10">
           <Link
             href="/cuenta"
-            className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-rose-300/60 hover:text-rose-300 transition-colors mb-4"
+            className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-white/60 hover:text-white transition-colors mb-4"
           >
             ← Mis pedidos
           </Link>
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
-              <h1 className="font-heading text-4xl text-white">
+              <h1 className="font-heading text-3xl sm:text-4xl text-white">
                 Pedido #{order.number}
               </h1>
-              <p className="mt-1.5 text-rose-200/60 text-sm">
+              <p className="mt-1.5 text-white/70 text-sm">
                 {new Date(order.date_created).toLocaleDateString("es-CO", {
                   weekday: "long",
                   year: "numeric",
@@ -203,9 +203,9 @@ export default async function PedidoDetallePage({
                     (m) => m.display_key?.toLowerCase().includes("talla") || m.key?.toLowerCase() === "pa_talla"
                   );
                   return (
-                    <div key={item.id} className="flex items-center gap-5 px-7 py-5">
+                    <div key={item.id} className="flex items-center gap-3 px-4 py-4 sm:gap-5 sm:px-6 sm:py-5">
                       {/* Imagen */}
-                      <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden bg-warm-100">
+                      <div className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-xl overflow-hidden bg-warm-100">
                         {item.image?.src ? (
                           <Image
                             src={item.image.src}

@@ -1,6 +1,5 @@
 import { getCategories, getProducts } from "@/lib/woocommerce";
 import { HeroBanner } from "@/components/home/HeroBanner";
-import { BrandShowcase } from "@/components/home/BrandShowcase";
 import { CategoryShowcase } from "@/components/home/CategoryShowcase";
 import { NewArrivals } from "@/components/home/NewArrivals";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
@@ -24,7 +23,6 @@ export default async function HomePage() {
   return (
     <>
       <OrganizationJsonLd />
-      <BrandShowcase />
       <HeroBanner />
       {mainCategories.length > 0 && (
         <CategoryShowcase categories={mainCategories} />

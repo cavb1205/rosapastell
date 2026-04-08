@@ -9,7 +9,7 @@ const metadataBaseUrl = process.env.NEXT_PUBLIC_SITE_URL
   : process.env.VERCEL_URL
   ? new URL(`https://${process.env.VERCEL_URL}`)
   : new URL(SITE_URL);
-import { Header } from "@/components/layout/Header";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { AuthProvider } from "@/components/auth/AuthProvider";
@@ -70,7 +70,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <Header />
+          <SiteHeader />
           <main className="flex-1">{children}</main>
           <Footer />
           <WhatsAppButton />

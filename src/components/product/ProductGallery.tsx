@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { WooImage } from "@/types/product";
@@ -14,16 +14,73 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const [selected, setSelected] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  const openLightbox = () => setLightboxOpen(true);
-  const closeLightbox = () => setLightboxOpen(false);
+  // Pinch-to-zoom state
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const touchRef = useRef<{ dist: number; midX: number; midY: number; ox: number; oy: number } | null>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  const openLightbox = () => { setLightboxOpen(true); setScale(1); setOffset({ x: 0, y: 0 }); };
+  const closeLightbox = () => { setLightboxOpen(false); setScale(1); setOffset({ x: 0, y: 0 }); };
 
   const prev = useCallback(() => {
     setSelected((i) => (i === 0 ? images.length - 1 : i - 1));
+    setScale(1); setOffset({ x: 0, y: 0 });
   }, [images.length]);
 
   const next = useCallback(() => {
     setSelected((i) => (i === images.length - 1 ? 0 : i + 1));
+    setScale(1); setOffset({ x: 0, y: 0 });
   }, [images.length]);
+
+  // ── Touch handlers para pinch-to-zoom y swipe ──
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+
+  function getDist(t: React.TouchList) {
+    const dx = t[0].clientX - t[1].clientX;
+    const dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) {
+      const dist = getDist(e.touches);
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      touchRef.current = { dist, midX, midY, ox: offset.x, oy: offset.y };
+    } else if (e.touches.length === 1) {
+      swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (e.touches.length === 2 && touchRef.current) {
+      e.preventDefault();
+      const newDist = getDist(e.touches);
+      const newScale = Math.min(4, Math.max(1, scale * (newDist / touchRef.current.dist)));
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const dx = midX - touchRef.current.midX;
+      const dy = midY - touchRef.current.midY;
+      setScale(newScale);
+      setOffset({ x: touchRef.current.ox + dx, y: touchRef.current.oy + dy });
+      touchRef.current = { ...touchRef.current, dist: newDist, midX, midY };
+    }
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    touchRef.current = null;
+    // Swipe para cambiar imagen (solo si no hay zoom)
+    if (scale <= 1 && swipeStart.current && e.changedTouches.length === 1) {
+      const dx = e.changedTouches[0].clientX - swipeStart.current.x;
+      if (Math.abs(dx) > 50) {
+        dx < 0 ? next() : prev();
+      }
+    }
+    swipeStart.current = null;
+    // Si el zoom quedó en <1 por algún rebote, reseteamos
+    if (scale < 1) { setScale(1); setOffset({ x: 0, y: 0 }); }
+  }
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -120,10 +177,18 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             </span>
           )}
 
-          {/* Imagen */}
+          {/* Imagen con pinch-to-zoom */}
           <div
-            className="relative w-full max-w-3xl max-h-[85vh] aspect-square mx-4"
-            onClick={(e) => e.stopPropagation()}
+            ref={imgRef}
+            className="relative w-full max-w-3xl max-h-[85vh] aspect-square mx-4 touch-none"
+            onClick={(e) => { if (scale <= 1) e.stopPropagation(); }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              transform: `scale(${scale}) translate(${offset.x / scale}px, ${offset.y / scale}px)`,
+              transition: scale === 1 ? "transform 0.2s ease" : "none",
+            }}
           >
             <Image
               src={images[selected].src}
@@ -135,8 +200,8 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             />
           </div>
 
-          {/* Flechas */}
-          {images.length > 1 && (
+          {/* Flechas — se ocultan con zoom activo */}
+          {images.length > 1 && scale <= 1 && (
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); prev(); }}
@@ -153,6 +218,16 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 <ChevronRight className="h-9 w-9" />
               </button>
             </>
+          )}
+
+          {/* Hint zoom activo */}
+          {scale > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setScale(1); setOffset({ x: 0, y: 0 }); }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white/80 text-xs px-3 py-1.5 rounded-full"
+            >
+              Toca para restablecer
+            </button>
           )}
 
           {/* Thumbnails en lightbox */}
