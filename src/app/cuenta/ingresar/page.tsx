@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
-
       {/* Panel decorativo izquierdo */}
       <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 relative overflow-hidden bg-burgundy-500 flex-col items-start justify-between p-14">
         {/* Fondo con círculos suaves */}
@@ -30,18 +29,14 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <Logo instanceId="login-panel" markSize={30} light />
-        </div>
-
         {/* Quote central */}
         <div className="relative z-10 max-w-sm">
           <p className="font-heading text-4xl xl:text-5xl text-white leading-[1.2]">
             El descanso es un lujo que mereces cada noche.
           </p>
           <p className="mt-6 text-white/80 text-sm leading-relaxed">
-            Pijamas artesanales desde Ibagué, Colombia — para tus momentos más íntimos.
+            Pijamas artesanales desde Ibagué, Colombia — para tus momentos más
+            íntimos.
           </p>
         </div>
 
@@ -56,30 +51,32 @@ export default function LoginPage() {
       {/* Panel derecho — formulario */}
       <div className="flex-1 flex items-center justify-center px-6 py-14 bg-white">
         <div className="w-full max-w-[420px]">
-
-          {/* Logo móvil */}
-          <div className="lg:hidden flex justify-center mb-10">
-            <Logo instanceId="login-mobile" markSize={38} />
-          </div>
-
           {/* Encabezado */}
           <div className="mb-8">
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-2">Cuenta</p>
-            <h1 className="font-heading text-3xl text-warm-900">Bienvenida de vuelta</h1>
-            <p className="mt-2 text-sm text-warm-400">Ingresa con tu cuenta para continuar</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-2">
+              Cuenta
+            </p>
+            <h1 className="font-heading text-3xl text-warm-900">
+              Bienvenida de vuelta
+            </h1>
+            <p className="mt-2 text-sm text-warm-400">
+              Ingresa con tu cuenta para continuar
+            </p>
           </div>
 
           <LoginForm />
 
           <p className="mt-8 text-center text-xs text-warm-300">
             Al ingresar aceptas nuestra{" "}
-            <Link href="/politica-de-privacidad" className="underline hover:text-warm-500 transition-colors">
+            <Link
+              href="/politica-de-privacidad"
+              className="underline hover:text-warm-500 transition-colors"
+            >
               política de privacidad
             </Link>
           </p>
         </div>
       </div>
-
     </div>
   );
 }
