@@ -77,7 +77,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           productId={product.id}
           name={product.name}
           slug={product.slug}
-          price={displayPrice}
+          price={String(displayPrice)}
           image={product.images[0]?.src || ""}
           className="absolute top-3 right-3 h-8 w-8 shadow-sm md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity"
         />
