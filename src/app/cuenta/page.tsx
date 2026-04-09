@@ -5,7 +5,7 @@ import { getUserFromCookie } from "@/lib/auth";
 import { SITE_NAME } from "@/lib/constants";
 import { OrderHistory } from "@/components/cuenta/OrderHistory";
 import { LogoutButton } from "@/components/cuenta/LogoutButton";
-import { Crown, ShoppingBag, User } from "lucide-react";
+import { Crown, ShoppingBag, User, Heart } from "lucide-react";
 
 export const metadata: Metadata = {
   title: `Mi Cuenta | ${SITE_NAME}`,
@@ -97,6 +97,19 @@ export default async function CuentaPage() {
             <div>
               <p className="font-semibold text-warm-800">Mi perfil</p>
               <p className="text-sm text-warm-400 mt-0.5">Ver datos de la cuenta</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/cuenta/favoritos"
+            className="group flex items-center gap-5 bg-white rounded-2xl px-6 py-6 shadow-sm border border-warm-200 hover:border-rose-300 hover:shadow-md transition-all sm:col-span-2"
+          >
+            <div className="h-12 w-12 shrink-0 flex items-center justify-center rounded-full bg-burgundy-50 group-hover:bg-burgundy-100 transition-colors">
+              <Heart className="h-5 w-5 text-burgundy-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-warm-800">Mis favoritos</p>
+              <p className="text-sm text-warm-400 mt-0.5">Productos que guardaste</p>
             </div>
           </Link>
         </div>

@@ -9,6 +9,7 @@ import { WHATSAPP_URL } from "@/lib/constants";
 import { MessageCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { ShareButtons } from "./ShareButtons";
+import { WishlistButton } from "./WishlistButton";
 
 interface ProductDetailProps {
   product: WooProduct;
@@ -129,7 +130,17 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
 
       {/* Share */}
       <div className="mt-6 pt-6 border-t border-warm-100">
-        <ShareButtons slug={product.slug} name={product.name} />
+        <div className="flex items-center gap-3">
+          <ShareButtons slug={product.slug} name={product.name} />
+          <WishlistButton
+            productId={product.id}
+            name={product.name}
+            slug={product.slug}
+            price={String(displayPrice)}
+            image={product.images[0]?.src || ""}
+            className="h-9 w-9 border border-warm-200 shadow-sm"
+          />
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { WooProduct } from "@/types/product";
 import { formatPrice } from "@/lib/formatters";
 import { useAuthStore } from "@/store/auth";
+import { WishlistButton } from "./WishlistButton";
 
 interface ProductCardProps {
   product: WooProduct;
@@ -71,6 +72,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             {lastUnit ? "¡Última unidad!" : `Solo quedan ${stock}`}
           </span>
         )}
+        {/* Wishlist — esquina superior derecha */}
+        <WishlistButton
+          productId={product.id}
+          name={product.name}
+          slug={product.slug}
+          price={displayPrice}
+          image={product.images[0]?.src || ""}
+          className="absolute top-3 right-3 h-8 w-8 shadow-sm md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity"
+        />
       </div>
       <div className="p-4">
         <h3 className="text-sm font-medium text-warm-800 line-clamp-2 group-hover:text-burgundy-500 transition-colors">

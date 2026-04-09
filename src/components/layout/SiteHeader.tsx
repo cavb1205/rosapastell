@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ShoppingBag, Search, Menu, X, User, Crown, LogOut, Package } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, User, Crown, LogOut, Package, Heart } from "lucide-react";
 import { NAV_LINKS } from "@/lib/constants";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
@@ -46,19 +46,11 @@ export function SiteHeader() {
     router.refresh();
   }
 
-  // Iconos de acción (compartidos entre home y páginas interiores)
-  const ActionIcons = () => (
-    <div className="flex items-center gap-0.5">
-      <Link
-        href="/buscar"
-        className="p-2 text-warm-600 hover:text-burgundy-500 transition-colors"
-        aria-label="Buscar"
-      >
-        <Search className="h-5 w-5" />
-      </Link>
-
+  // Dropdown desktop (solo visible en md+)
+  const UserDropdown = () => (
+    <div className="hidden md:block relative" ref={userMenuRef}>
       {hydrated && (
-        <div className="relative" ref={userMenuRef}>
+        <>
           {user ? (
             <>
               <button
@@ -73,7 +65,6 @@ export function SiteHeader() {
                   </span>
                 )}
               </button>
-
               {userMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-52 rounded-xl bg-white shadow-lg border border-warm-100 py-2 z-50">
                   <div className="px-4 py-2 border-b border-warm-50">
@@ -85,42 +76,59 @@ export function SiteHeader() {
                       </span>
                     )}
                   </div>
-                  <Link
-                    href="/cuenta"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50 transition-colors"
-                  >
+                  <Link href="/cuenta" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50 transition-colors">
                     <User className="h-4 w-4 text-warm-400" /> Mi cuenta
                   </Link>
-                  <Link
-                    href="/cuenta"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50 transition-colors"
-                  >
+                  <Link href="/cuenta" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50 transition-colors">
                     <Package className="h-4 w-4 text-warm-400" /> Mis pedidos
                   </Link>
+                  <Link href="/cuenta/favoritos" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50 transition-colors">
+                    <Heart className="h-4 w-4 text-warm-400" /> Favoritos
+                  </Link>
                   <hr className="my-1 border-warm-100" />
-                  <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                  >
+                  <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
                     <LogOut className="h-4 w-4" /> Cerrar sesión
                   </button>
                 </div>
               )}
             </>
           ) : (
-            <Link
-              href="/cuenta/ingresar"
-              className="p-2 text-warm-600 hover:text-burgundy-500 transition-colors"
-              aria-label="Ingresar"
-            >
+            <Link href="/cuenta/ingresar" className="p-2 text-warm-600 hover:text-burgundy-500 transition-colors" aria-label="Ingresar">
               <User className="h-5 w-5" />
             </Link>
           )}
-        </div>
+        </>
       )}
+    </div>
+  );
 
+  // Icono usuario móvil — link directo a /cuenta o /ingresar
+  const MobileUserIcon = () => (
+    <div className="md:hidden">
+      {hydrated && (
+        <Link
+          href={user ? "/cuenta" : "/cuenta/ingresar"}
+          className="relative p-2 text-warm-600 hover:text-burgundy-500 transition-colors inline-flex"
+          aria-label="Mi cuenta"
+        >
+          <User className="h-5 w-5" />
+          {user?.isWholesale && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-burgundy-500">
+              <Crown className="h-2 w-2 text-white" />
+            </span>
+          )}
+        </Link>
+      )}
+    </div>
+  );
+
+  const ActionIcons = () => (
+    <div className="flex items-center gap-0.5">
+      <Link href="/buscar" className="p-2 text-warm-600 hover:text-burgundy-500 transition-colors" aria-label="Buscar">
+        <Search className="h-5 w-5" />
+      </Link>
+      <MobileUserIcon />
+      <UserDropdown />
       <button
         onClick={openDrawer}
         className="relative p-2 text-warm-600 hover:text-burgundy-500 transition-colors"
@@ -222,11 +230,17 @@ export function SiteHeader() {
                         <Crown className="h-2.5 w-2.5" /> Mayorista
                       </span>
                     )}
-                    <Link href="/cuenta" className="block text-sm text-warm-600 hover:text-burgundy-600 py-2" onClick={() => setMobileMenuOpen(false)}>
-                      Mi cuenta y pedidos
+                    <Link href="/cuenta" className="flex items-center gap-2 text-sm text-warm-600 hover:text-burgundy-600 py-2" onClick={() => setMobileMenuOpen(false)}>
+                      <Package className="h-4 w-4 text-warm-400" /> Mi cuenta y pedidos
                     </Link>
-                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="block text-sm text-red-500 py-2">
-                      Cerrar sesión
+                    <Link href="/cuenta/favoritos" className="flex items-center gap-2 text-sm text-warm-600 hover:text-burgundy-600 py-2" onClick={() => setMobileMenuOpen(false)}>
+                      <Heart className="h-4 w-4 text-warm-400" /> Favoritos
+                    </Link>
+                    <Link href="/cuenta/perfil" className="flex items-center gap-2 text-sm text-warm-600 hover:text-burgundy-600 py-2" onClick={() => setMobileMenuOpen(false)}>
+                      <User className="h-4 w-4 text-warm-400" /> Mi perfil
+                    </Link>
+                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-sm text-red-500 py-2">
+                      <LogOut className="h-4 w-4" /> Cerrar sesión
                     </button>
                   </>
                 ) : (
