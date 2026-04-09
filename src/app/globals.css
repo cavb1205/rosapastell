@@ -81,6 +81,15 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading), serif;
 }
 
+/* Cart toast slide-up */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out forwards;
+}
+
 /* Skeleton shimmer */
 @keyframes skeleton-shimmer {
   0%   { background-position: -600px 0; }

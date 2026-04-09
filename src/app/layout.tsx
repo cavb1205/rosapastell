@@ -15,6 +15,7 @@ import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { RegisterModal } from "@/components/auth/RegisterModal";
+import { CartToastContainer } from "@/components/ui/CartToast";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -76,6 +77,7 @@ export default function RootLayout({
           <WhatsAppButton />
           <CartDrawer />
           <RegisterModal />
+          <CartToastContainer />
           <Analytics />
         </AuthProvider>
       </body>

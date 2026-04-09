@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ShoppingBag, Check, Minus, Plus } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
+import { useUIStore } from "@/store/ui";
 import type { WooProduct, WooVariation } from "@/types/product";
 
 interface AddToCartProps {
@@ -20,7 +21,7 @@ export function AddToCart({
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
-  const openDrawer = useCartStore((s) => s.openDrawer);
+  const showCartToast = useUIStore((s) => s.showCartToast);
   const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
 
   // Reset quantity when the user switches size
@@ -50,18 +51,21 @@ export function AddToCart({
         ? (source.wholesaleSalePrice ?? source.wholesalePrice)
         : parseFloat(source.price);
 
+    const size = selectedSize || "Única";
+    const image = product.images[0]?.src || "";
+
     addItem({
       productId: product.id,
       variationId: selectedVariation?.id,
       name: product.name,
       price,
-      size: selectedSize || "Única",
+      size,
       quantity,
-      image: product.images[0]?.src || "",
+      image,
       slug: product.slug,
     });
 
-    openDrawer();
+    showCartToast({ name: product.name, size, quantity, image });
     setAdded(true);
     setQuantity(1);
     setTimeout(() => setAdded(false), 2000);
