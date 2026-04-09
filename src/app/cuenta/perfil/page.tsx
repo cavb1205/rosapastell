@@ -57,14 +57,14 @@ export default async function PerfilPage() {
     <div className="min-h-screen bg-warm-50">
 
       {/* ── Header ── */}
-      <div className="relative overflow-hidden bg-burgundy-900">
+      <div className="relative overflow-hidden bg-burgundy-500">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-burgundy-700 opacity-40" />
-          <div className="absolute bottom-0 left-1/4 w-56 h-56 rounded-full bg-rose-900 opacity-20" />
+          <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10" />
+          <div className="absolute bottom-0 left-1/4 w-56 h-56 rounded-full bg-white/10" />
           <div
             className="absolute inset-0 opacity-10"
             style={{
-              backgroundImage: `radial-gradient(circle, rgba(212,160,160,0.5) 1px, transparent 1px)`,
+              backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)`,
               backgroundSize: "32px 32px",
             }}
           />
@@ -72,21 +72,21 @@ export default async function PerfilPage() {
         <div className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-10">
           <Link
             href="/cuenta"
-            className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-rose-300/60 hover:text-rose-300 transition-colors mb-4"
+            className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-white/60 hover:text-white transition-colors mb-4"
           >
             ← Mi cuenta
           </Link>
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-rose-300/60 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-2">
                 Configuración
               </p>
-              <h1 className="font-heading text-4xl text-white">Mi Perfil</h1>
-              <p className="mt-1.5 text-rose-200/60 text-sm">{user.email}</p>
+              <h1 className="font-heading text-3xl sm:text-4xl text-white">Mi Perfil</h1>
+              <p className="mt-1.5 text-white/70 text-sm">{user.email}</p>
             </div>
             <div className="flex flex-col items-end gap-3">
               {user.isWholesale && (
-                <span className="flex items-center gap-1.5 rounded-full bg-burgundy-700 border border-burgundy-500 px-3 py-1.5 text-xs font-semibold text-rose-200">
+                <span className="flex items-center gap-1.5 rounded-full bg-white/20 border border-white/30 px-3 py-1.5 text-xs font-semibold text-white">
                   <Crown className="h-3.5 w-3.5" />
                   Mayorista
                 </span>

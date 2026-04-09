@@ -61,7 +61,7 @@ function ReviewCard({ review }: { review: WooReview }) {
       <div className="flex items-start justify-between gap-4 mb-2">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-warm-900">{review.name}</span>
+            <span className="font-semibold text-sm text-warm-900">{review.reviewer}</span>
             {review.verified && (
               <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
                 Compra verificada
