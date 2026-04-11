@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import type { WooVariation } from "@/types/product";
+import { SizeGuideModal } from "./SizeGuideModal";
 
 interface SizeSelectorProps {
   variations: WooVariation[];
@@ -13,6 +15,7 @@ export function SizeSelector({
   selectedVariation,
   onSelect,
 }: SizeSelectorProps) {
+  const [guideOpen, setGuideOpen] = useState(false);
   const lowStockThreshold = 5;
   const selectedStock = selectedVariation?.stock_quantity ?? null;
   const showLowStock =
@@ -24,8 +27,18 @@ export function SizeSelector({
 
   return (
     <div>
+      {guideOpen && <SizeGuideModal onClose={() => setGuideOpen(false)} />}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-warm-700">Talla</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-sm font-semibold text-warm-700">Talla</h3>
+          <button
+            type="button"
+            onClick={() => setGuideOpen(true)}
+            className="text-xs text-burgundy-500 hover:text-burgundy-700 underline underline-offset-2 transition-colors"
+          >
+            ¿Cuál es tu talla?
+          </button>
+        </div>
         {showLowStock ? (
           <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
             {selectedStock === 1 ? "¡Última unidad!" : `Solo quedan ${selectedStock}`}

@@ -23,12 +23,13 @@ function verifySignature(rawBody: string, signature: string): boolean {
   return crypto.timingSafeEqual(a, b);
 }
 
-/** Invalida las páginas que muestran stock: categorías, colecciones y homepage. */
+/** Invalida las páginas que muestran stock: categorías, colecciones, homepage e índice de búsqueda. */
 function revalidateCatalog(): string[] {
   revalidatePath("/categorias/[slug]", "page");
   revalidatePath("/colecciones");
   revalidatePath("/");
-  return ["/categorias/[slug]", "/colecciones", "/"];
+  revalidatePath("/api/search/index");
+  return ["/categorias/[slug]", "/colecciones", "/", "/api/search/index"];
 }
 
 export async function POST(request: NextRequest) {
