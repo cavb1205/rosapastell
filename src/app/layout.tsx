@@ -17,6 +17,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { RegisterModal } from "@/components/auth/RegisterModal";
 import { CartToastContainer } from "@/components/ui/CartToast";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 const dmSerif = DM_Serif_Display({
@@ -80,6 +81,7 @@ export default function RootLayout({
           <CartToastContainer />
           <Analytics />
         </AuthProvider>
+        <GoogleAnalytics gaId="G-DLZ93LHGPN" />
       </body>
     </html>
   );
