@@ -12,7 +12,7 @@ import { Pagination } from "@/components/catalog/Pagination";
 import { SortSelector } from "@/components/catalog/SortSelector";
 import { SizeFilter } from "@/components/catalog/SizeFilter";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
 
 export const revalidate = 60;
 
@@ -33,21 +33,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!category) return {};
 
   const description = `Compra ${category.name} en ${SITE_NAME}. ${category.count} estilos disponibles. Envíos a toda Colombia.`;
+  const canonical = `${SITE_URL}/categorias/${slug}`;
+  const ogImages = category.image
+    ? [{ url: category.image.src, alt: category.name, width: 800, height: 800 }]
+    : [];
+
   return {
     title: `${category.name} | ${SITE_NAME}`,
     description,
+    alternates: { canonical },
     openGraph: {
       title: `${category.name} | ${SITE_NAME}`,
       description,
-      url: `/categorias/${slug}`,
-      images: category.image
-        ? [{ url: category.image.src, alt: category.name }]
-        : [],
+      url: canonical,
+      type: "website",
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: `${category.name} | ${SITE_NAME}`,
       description,
+      images: ogImages.slice(0, 1).map((i) => ({ url: i.url, alt: i.alt })),
     },
   };
 }

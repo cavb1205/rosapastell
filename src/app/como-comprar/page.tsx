@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: `Cómo Comprar | ${SITE_NAME}`,
   description: `Aprende cómo comprar en ${SITE_NAME}. Proceso de compra fácil y seguro con envíos a toda Colombia.`,
+  alternates: { canonical: `${SITE_URL}/como-comprar` },
   openGraph: {
     title: `¿Cómo Comprar? | ${SITE_NAME}`,
     description: `Comprar en Rosa Pastell es fácil: elige tu pijama, selecciona talla, paga online o por WhatsApp. Envíos a todo Colombia.`,
-    url: "/como-comprar",
+    url: `${SITE_URL}/como-comprar`,
   },
   twitter: {
     card: "summary_large_image",
@@ -44,9 +45,26 @@ const steps = [
   },
 ];
 
+const howToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: `Cómo comprar en ${SITE_NAME}`,
+  description: `Pasos para comprar pijamas en ${SITE_NAME} con envío a toda Colombia.`,
+  step: steps.map((s, i) => ({
+    "@type": "HowToStep",
+    position: i + 1,
+    name: s.title,
+    text: s.description,
+  })),
+};
+
 export default function ComoComprarPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+      />
       <h1 className="font-heading text-4xl text-warm-900 mb-4">
         Cómo Comprar
       </h1>

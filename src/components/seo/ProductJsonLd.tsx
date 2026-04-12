@@ -6,21 +6,36 @@ interface ProductJsonLdProps {
 }
 
 export function ProductJsonLd({ product }: ProductJsonLdProps) {
+  const url = `${SITE_URL}/producto/${product.slug}`;
+
+  // Precio válido por 30 días desde hoy (señal positiva para Google Shopping)
+  const priceValidUntil = new Date();
+  priceValidUntil.setDate(priceValidUntil.getDate() + 30);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.short_description.replace(/<[^>]*>/g, ""),
+    description: product.short_description
+      ? product.short_description.replace(/<[^>]*>/g, "").trim()
+      : product.name,
     image: product.images.map((img) => img.src),
+    sku: product.sku || undefined,
+    url,
     brand: {
       "@type": "Brand",
       name: SITE_NAME,
     },
+    ...(product.categories.length > 0 && {
+      category: product.categories.map((c) => c.name).join(" > "),
+    }),
     offers: {
       "@type": "Offer",
-      url: `${SITE_URL}/producto/${product.slug}`,
+      url,
       priceCurrency: "COP",
       price: product.price,
+      priceValidUntil: priceValidUntil.toISOString().split("T")[0],
+      itemCondition: "https://schema.org/NewCondition",
       availability:
         product.stock_status === "instock"
           ? "https://schema.org/InStock"
@@ -28,6 +43,7 @@ export function ProductJsonLd({ product }: ProductJsonLdProps) {
       seller: {
         "@type": "Organization",
         name: SITE_NAME,
+        url: SITE_URL,
       },
     },
   };

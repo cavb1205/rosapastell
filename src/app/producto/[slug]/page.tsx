@@ -12,7 +12,7 @@ import { ProductReviews } from "@/components/product/ProductReviews";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { formatPrice } from "@/lib/formatters";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
 
 // ISR: páginas generadas bajo demanda en el primer request, cacheadas 60s
 // No usamos generateStaticParams para evitar sobrecargar WordPress en el build
@@ -29,25 +29,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!product) return {};
 
   const description = `Compra ${product.name} en ${SITE_NAME}. ${formatPrice(product.price)} COP. Envíos a toda Colombia.`;
+  const canonical = `${SITE_URL}/producto/${slug}`;
+  const ogImages = product.images.map((img) => ({
+    url: img.src,
+    alt: img.alt || product.name,
+    width: 800,
+    height: 800,
+  }));
 
   return {
     title: product.name,
     description,
+    alternates: { canonical },
     openGraph: {
       title: `${product.name} | ${SITE_NAME}`,
       description,
-      url: `/producto/${slug}`,
-      images: product.images.map((img) => ({
-        url: img.src,
-        alt: img.alt || product.name,
-        width: 800,
-        height: 800,
-      })),
+      url: canonical,
+      type: "website",
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: `${product.name} | ${SITE_NAME}`,
       description,
+      images: ogImages.slice(0, 1).map((i) => ({ url: i.url, alt: i.alt })),
     },
   };
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getCategories, getProducts } from "@/lib/woocommerce";
 import { getFeaturedReviews } from "@/lib/reviews";
 import { HeroBanner } from "@/components/home/HeroBanner";
@@ -5,8 +6,28 @@ import { CategoryShowcase } from "@/components/home/CategoryShowcase";
 import { NewArrivals } from "@/components/home/NewArrivals";
 import { ReviewsCarousel } from "@/components/home/ReviewsCarousel";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
+import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: `${SITE_NAME} | Pijamas para Mujer en Colombia`,
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: SITE_URL,
+  },
+  openGraph: {
+    title: `${SITE_NAME} | Pijamas para Mujer en Colombia`,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} | Pijamas para Mujer en Colombia`,
+    description: SITE_DESCRIPTION,
+  },
+};
 
 export default async function HomePage() {
   const [categoriesResult, newArrivalsResult, reviews] = await Promise.all([

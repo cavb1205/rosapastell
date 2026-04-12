@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { getCategories } from "@/lib/woocommerce";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 export const revalidate = 300;
@@ -10,10 +10,11 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: `Colecciones | ${SITE_NAME}`,
   description: `Explora todas las colecciones de pijamas de ${SITE_NAME}. Pijama Victoria, Nahomi, Candy, Malibú y más. Envíos a toda Colombia.`,
+  alternates: { canonical: `${SITE_URL}/colecciones` },
   openGraph: {
     title: `Todas las Colecciones | ${SITE_NAME}`,
     description: `Más de 18 colecciones de pijamas para mujer. Encuentra la tuya.`,
-    url: "/colecciones",
+    url: `${SITE_URL}/colecciones`,
   },
   twitter: {
     card: "summary_large_image",
@@ -29,8 +30,25 @@ export default async function ColeccionesPage() {
     .filter((c) => c.count > 0 && c.slug !== "uncategorized")
     .sort((a, b) => b.count - a.count);
 
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `Colecciones de Pijamas | ${SITE_NAME}`,
+    url: `${SITE_URL}/colecciones`,
+    description: `Todas las colecciones de pijamas para mujer de ${SITE_NAME}. Envíos a toda Colombia.`,
+    hasPart: filtered.map((c) => ({
+      "@type": "ItemList",
+      name: c.name,
+      url: `${SITE_URL}/categorias/${c.slug}`,
+    })),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
       <BreadcrumbJsonLd
         items={[
           { name: "Inicio", href: "/" },
@@ -79,10 +97,10 @@ export default async function ColeccionesPage() {
                   priority={index < 8}
                 />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-rose-100 via-cream-100 to-rose-200" />
+                <div className="h-full w-full bg-linear-to-br from-rose-100 via-cream-100 to-rose-200" />
               )}
               {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/20 to-transparent" />
               {/* Text */}
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <h2 className="font-heading text-lg leading-tight text-white">

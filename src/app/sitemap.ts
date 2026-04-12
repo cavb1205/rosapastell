@@ -11,11 +11,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // ── Páginas estáticas ─────────────────────────────────────────────
   const staticPages: MetadataRoute.Sitemap = [
-    { url: base,                      lastModified: now, changeFrequency: "daily",   priority: 1.0 },
-    { url: `${base}/colecciones`,     lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
-    { url: `${base}/nosotros`,        lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${base}/como-comprar`,    lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${base}/buscar`,          lastModified: now, changeFrequency: "monthly", priority: 0.4 },
+    { url: base,                              lastModified: now, changeFrequency: "daily",   priority: 1.0 },
+    { url: `${base}/colecciones`,             lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${base}/nosotros`,               lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/como-comprar`,           lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/politica-de-privacidad`, lastModified: now, changeFrequency: "yearly",  priority: 0.3 },
+    { url: `${base}/buscar`,                 lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
 
   // ── Categorías ────────────────────────────────────────────────────
