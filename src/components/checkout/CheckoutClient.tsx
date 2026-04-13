@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Tag, X, Loader2, CheckCircle2, LogIn, AlertCircle } from "lucide-react";
+import { Tag, X, Loader2, CheckCircle2, LogIn, AlertCircle, CreditCard, MessageCircle } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { formatPrice } from "@/lib/formatters";
@@ -23,7 +23,7 @@ const schema = z.object({
   department: z.string().min(1, "Selecciona tu departamento"),
   city: z.string().min(2, "Ciudad requerida"),
   address: z.string().min(5, "Dirección requerida"),
-  paymentMethod: z.literal("whatsapp"),
+  paymentMethod: z.enum(["whatsapp", "wompi"]),
   notes: z.string().optional(),
 });
 
@@ -37,6 +37,10 @@ function calcDiscount(coupon: AppliedCoupon, subtotal: number): number {
   if (coupon.discount_type === "fixed_cart") return Math.min(amount, subtotal);
   return 0;
 }
+
+const WOMPI_ENABLED =
+  !!process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY &&
+  !process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY.includes("xxx");
 
 export function CheckoutClient() {
   const [loading, setLoading] = useState(false);
@@ -55,6 +59,8 @@ export function CheckoutClient() {
   const hydrated = useHydration();
   const router = useRouter();
 
+  const isWholesale = user?.isWholesale ?? false;
+
   const {
     register,
     handleSubmit,
@@ -65,6 +71,8 @@ export function CheckoutClient() {
     resolver: zodResolver(schema),
     defaultValues: { paymentMethod: "whatsapp" },
   });
+
+  const paymentMethod = watch("paymentMethod");
 
   const watchedCity = watch("city") ?? "";
   const isIbague = watchedCity.trim().toLowerCase().replace(/[áàä]/g, "a") === "ibague";
@@ -145,12 +153,14 @@ export function CheckoutClient() {
     setError("");
     setStockError(false);
 
+    const isWompi = data.paymentMethod === "wompi";
+
     try {
       const orderPayload: CreateOrderPayload = {
-        payment_method: "whatsapp",
-        payment_method_title: "Transferencia / WhatsApp",
+        payment_method: isWompi ? "wompi" : "whatsapp",
+        payment_method_title: isWompi ? "Tarjeta / PSE / Nequi (Wompi)" : "Transferencia / WhatsApp",
         set_paid: false,
-        status: "on-hold",
+        status: isWompi ? "pending" : "on-hold",
         billing: {
           first_name: data.firstName,
           last_name: data.lastName,
@@ -213,6 +223,20 @@ export function CheckoutClient() {
 
       const order = await res.json();
       clearCart();
+
+      if (isWompi) {
+        const amountInCents = Math.round(total * 100);
+        const params = new URLSearchParams({
+          orderId: String(order.id),
+          order: order.number,
+          amount: String(amountInCents),
+          email: data.email,
+          name: `${data.firstName} ${data.lastName}`,
+          phone: data.phone,
+        });
+        router.push(`/checkout/wompi?${params.toString()}`);
+        return;
+      }
 
       const itemLines = items
         .map(
@@ -372,8 +396,63 @@ export function CheckoutClient() {
             </div>
           )}
 
-          {/* Método de pago — campo oculto, siempre whatsapp */}
-          <input type="hidden" {...register("paymentMethod")} value="whatsapp" />
+          {/* Método de pago */}
+          {!isWholesale && WOMPI_ENABLED ? (
+            <section className="bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden">
+              <div className="px-7 py-5 bg-warm-50 border-b border-warm-100">
+                <h2 className="font-heading text-xl text-warm-900">Método de Pago</h2>
+              </div>
+              <div className="px-7 py-6 space-y-3">
+                {/* Wompi */}
+                <label
+                  className={`flex items-center gap-4 cursor-pointer rounded-xl border p-4 transition-all ${
+                    paymentMethod === "wompi"
+                      ? "border-burgundy-400 bg-rose-50"
+                      : "border-warm-200 hover:border-warm-300 bg-white"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value="wompi"
+                    {...register("paymentMethod")}
+                    className="accent-burgundy-500"
+                  />
+                  <CreditCard className={`h-5 w-5 shrink-0 ${paymentMethod === "wompi" ? "text-burgundy-500" : "text-warm-400"}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-warm-800">Tarjeta / PSE / Nequi</p>
+                    <p className="text-xs text-warm-400 mt-0.5">Pago en línea seguro con Wompi · Bancolombia</p>
+                  </div>
+                  <span className="text-xs font-bold text-sage-600 bg-sage-50 border border-sage-200 rounded-full px-2.5 py-0.5 shrink-0">
+                    Recomendado
+                  </span>
+                </label>
+
+                {/* WhatsApp */}
+                <label
+                  className={`flex items-center gap-4 cursor-pointer rounded-xl border p-4 transition-all ${
+                    paymentMethod === "whatsapp"
+                      ? "border-burgundy-400 bg-rose-50"
+                      : "border-warm-200 hover:border-warm-300 bg-white"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value="whatsapp"
+                    {...register("paymentMethod")}
+                    className="accent-burgundy-500"
+                  />
+                  <MessageCircle className={`h-5 w-5 shrink-0 ${paymentMethod === "whatsapp" ? "text-burgundy-500" : "text-warm-400"}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-warm-800">Transferencia / WhatsApp</p>
+                    <p className="text-xs text-warm-400 mt-0.5">Transfiere y envía el comprobante por WhatsApp</p>
+                  </div>
+                </label>
+              </div>
+            </section>
+          ) : (
+            // Mayoristas: solo WhatsApp, campo oculto
+            <input type="hidden" {...register("paymentMethod")} value="whatsapp" />
+          )}
         </div>
 
         {/* ── Resumen del pedido ── */}
