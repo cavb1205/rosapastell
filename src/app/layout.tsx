@@ -70,6 +70,12 @@ export default function RootLayout({
       lang="es"
       className={`${dmSerif.variable} h-full antialiased`}
     >
+      <head>
+        {/* Preconnect a orígenes externos para reducir latencia */}
+        <link rel="preconnect" href="https://www.rosapastell.com" />
+        <link rel="preconnect" href="https://i0.wp.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <SiteHeader />

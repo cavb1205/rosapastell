@@ -1,11 +1,13 @@
 import type { WooProduct } from "@/types/product";
+import type { WooReview } from "@/types/review";
 import { SITE_URL, SITE_NAME } from "@/lib/constants";
 
 interface ProductJsonLdProps {
   product: WooProduct;
+  reviews?: WooReview[];
 }
 
-export function ProductJsonLd({ product }: ProductJsonLdProps) {
+export function ProductJsonLd({ product, reviews }: ProductJsonLdProps) {
   const url = `${SITE_URL}/producto/${product.slug}`;
 
   // Precio válido por 30 días desde hoy (señal positiva para Google Shopping)
@@ -28,6 +30,29 @@ export function ProductJsonLd({ product }: ProductJsonLdProps) {
     },
     ...(product.categories.length > 0 && {
       category: product.categories.map((c) => c.name).join(" > "),
+    }),
+    ...(reviews && reviews.length > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: (
+          reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+        ).toFixed(1),
+        reviewCount: reviews.length,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: reviews.slice(0, 5).map((r) => ({
+        "@type": "Review",
+        author: { "@type": "Person", name: r.reviewer },
+        datePublished: r.date_created,
+        reviewBody: r.review.replace(/<[^>]*>/g, "").trim(),
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: r.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      })),
     }),
     offers: {
       "@type": "Offer",

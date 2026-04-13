@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Tag, X, Loader2, CheckCircle2, LogIn } from "lucide-react";
+import { Tag, X, Loader2, CheckCircle2, LogIn, AlertCircle } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { formatPrice } from "@/lib/formatters";
@@ -41,6 +41,7 @@ function calcDiscount(coupon: AppliedCoupon, subtotal: number): number {
 export function CheckoutClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [stockError, setStockError] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
 
   // Cupón
@@ -142,6 +143,7 @@ export function CheckoutClient() {
   async function onSubmit(data: FormData) {
     setLoading(true);
     setError("");
+    setStockError(false);
 
     try {
       const orderPayload: CreateOrderPayload = {
@@ -186,10 +188,8 @@ export function CheckoutClient() {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         if (errData.stockError) {
-          setError(
-            "Uno o más productos de tu pedido se agotaron justo antes de confirmar. " +
-            "Por favor revisa tu carrito y vuelve a intentarlo."
-          );
+          setStockError(true);
+          setError("Uno o más productos se agotaron justo antes de confirmar tu pedido.");
         } else {
           setError("Ocurrió un error al procesar tu pedido. Por favor intenta de nuevo.");
         }
@@ -197,6 +197,31 @@ export function CheckoutClient() {
       }
 
       const order = await res.json();
+
+      // Email de confirmación — no bloqueante, falla silenciosamente
+      fetch("/api/email/order-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: order.number,
+          email: data.email,
+          firstName: data.firstName,
+          items: items.map((i) => ({
+            name: i.name,
+            size: i.size,
+            quantity: i.quantity,
+            price: i.price,
+            image: i.image,
+          })),
+          subtotal,
+          discount: discount > 0 ? discount : undefined,
+          couponCode: appliedCoupon?.code,
+          total,
+          city: data.city,
+          address: data.address,
+        }),
+      }).catch(() => {});
+
       clearCart();
 
       const itemLines = items
@@ -254,7 +279,7 @@ export function CheckoutClient() {
           {!authLoading && !user && (
             <div className="flex items-center justify-between gap-4 rounded-xl border border-warm-200 bg-white px-5 py-4 shadow-sm">
               <div className="flex items-center gap-3 min-w-0">
-                <LogIn className="h-4 w-4 text-rose-400 flex-shrink-0" />
+                <LogIn className="h-4 w-4 text-rose-400 shrink-0" />
                 <p className="text-sm text-warm-700">
                   ¿Ya tienes cuenta?{" "}
                   <Link
@@ -268,7 +293,7 @@ export function CheckoutClient() {
               </div>
               <Link
                 href={`/cuenta/registro?redirect=/checkout`}
-                className="flex-shrink-0 text-xs font-semibold text-warm-400 hover:text-warm-600 transition-colors whitespace-nowrap"
+                className="shrink-0 text-xs font-semibold text-warm-400 hover:text-warm-600 transition-colors whitespace-nowrap"
               >
                 Crear cuenta
               </Link>
@@ -278,7 +303,7 @@ export function CheckoutClient() {
           {/* Aviso pre-llenado */}
           {prefilled && (
             <div className="flex items-center gap-3 rounded-xl bg-sage-50 border border-sage-200 px-5 py-3.5">
-              <CheckCircle2 className="h-4 w-4 text-sage-500 flex-shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-sage-500 shrink-0" />
               <p className="text-sm text-sage-700">
                 Datos pre-llenados desde tu perfil. Revisa y ajusta si es necesario.
               </p>
@@ -334,7 +359,7 @@ export function CheckoutClient() {
                 ? "bg-sage-50 border-sage-200"
                 : "bg-blue-50 border-blue-200"
             }`}>
-              <span className="text-xl flex-shrink-0">
+              <span className="text-xl shrink-0">
                 {shippingType === "local" ? "🛵" : "📦"}
               </span>
               <div>
@@ -375,7 +400,7 @@ export function CheckoutClient() {
                   key={`${item.productId}-${item.variationId}`}
                   className="flex gap-3 items-center"
                 >
-                  <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-cream-100">
+                  <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-cream-100">
                     {item.image && (
                       <Image src={item.image} alt={item.name} fill sizes="48px" className="object-cover" />
                     )}
@@ -384,7 +409,7 @@ export function CheckoutClient() {
                     <p className="text-xs font-medium text-warm-700 line-clamp-1">{item.name}</p>
                     <p className="text-xs text-warm-400">T: {item.size} × {item.quantity}</p>
                   </div>
-                  <p className="text-xs font-semibold text-warm-800 flex-shrink-0">
+                  <p className="text-xs font-semibold text-warm-800 shrink-0">
                     {formatPrice(item.price * item.quantity)}
                   </p>
                 </div>
@@ -469,9 +494,20 @@ export function CheckoutClient() {
             {/* Error y botón */}
             <div className="px-6 pb-6 space-y-3">
               {error && (
-                <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                  {error}
-                </p>
+                <div className="flex gap-3 items-start bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1.5">
+                    <p className="text-sm text-red-600">{error}</p>
+                    {stockError && (
+                      <Link
+                        href="/carrito"
+                        className="inline-block text-xs font-semibold text-red-600 underline underline-offset-2 hover:text-red-800 transition-colors"
+                      >
+                        Revisar carrito →
+                      </Link>
+                    )}
+                  </div>
+                </div>
               )}
               <button
                 type="submit"

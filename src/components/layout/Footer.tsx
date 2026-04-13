@@ -19,9 +19,9 @@ export function Footer() {
 
           {/* Navigation */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-warm-600 mb-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-warm-600 mb-4">
               Navegación
-            </h4>
+            </h3>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -60,9 +60,9 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-warm-600 mb-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-warm-600 mb-4">
               Contacto
-            </h4>
+            </h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-warm-600">
                 <Phone className="h-4 w-4 flex-shrink-0" />
@@ -84,9 +84,9 @@ export function Footer() {
 
           {/* Social */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-warm-600 mb-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-warm-600 mb-4">
               Síguenos
-            </h4>
+            </h3>
             <div className="flex gap-3">
               {/* Facebook */}
               <a

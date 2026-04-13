@@ -82,7 +82,7 @@ export function CartDrawer() {
               <p className="text-warm-500 text-sm">Tu carrito está vacío</p>
               <button
                 onClick={closeDrawer}
-                className="text-sm font-semibold text-burgundy-500 hover:text-burgundy-700 underline underline-offset-2 transition-colors"
+                className="text-sm font-semibold text-burgundy-700 hover:text-burgundy-800 underline underline-offset-2 transition-colors"
               >
                 Seguir comprando
               </button>

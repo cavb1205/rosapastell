@@ -11,8 +11,10 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { formatPrice } from "@/lib/formatters";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { getProductReviews } from "@/lib/reviews";
 
 // ISR: páginas generadas bajo demanda en el primer request, cacheadas 60s
 // No usamos generateStaticParams para evitar sobrecargar WordPress en el build
@@ -65,20 +67,21 @@ export default async function ProductPage({ params }: PageProps) {
 
   const category = product.categories[0];
 
-  const [variations, relatedResult] = await Promise.all([
+  const [variations, relatedResult, reviews] = await Promise.all([
     product.type === "variable" ? getProductVariations(product.id) : Promise.resolve([]),
     product.related_ids.length > 0
       ? getProducts({ include: product.related_ids.slice(0, 4).join(","), per_page: 4 })
       : category
         ? getProducts({ category: String(category.id), per_page: 5, exclude: String(product.id) })
         : Promise.resolve({ data: [], totalPages: 0, total: 0 }),
+    getProductReviews(product.id),
   ]);
 
   const relatedProducts = relatedResult.data.slice(0, 4);
 
   return (
     <>
-      <ProductJsonLd product={product} />
+      <ProductJsonLd product={product} reviews={reviews} />
       <BreadcrumbJsonLd
         items={[
           { name: "Inicio", href: "/" },
@@ -108,7 +111,7 @@ export default async function ProductPage({ params }: PageProps) {
               </>
             )}
             <li aria-hidden>/</li>
-            <li className="text-warm-700 font-medium truncate max-w-[200px]">
+            <li className="text-warm-700 font-medium truncate max-w-50">
               {product.name}
             </li>
           </ol>
@@ -120,6 +123,16 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
 
         <ProductReviews productId={product.id} />
+
+        <RecentlyViewed
+          current={{
+            id: product.id,
+            name: product.name,
+            slug: product.slug,
+            price: product.price,
+            image: product.images[0]?.src ?? "",
+          }}
+        />
 
         {relatedProducts.length > 0 && (
           <section className="mt-16 pt-14 border-t border-warm-100">
@@ -139,7 +152,7 @@ export default async function ProductPage({ params }: PageProps) {
               {category && (
                 <a
                   href={`/categorias/${category.slug}`}
-                  className="flex-shrink-0 text-sm font-medium text-burgundy-500 hover:text-burgundy-700 transition-colors underline underline-offset-4"
+                  className="shrink-0 text-sm font-medium text-burgundy-500 hover:text-burgundy-700 transition-colors underline underline-offset-4"
                 >
                   Ver colección →
                 </a>

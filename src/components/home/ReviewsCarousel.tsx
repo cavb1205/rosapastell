@@ -90,7 +90,7 @@ export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
     <section className="py-14 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-8">
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-burgundy-400 mb-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-burgundy-700 mb-2">
             Lo que dicen nuestras clientas
           </p>
           <h2 className="font-heading text-2xl sm:text-3xl text-warm-900">

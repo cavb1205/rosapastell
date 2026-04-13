@@ -3,18 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "www.rosapastell.com",
-      },
-      {
-        protocol: "https",
-        hostname: "rosapastell.com",
-      },
-      {
-        protocol: "https",
-        hostname: "i0.wp.com",
-      },
+      // Dominio actual de WordPress (producción)
+      { protocol: "https", hostname: "www.rosapastell.com" },
+      { protocol: "https", hostname: "rosapastell.com" },
+      // Subdominio API tras migración DNS
+      { protocol: "https", hostname: "api.rosapastell.com" },
+      // CDN Jetpack/WordPress.com para imágenes
+      { protocol: "https", hostname: "i0.wp.com" },
+      { protocol: "https", hostname: "i1.wp.com" },
+      { protocol: "https", hostname: "i2.wp.com" },
     ],
   },
   async redirects() {

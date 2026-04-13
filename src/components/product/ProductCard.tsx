@@ -87,7 +87,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {product.name}
         </h3>
         <div className="mt-2 flex items-center gap-2">
-          <span className="text-base font-semibold text-burgundy-500">
+          <span className="text-base font-semibold text-burgundy-700">
             {formatPrice(displayPrice)}
           </span>
           {crossedPrice && (

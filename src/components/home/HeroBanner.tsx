@@ -13,7 +13,7 @@ export function HeroBanner() {
       <button
         onClick={() => openRegisterModal()}
         className="block relative w-full overflow-hidden rounded-2xl shadow-md hover:shadow-[0_8px_32px_rgba(248,155,187,0.4)] transition-all duration-300 group cursor-pointer"
-        aria-label="Regístrate para precios mayoristas"
+        aria-label="Regístrate →"
       >
         <Image
           src={WHOLESALE_BANNER}

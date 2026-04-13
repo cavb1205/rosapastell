@@ -30,7 +30,7 @@ export function NewArrivals({ products }: NewArrivalsProps) {
         <div className="mt-8 text-center sm:hidden">
           <Link
             href="/colecciones"
-            className="inline-flex text-sm font-medium text-burgundy-500 hover:text-burgundy-600 transition-colors"
+            className="inline-flex text-sm font-medium text-burgundy-700 hover:text-burgundy-800 transition-colors"
           >
             Ver todos los productos &rarr;
           </Link>
