@@ -182,7 +182,22 @@ export function CheckoutClient() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
+        body: JSON.stringify({
+          ...orderPayload,
+          _emailMeta: {
+            items: items.map((i) => ({
+              name: i.name,
+              size: i.size,
+              quantity: i.quantity,
+              price: i.price,
+              image: i.image,
+            })),
+            subtotal,
+            discount: discount > 0 ? discount : undefined,
+            couponCode: appliedCoupon?.code,
+            total,
+          },
+        }),
       });
 
       if (!res.ok) {
@@ -197,31 +212,6 @@ export function CheckoutClient() {
       }
 
       const order = await res.json();
-
-      // Email de confirmación — no bloqueante, falla silenciosamente
-      fetch("/api/email/order-confirmation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderNumber: order.number,
-          email: data.email,
-          firstName: data.firstName,
-          items: items.map((i) => ({
-            name: i.name,
-            size: i.size,
-            quantity: i.quantity,
-            price: i.price,
-            image: i.image,
-          })),
-          subtotal,
-          discount: discount > 0 ? discount : undefined,
-          couponCode: appliedCoupon?.code,
-          total,
-          city: data.city,
-          address: data.address,
-        }),
-      }).catch(() => {});
-
       clearCart();
 
       const itemLines = items
