@@ -250,7 +250,7 @@ export function CheckoutClient() {
         : "";
 
       const msg = encodeURIComponent(
-        `Hola Rosa Pastell! Mi pedido #${order.number}.\n\n${itemLines}${couponLine}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}\n\nAdjunto comprobante.`
+        `Hola Rosa Pastell! Acabo de realizar el pedido #${order.number} y quiero recibir los datos para realizar el pago.\n\n${itemLines}${couponLine}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}`
       );
 
       const guestParams = !user
@@ -444,7 +444,7 @@ export function CheckoutClient() {
                   <MessageCircle className={`h-5 w-5 shrink-0 ${paymentMethod === "whatsapp" ? "text-burgundy-500" : "text-warm-400"}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-warm-800">Transferencia / WhatsApp</p>
-                    <p className="text-xs text-warm-400 mt-0.5">Transfiere y envía el comprobante por WhatsApp</p>
+                    <p className="text-xs text-warm-400 mt-0.5">Te enviaremos los datos de pago por WhatsApp</p>
                   </div>
                 </label>
               </div>

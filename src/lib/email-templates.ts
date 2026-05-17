@@ -105,7 +105,7 @@ export function orderConfirmationHtml(p: OrderConfirmationParams): string {
               </h1>
               <p style="margin:0 0 24px;font-size:14px;color:${mutedText};line-height:1.6;">
                 Recibimos tu pedido <strong style="color:${darkText};">#${p.orderNumber}</strong>.
-                Realiza tu pago y envíanos el comprobante por WhatsApp para confirmar el despacho.
+                Escríbenos por WhatsApp con tu número de pedido para enviarte los datos de pago y confirmar tu compra.
               </p>
 
               <!-- Productos -->
@@ -151,7 +151,7 @@ export function orderConfirmationHtml(p: OrderConfirmationParams): string {
                       style="display:inline-block;background:#25D366;color:#ffffff;
                         font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
                         text-decoration:none;letter-spacing:0.3px;">
-                      Enviar comprobante por WhatsApp
+                      Solicitar datos de pago por WhatsApp
                     </a>
                   </td>
                 </tr>

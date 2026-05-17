@@ -2,19 +2,10 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { MessageCircle, CheckCircle, Copy, UserPlus, X } from "lucide-react";
+import { MessageCircle, CheckCircle, UserPlus, X } from "lucide-react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
-
-const BANK_INFO = {
-  bank: "Bancolombia",
-  type: "Cuenta de Ahorros",
-  number: "000-000000-00",
-  name: "Rosa Pastell",
-  nit: "000.000.000-0",
-  nequi: "+57 315 608 2381",
-};
 
 function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
   const searchParams = useSearchParams();
@@ -34,12 +25,10 @@ function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
     : "/cuenta/registro";
 
   function openWhatsApp() {
-    const text = msg || `Hola Rosa Pastell! Pedido #${orderNumber}`;
+    const text = msg || encodeURIComponent(
+      `Hola Rosa Pastell! Acabo de realizar el pedido #${orderNumber} y quiero recibir los datos para realizar el pago.`
+    );
     window.open(`https://wa.me/${whatsappNumber}?text=${text}`, "_blank");
-  }
-
-  function copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text);
   }
 
   return (
@@ -56,53 +45,29 @@ function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
         </p>
       )}
 
-      {/* Bank info */}
+      {/* Instrucciones de pago */}
       <div className="bg-cream-100 rounded-2xl p-6 text-left mb-6">
-        <h2 className="font-semibold text-warm-800 mb-4 text-center">
-          Datos para el pago
+        <h2 className="font-semibold text-warm-800 mb-3 text-center">
+          ¿Cómo completar tu compra?
         </h2>
-        <div className="space-y-3">
-          {[
-            { label: "Banco", value: BANK_INFO.bank },
-            { label: "Tipo de cuenta", value: BANK_INFO.type },
-            { label: "Número de cuenta", value: BANK_INFO.number },
-            { label: "A nombre de", value: BANK_INFO.name },
-            { label: "NIT", value: BANK_INFO.nit },
-          ].map((row) => (
-            <div key={row.label} className="flex justify-between items-center gap-2">
-              <span className="text-sm text-warm-500">{row.label}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-warm-800">{row.value}</span>
-                <button
-                  onClick={() => copyToClipboard(row.value)}
-                  className="text-warm-300 hover:text-warm-500 transition-colors"
-                  title="Copiar"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
-          <div className="pt-2 border-t border-cream-200">
-            <div className="flex justify-between items-center gap-2">
-              <span className="text-sm text-warm-500">Nequi</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-warm-800">{BANK_INFO.nequi}</span>
-                <button
-                  onClick={() => copyToClipboard(BANK_INFO.nequi)}
-                  className="text-warm-300 hover:text-warm-500 transition-colors"
-                  title="Copiar"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ol className="space-y-3 text-sm text-warm-700">
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center text-xs font-bold">1</span>
+            <span>Escríbenos por WhatsApp con tu número de pedido <strong>#{orderNumber}</strong></span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center text-xs font-bold">2</span>
+            <span>Te enviaremos los datos de pago actualizados (transferencia o Nequi)</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center text-xs font-bold">3</span>
+            <span>Realiza el pago y envíanos el comprobante por el mismo chat</span>
+          </li>
+        </ol>
       </div>
 
       <p className="text-sm text-warm-500 mb-6">
-        Una vez realices el pago, envíanos el comprobante por WhatsApp para confirmar tu pedido.
+        Confirmaremos tu pedido una vez verifiquemos el pago. ¡Es rápido y fácil!
       </p>
 
       <button
@@ -110,7 +75,7 @@ function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
         className="w-full flex items-center justify-center gap-3 rounded-full bg-[#25D366] px-8 py-4 text-base font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
       >
         <MessageCircle className="h-5 w-5" />
-        Enviar comprobante por WhatsApp
+        Solicitar datos de pago por WhatsApp
       </button>
 
       {/* Tarjeta: guardar datos */}
