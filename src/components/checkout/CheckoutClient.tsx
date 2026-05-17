@@ -238,25 +238,10 @@ export function CheckoutClient() {
         return;
       }
 
-      const itemLines = items
-        .map(
-          (i) =>
-            `- ${i.name} (Talla ${i.size}) x${i.quantity} - ${formatPrice(i.price * i.quantity)}`
-        )
-        .join("\n");
-
-      const couponLine = appliedCoupon
-        ? `\nCupón aplicado: ${appliedCoupon.code} (-${formatPrice(discount)})`
-        : "";
-
-      const msg = encodeURIComponent(
-        `Hola Rosa Pastell! Acabo de realizar el pedido #${order.number} y quiero recibir los datos para realizar el pago.\n\n${itemLines}${couponLine}\n\nTotal: ${formatPrice(total)}\n\nNombre: ${data.firstName} ${data.lastName}\nCiudad: ${data.city}\nDirección: ${data.address}`
-      );
-
       const guestParams = !user
         ? `&guestEmail=${encodeURIComponent(data.email)}&guestName=${encodeURIComponent(data.firstName)}&guestLastName=${encodeURIComponent(data.lastName)}`
         : "";
-      router.push(`/checkout/whatsapp?order=${order.number}&msg=${msg}${guestParams}`);
+      router.push(`/checkout/whatsapp?order=${order.number}&total=${total}${guestParams}`);
     } catch {
       setError("Ocurrió un error de conexión. Por favor intenta de nuevo.");
     } finally {

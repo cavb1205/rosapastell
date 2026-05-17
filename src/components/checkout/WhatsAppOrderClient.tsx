@@ -6,11 +6,12 @@ import { MessageCircle, CheckCircle, UserPlus, X } from "lucide-react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
+import { formatPrice } from "@/lib/formatters";
 
 function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
-  const msg = searchParams.get("msg");
+  const totalParam = searchParams.get("total");
   const guestEmail = searchParams.get("guestEmail");
   const guestName = searchParams.get("guestName");
   const guestLastName = searchParams.get("guestLastName");
@@ -24,9 +25,12 @@ function WhatsAppContent({ whatsappNumber }: { whatsappNumber: string }) {
     ? `/cuenta/registro?email=${encodeURIComponent(guestEmail)}${guestName ? `&firstName=${encodeURIComponent(guestName)}` : ""}${guestLastName ? `&lastName=${encodeURIComponent(guestLastName)}` : ""}`
     : "/cuenta/registro";
 
+  const totalDisplay = totalParam ? formatPrice(Number(totalParam)) : null;
+
   function openWhatsApp() {
-    const text = msg || encodeURIComponent(
-      `Hola Rosa Pastell! Acabo de realizar el pedido #${orderNumber} y quiero recibir los datos para realizar el pago.`
+    const totalLine = totalDisplay ? ` por un total de ${totalDisplay}` : "";
+    const text = encodeURIComponent(
+      `Hola Rosa Pastell! Acabo de realizar el pedido #${orderNumber}${totalLine} y quiero recibir los datos para realizar el pago.`
     );
     window.open(`https://wa.me/${whatsappNumber}?text=${text}`, "_blank");
   }
