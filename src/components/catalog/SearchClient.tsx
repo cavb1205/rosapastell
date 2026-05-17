@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Search, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import useSWR from "swr";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { WooProduct } from "@/types/product";
 export interface SearchIndexItem {
   id: number;
@@ -15,6 +17,8 @@ export interface SearchIndexItem {
 }
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { formatPrice } from "@/lib/formatters";
+
+const indexFetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -39,23 +43,21 @@ export function SearchClient() {
   const [products, setProducts] = useState<WooProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
-  // Índice estático
-  const [index, setIndex] = useState<SearchIndexItem[]>([]);
+  // Índice estático — cacheado con SWR (1 hora, sin revalidar en focus)
+  const { data: index = [] } = useSWR<SearchIndexItem[]>(
+    "/api/search/index",
+    indexFetcher,
+    { revalidateOnFocus: false, dedupingInterval: 3600000 },
+  );
   const [suggestions, setSuggestions] = useState<SearchIndexItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounce(query, 350);
-
-  // Cargar índice una sola vez
-  useEffect(() => {
-    fetch("/api/search/index")
-      .then((r) => r.json())
-      .then((data: SearchIndexItem[]) => setIndex(data))
-      .catch(() => {});
-  }, []);
 
   // Filtrar sugerencias localmente — sin llamadas al servidor
   useEffect(() => {
@@ -86,19 +88,22 @@ export function SearchClient() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const runSearch = useCallback(async (q: string) => {
+  const runSearch = useCallback(async (q: string, p = 1) => {
     if (q.length < 2) {
       setProducts([]);
       setSearched(false);
+      setTotalPages(0);
       return;
     }
     setLoading(true);
     setShowSuggestions(false);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&page=${p}`);
       const data = await res.json();
       setProducts(data.data || []);
+      setTotalPages(data.totalPages || 0);
       setSearched(true);
+      setPage(p);
     } catch {
       setProducts([]);
     } finally {
@@ -232,6 +237,31 @@ export function SearchClient() {
               : `${products.length} resultado${products.length !== 1 ? "s" : ""} para "${query}"`}
           </p>
           <ProductGrid products={products} />
+          {totalPages > 1 && (
+            <nav aria-label="Paginación de búsqueda" className="flex items-center justify-center gap-2 mt-10">
+              {page > 1 && (
+                <button
+                  onClick={() => runSearch(query, page - 1)}
+                  className="flex items-center justify-center h-10 w-10 rounded-lg border border-warm-200 text-warm-600 hover:bg-warm-50 transition-colors"
+                  aria-label="Página anterior"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              )}
+              <span className="text-sm text-warm-500">
+                Página {page} de {totalPages}
+              </span>
+              {page < totalPages && (
+                <button
+                  onClick={() => runSearch(query, page + 1)}
+                  className="flex items-center justify-center h-10 w-10 rounded-lg border border-warm-200 text-warm-600 hover:bg-warm-50 transition-colors"
+                  aria-label="Página siguiente"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              )}
+            </nav>
+          )}
         </>
       )}
 

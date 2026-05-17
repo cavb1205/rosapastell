@@ -5,8 +5,6 @@ import type { WooProduct, WooVariation } from "@/types/product";
 import { formatPrice } from "@/lib/formatters";
 import { SizeSelector } from "./SizeSelector";
 import { AddToCart } from "./AddToCart";
-import { WHATSAPP_URL } from "@/lib/constants";
-import { MessageCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { sanitizeHTML } from "@/lib/sanitize";
 import { ShareButtons } from "./ShareButtons";
@@ -93,21 +91,12 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
       )}
 
       {/* Add to cart */}
-      <div className="mt-6 space-y-3">
+      <div className="mt-6">
         <AddToCart
           product={product}
           selectedVariation={selectedVariation}
           selectedSize={selectedSize}
         />
-        {/* <a
-          href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Hola! Estoy interesada en: ${product.name}`)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-[#25D366] px-8 py-4 text-sm font-semibold text-[#25D366] hover:bg-[#f0fdf4] transition-colors"
-        >
-          <MessageCircle className="h-5 w-5" />
-          Consultar por WhatsApp
-        </a> */}
       </div>
 
       {/* Description accordion */}
