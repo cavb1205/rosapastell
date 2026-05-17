@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createOrder, WooCommerceError } from "@/lib/woocommerce";
-import type { CreateOrderPayload } from "@/types/order";
 import { sendEmail } from "@/lib/brevo";
 import { orderConfirmationHtml } from "@/lib/email-templates";
+import { rateLimit } from "@/lib/rate-limit";
+import { orderSchema } from "@/lib/validations";
 
 // Códigos de error de WooCommerce relacionados con stock insuficiente
 const STOCK_ERROR_CODES = [
@@ -20,23 +21,20 @@ function isStockError(error: WooCommerceError): boolean {
   );
 }
 
-interface OrderRequestBody extends CreateOrderPayload {
-  _emailMeta?: {
-    items: { name: string; size: string; quantity: number; price: number; image?: string }[];
-    subtotal: number;
-    discount?: number;
-    couponCode?: string;
-    total: number;
-  };
-}
-
 export async function POST(request: NextRequest) {
-  try {
-    const body = (await request.json()) as OrderRequestBody;
+  const blocked = rateLimit(request, { limit: 5, windowMs: 60_000, prefix: "orders" });
+  if (blocked) return blocked;
 
-    // Extraer metadatos de email antes de enviar a WooCommerce
-    const emailMeta = body._emailMeta;
-    const { _emailMeta, ...orderPayload } = body;
+  try {
+    const parsed = orderSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Datos del pedido incompletos o inválidos" },
+        { status: 400 },
+      );
+    }
+
+    const { _emailMeta: emailMeta, ...orderPayload } = parsed.data;
 
     const order = await createOrder(orderPayload);
 
@@ -69,14 +67,14 @@ export async function POST(request: NextRequest) {
           error: error.message,
           stockError: true,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error("Orders API error:", error);
     return NextResponse.json(
       { error: "Error al crear la orden" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

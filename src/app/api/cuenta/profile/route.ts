@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromCookie } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
+import { profileUpdateSchema } from "@/lib/validations";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
 const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
@@ -12,7 +14,7 @@ export async function GET() {
   try {
     const res = await fetch(
       `${WP_URL}/wp-json/wc/v3/customers/${user.id}?consumer_key=${CK}&consumer_secret=${CS}`,
-      { next: { revalidate: 0 } }
+      { next: { revalidate: 0 } },
     );
     if (!res.ok) throw new Error("Error al obtener perfil");
     const data = await res.json();
@@ -24,19 +26,28 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  const blocked = rateLimit(request, { limit: 10, windowMs: 60_000, prefix: "profile" });
+  if (blocked) return blocked;
+
   const user = await getUserFromCookie();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   try {
-    const body = await request.json();
+    const parsed = profileUpdateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Datos de perfil inválidos" },
+        { status: 400 },
+      );
+    }
 
     const res = await fetch(
       `${WP_URL}/wp-json/wc/v3/customers/${user.id}?consumer_key=${CK}&consumer_secret=${CS}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }
+        body: JSON.stringify(parsed.data),
+      },
     );
 
     if (!res.ok) {

@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { wpLogin, AUTH_COOKIE_NAME, COOKIE_OPTIONS } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
+import { loginSchema } from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
-  try {
-    const { username, password } = await request.json();
+  const blocked = rateLimit(request, { limit: 5, windowMs: 60_000, prefix: "login" });
+  if (blocked) return blocked;
 
-    if (!username || !password) {
+  try {
+    const parsed = loginSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json(
         { error: "Email y contraseña son requeridos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
+    const { username, password } = parsed.data;
     const { token, user } = await wpLogin(username, password);
 
     const response = NextResponse.json({ user });

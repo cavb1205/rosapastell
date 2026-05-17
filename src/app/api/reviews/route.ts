@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
+import { reviewSchema } from "@/lib/validations";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
 const CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY!;
@@ -16,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   const res = await fetch(
     `${WP_URL}/wp-json/wc/v3/products/reviews?product=${productId}&per_page=20&status=approved&${auth()}`,
-    { next: { revalidate: 60 } }
+    { next: { revalidate: 60 } },
   );
 
   if (!res.ok) {
@@ -28,12 +30,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { product_id, review, rating, reviewer, reviewer_email } = body;
+  const blocked = rateLimit(req, { limit: 3, windowMs: 60_000, prefix: "reviews" });
+  if (blocked) return blocked;
 
-  if (!product_id || !review || !rating || !reviewer || !reviewer_email) {
-    return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
+  const parsed = reviewSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos de reseña incompletos o inválidos" }, { status: 400 });
   }
+
+  const { product_id, review, rating, reviewer, reviewer_email } = parsed.data;
 
   const res = await fetch(
     `${WP_URL}/wp-json/wc/v3/products/reviews?${auth()}`,
@@ -41,7 +46,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id, review, rating, reviewer, reviewer_email }),
-    }
+    },
   );
 
   const data = await res.json();

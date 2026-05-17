@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { wpRegister, AUTH_COOKIE_NAME, COOKIE_OPTIONS } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
+import { registerSchema } from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
+  const blocked = rateLimit(request, { limit: 3, windowMs: 60_000, prefix: "register" });
+  if (blocked) return blocked;
+
   try {
-    const body = await request.json();
-    const { email, password, firstName, lastName, phone } = body;
-
-    if (!email || !password || !firstName || !lastName) {
+    const parsed = registerSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Todos los campos son requeridos" },
-        { status: 400 }
+        { error: "Todos los campos son requeridos y la contraseña debe tener al menos 8 caracteres" },
+        { status: 400 },
       );
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "La contraseña debe tener al menos 8 caracteres" },
-        { status: 400 }
-      );
-    }
+    const { email, password, firstName, lastName, phone } = parsed.data;
 
     const { token, user } = await wpRegister({
       email,
