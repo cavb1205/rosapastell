@@ -87,7 +87,7 @@ export function RegisterForm({ initialValues, onSuccess, onLoginClick }: Registe
   }
 
   const inputClass =
-    "w-full rounded-xl border border-warm-300 bg-warm-50 px-4 py-4 text-sm text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 focus:bg-white hover:border-warm-400 transition-all duration-200";
+    "w-full rounded-xl border border-warm-300 bg-warm-50 px-4 py-4 text-base text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 focus:bg-white hover:border-warm-400 transition-all duration-200";
 
   const labelClass = "block text-xs font-semibold uppercase tracking-widest text-warm-500 mb-2.5";
 

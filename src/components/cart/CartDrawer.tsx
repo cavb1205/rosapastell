@@ -50,7 +50,7 @@ export function CartDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Carrito de compras"
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full max-w-[95vw] sm:max-w-md bg-white z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -131,20 +131,20 @@ export function CartDrawer() {
                     <div className="flex items-center border border-warm-200 rounded-full overflow-hidden">
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity - 1, item.variationId)}
-                        className="px-2.5 py-1.5 text-warm-500 hover:bg-warm-50 transition-colors"
+                        className="h-9 w-9 flex items-center justify-center text-warm-500 hover:bg-warm-50 transition-colors"
                         aria-label="Reducir"
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-3.5 w-3.5" />
                       </button>
-                      <span className="w-7 text-center text-sm font-semibold text-warm-800 select-none">
+                      <span className="w-8 text-center text-sm font-semibold text-warm-800 select-none">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variationId)}
-                        className="px-2.5 py-1.5 text-warm-500 hover:bg-warm-50 transition-colors"
+                        className="h-9 w-9 flex items-center justify-center text-warm-500 hover:bg-warm-50 transition-colors"
                         aria-label="Aumentar"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-3.5 w-3.5" />
                       </button>
                     </div>
 

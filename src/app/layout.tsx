@@ -58,6 +58,10 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    canonical: SITE_URL,
+    languages: { "es-CO": SITE_URL },
+  },
 };
 
 export default function RootLayout({
@@ -78,8 +82,14 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <AuthProvider>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-burgundy-500 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+          >
+            Saltar al contenido principal
+          </a>
           <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1">{children}</main>
           <Footer />
           <WhatsAppButton />
           <CartDrawer />

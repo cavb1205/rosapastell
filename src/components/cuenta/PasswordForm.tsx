@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Eye, EyeOff, Check, Loader2, Lock, CheckCircle2, X } from "lucide-react";
 
 const inputClass =
-  "w-full rounded-xl border border-warm-300 bg-warm-50 px-4 py-3.5 text-sm text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 focus:bg-white hover:border-warm-400 transition-all";
+  "w-full rounded-xl border border-warm-300 bg-warm-50 px-4 py-3.5 text-base text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 focus:bg-white hover:border-warm-400 transition-all";
 const labelClass =
   "block text-xs font-semibold uppercase tracking-widest text-warm-500 mb-2";
 

@@ -8,6 +8,7 @@ import { AddToCart } from "./AddToCart";
 import { WHATSAPP_URL } from "@/lib/constants";
 import { MessageCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { sanitizeHTML } from "@/lib/sanitize";
 import { ShareButtons } from "./ShareButtons";
 import { WishlistButton } from "./WishlistButton";
 
@@ -76,7 +77,7 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
       {product.short_description && (
         <div
           className="mt-4 text-sm text-warm-600 leading-relaxed prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: product.short_description }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHTML(product.short_description) }}
         />
       )}
 
@@ -118,7 +119,7 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
           </summary>
           <div
             className="mt-4 text-sm text-warm-600 leading-relaxed prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: product.description }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHTML(product.description) }}
           />
         </details>
       )}

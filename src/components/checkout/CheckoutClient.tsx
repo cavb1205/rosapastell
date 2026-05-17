@@ -516,7 +516,7 @@ export function CheckoutClient() {
                       }}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())}
                       placeholder="Código de cupón"
-                      className="flex-1 rounded-xl border border-warm-300 bg-warm-50 px-3.5 py-2.5 text-sm text-warm-800 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
+                      className="flex-1 rounded-xl border border-warm-300 bg-warm-50 px-3.5 py-2.5 text-base text-warm-800 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
                     />
                     <button
                       type="button"
@@ -616,7 +616,7 @@ function Field({
 }
 
 function inputClass(hasError: boolean) {
-  return `w-full rounded-xl border px-4 py-3.5 text-sm text-warm-800 bg-warm-50 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:bg-white transition-all ${
+  return `w-full rounded-xl border px-4 py-3.5 text-base text-warm-800 bg-warm-50 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:bg-white transition-all ${
     hasError
       ? "border-red-300 focus:border-red-300"
       : "border-warm-300 hover:border-warm-400 focus:border-rose-300"

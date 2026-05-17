@@ -12,7 +12,11 @@ export function CartToastContainer() {
   if (cartToasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-[calc(100vw-2rem)] max-w-sm pointer-events-none">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-[calc(100vw-2rem)] max-w-sm pointer-events-none"
+    >
       {cartToasts.map((toast) => (
         <div
           key={toast.id}

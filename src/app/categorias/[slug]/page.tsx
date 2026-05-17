@@ -26,8 +26,10 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = Number(pageParam || 1);
   const category = await getCategoryBySlug(slug);
 
   if (!category) return {};
@@ -39,9 +41,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : [];
 
   return {
-    title: `${category.name} | ${SITE_NAME}`,
+    title: page > 1 ? `${category.name} — Página ${page} | ${SITE_NAME}` : `${category.name} | ${SITE_NAME}`,
     description,
     alternates: { canonical },
+    ...(page > 1 && { robots: { index: false, follow: true } }),
     openGraph: {
       title: `${category.name} | ${SITE_NAME}`,
       description,

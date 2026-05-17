@@ -80,22 +80,22 @@ export function CartPageClient() {
                   onClick={() =>
                     updateQuantity(item.productId, item.quantity - 1, item.variationId)
                   }
-                  className="h-7 w-7 flex items-center justify-center rounded-full border border-warm-200 text-warm-600 hover:bg-warm-50"
+                  className="h-9 w-9 flex items-center justify-center rounded-full border border-warm-200 text-warm-600 hover:bg-warm-50"
                   aria-label="Reducir cantidad"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-3.5 w-3.5" />
                 </button>
-                <span className="w-6 text-center text-sm font-medium text-warm-700">
+                <span className="w-7 text-center text-sm font-medium text-warm-700">
                   {item.quantity}
                 </span>
                 <button
                   onClick={() =>
                     updateQuantity(item.productId, item.quantity + 1, item.variationId)
                   }
-                  className="h-7 w-7 flex items-center justify-center rounded-full border border-warm-200 text-warm-600 hover:bg-warm-50"
+                  className="h-9 w-9 flex items-center justify-center rounded-full border border-warm-200 text-warm-600 hover:bg-warm-50"
                   aria-label="Aumentar cantidad"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

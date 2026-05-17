@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { stripHTML } from "@/lib/sanitize";
 import type { WooReview } from "@/types/review";
 
 interface ProductReviewsProps {
@@ -72,10 +73,9 @@ function ReviewCard({ review }: { review: WooReview }) {
         </div>
         <StarRating value={review.rating} readonly small />
       </div>
-      <p
-        className="text-sm text-warm-700 leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: review.review }}
-      />
+      <p className="text-sm text-warm-700 leading-relaxed">
+        {stripHTML(review.review)}
+      </p>
     </div>
   );
 }
@@ -199,7 +199,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-warm-300 bg-warm-50 px-4 py-3 text-sm text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 focus:bg-white hover:border-warm-400 transition-all duration-200";
+    "w-full rounded-xl border border-warm-300 bg-warm-50 px-4 py-3 text-base text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 focus:bg-white hover:border-warm-400 transition-all duration-200";
   const labelClass = "block text-xs font-semibold uppercase tracking-widest text-warm-500 mb-2";
 
   return (

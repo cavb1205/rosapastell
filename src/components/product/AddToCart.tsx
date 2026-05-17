@@ -93,9 +93,9 @@ export function AddToCart({
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             disabled={quantity <= 1}
             aria-label="Reducir cantidad"
-            className="px-3 py-2 text-warm-600 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="h-10 w-10 flex items-center justify-center text-warm-600 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <Minus className="h-3.5 w-3.5" />
+            <Minus className="h-4 w-4" />
           </button>
           <span className="w-8 text-center text-sm font-semibold text-warm-900 select-none">
             {quantity}
@@ -105,9 +105,9 @@ export function AddToCart({
             onClick={() => setQuantity((q) => Math.min(maxStock, q + 1))}
             disabled={quantity >= maxStock}
             aria-label="Aumentar cantidad"
-            className="px-3 py-2 text-warm-600 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="h-10 w-10 flex items-center justify-center text-warm-600 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-4 w-4" />
           </button>
         </div>
       </div>

@@ -146,7 +146,7 @@ export function SearchClient() {
           }}
           onKeyDown={handleKeyDown}
           placeholder="Buscar pijamas, tallas, estilos..."
-          className="w-full rounded-full border border-warm-200 bg-white pl-12 pr-10 py-3.5 text-sm text-warm-800 focus:outline-none focus:ring-2 focus:ring-burgundy-200 hover:border-warm-300 transition-colors"
+          className="w-full rounded-full border border-warm-200 bg-white pl-12 pr-10 py-3.5 text-base text-warm-800 focus:outline-none focus:ring-2 focus:ring-burgundy-200 hover:border-warm-300 transition-colors"
           autoFocus
           autoComplete="off"
         />

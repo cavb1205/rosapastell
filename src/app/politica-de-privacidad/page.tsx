@@ -5,10 +5,11 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 export const metadata: Metadata = {
   title: `Política de Privacidad | ${SITE_NAME}`,
   description: `Conoce cómo ${SITE_NAME} recopila, usa y protege tu información personal.`,
+  alternates: { canonical: `${SITE_URL}/politica-de-privacidad` },
   openGraph: {
     title: `Política de Privacidad | ${SITE_NAME}`,
     description: `Conoce cómo ${SITE_NAME} recopila, usa y protege tu información personal.`,
-    url: "/politica-de-privacidad",
+    url: `${SITE_URL}/politica-de-privacidad`,
   },
 };
 
