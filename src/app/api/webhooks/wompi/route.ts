@@ -2,38 +2,72 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { updateOrderStatus } from "@/lib/woocommerce";
 
-// Wompi firma el evento con SHA-256 usando el event secret
-function verifyWompiSignature(body: string, signature: string): boolean {
+interface WompiEvent {
+  event: string;
+  data: {
+    transaction: {
+      id: string;
+      reference: string;
+      status: "APPROVED" | "DECLINED" | "VOIDED" | "ERROR";
+      amount_in_cents: number;
+      [key: string]: unknown;
+    };
+  };
+  timestamp: number;
+  signature: {
+    properties: string[];
+    checksum: string;
+  };
+}
+
+/**
+ * Wompi firma los webhooks concatenando:
+ * 1. Valores de las propiedades listadas en signature.properties (en orden)
+ * 2. El timestamp del evento
+ * 3. El events secret
+ * Y aplicando SHA-256 al resultado.
+ */
+function verifyWompiSignature(event: WompiEvent): boolean {
   const secret = process.env.WOMPI_EVENTS_SECRET;
   if (!secret) return false;
-  const expected = createHash("sha256").update(body + secret).digest("hex");
-  return expected === signature;
+
+  // Extraer los valores de las propiedades dinámicas
+  const values = event.signature.properties.map((prop) => {
+    const keys = prop.split(".");
+    let value: unknown = event.data;
+    for (const key of keys) {
+      if (value && typeof value === "object") {
+        value = (value as Record<string, unknown>)[key];
+      } else {
+        return "";
+      }
+    }
+    return String(value);
+  });
+
+  const chain = values.join("") + String(event.timestamp) + secret;
+  const expected = createHash("sha256").update(chain).digest("hex");
+
+  return expected === event.signature.checksum;
 }
 
 export async function POST(request: NextRequest) {
-  const raw = await request.text();
-  const signature = request.headers.get("x-event-checksum") ?? "";
-
-  if (!verifyWompiSignature(raw, signature)) {
-    console.warn("[Wompi Webhook] Firma inválida");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  let event: {
-    event: string;
-    data: {
-      transaction: {
-        reference: string;
-        status: "APPROVED" | "DECLINED" | "VOIDED" | "ERROR";
-        amount_in_cents: number;
-      };
-    };
-  };
+  let event: WompiEvent;
 
   try {
-    event = JSON.parse(raw);
+    event = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (!event.signature?.checksum || !event.signature?.properties) {
+    console.warn("[Wompi Webhook] Evento sin firma");
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  }
+
+  if (!verifyWompiSignature(event)) {
+    console.warn("[Wompi Webhook] Firma inválida");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (event.event !== "transaction.updated") {
