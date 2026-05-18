@@ -39,7 +39,16 @@ export function LoginForm() {
       }
 
       setAuth(data.user, "");
-      // Mantener loading durante la navegación — setLoading(false) nunca se llama en éxito
+
+      // Administradores van directo al dashboard de WordPress
+      const isAdmin = data.user.roles?.some((r: string) =>
+        ["administrator", "shop_manager"].includes(r)
+      );
+      if (isAdmin) {
+        window.location.href = `${process.env.NEXT_PUBLIC_WP_ADMIN_URL || "https://www.rosapastell.com"}/wp-admin`;
+        return;
+      }
+
       router.push(redirectTo);
       router.refresh();
       return;
