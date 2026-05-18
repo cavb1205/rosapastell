@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail } from "@/lib/brevo";
+import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml } from "@/lib/email-templates";
 
 export async function POST(req: NextRequest) {

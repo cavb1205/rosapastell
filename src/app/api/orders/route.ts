@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createOrder, WooCommerceError } from "@/lib/woocommerce";
-import { sendEmail } from "@/lib/brevo";
+import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
 import { orderSchema } from "@/lib/validations";
