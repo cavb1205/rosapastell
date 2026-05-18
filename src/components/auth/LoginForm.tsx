@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { useUIStore } from "@/store/ui";
 
@@ -13,6 +13,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const { setAuth } = useAuthStore();
   const openRegisterModal = useUIStore((s) => s.openRegisterModal);
   const router = useRouter();
@@ -35,10 +36,12 @@ export function LoginForm() {
 
       if (!res.ok) {
         setError(data.error || "Credenciales incorrectas");
+        setLoading(false);
         return;
       }
 
       setAuth(data.user, "");
+      setSuccess(true);
 
       // Administradores van directo al dashboard de WordPress
       const isAdmin = data.user.roles?.some((r: string) =>
@@ -51,10 +54,8 @@ export function LoginForm() {
 
       router.push(redirectTo);
       router.refresh();
-      return;
     } catch {
       setError("Error de conexión. Intenta de nuevo.");
-    } finally {
       setLoading(false);
     }
   }
@@ -63,6 +64,18 @@ export function LoginForm() {
     "w-full rounded-xl border border-warm-300 bg-warm-50 px-4 py-4 text-base text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 focus:bg-white hover:border-warm-400 transition-all duration-200";
 
   const labelClass = "block text-xs font-semibold uppercase tracking-widest text-warm-500 mb-2.5";
+
+  if (success) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-8 animate-in fade-in duration-300">
+        <div className="w-14 h-14 flex items-center justify-center rounded-full bg-sage-100">
+          <CheckCircle className="h-7 w-7 text-sage-500" />
+        </div>
+        <p className="text-warm-800 font-semibold">¡Bienvenida!</p>
+        <p className="text-sm text-warm-500">Redirigiendo a tu cuenta...</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
