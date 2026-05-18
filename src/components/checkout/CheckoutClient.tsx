@@ -269,7 +269,7 @@ export function CheckoutClient() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
         {/* ── Formulario ── */}
         <div className="lg:col-span-2 space-y-6">
@@ -442,13 +442,13 @@ export function CheckoutClient() {
 
         {/* ── Resumen del pedido ── */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 bg-warm-50 border-b border-warm-100">
+          <div className="lg:sticky lg:top-24 bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden">
+            <div className="px-4 sm:px-6 py-5 bg-warm-50 border-b border-warm-100">
               <h2 className="font-heading text-xl text-warm-900">Tu Pedido</h2>
             </div>
 
             {/* Productos */}
-            <div className="px-6 py-4 space-y-3 border-b border-warm-100">
+            <div className="px-4 sm:px-6 py-4 space-y-3 border-b border-warm-100">
               {items.map((item) => (
                 <div
                   key={`${item.productId}-${item.variationId}`}
@@ -471,9 +471,9 @@ export function CheckoutClient() {
             </div>
 
             {/* Cupón */}
-            <div className="px-6 py-4 border-b border-warm-100">
+            <div className="px-4 sm:px-6 py-4 border-b border-warm-100">
               {appliedCoupon ? (
-                <div className="flex items-center justify-between rounded-xl bg-sage-50 border border-sage-200 px-4 py-3">
+                <div className="flex items-center justify-between rounded-xl bg-sage-50 border border-sage-200 px-3 sm:px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Tag className="h-4 w-4 text-sage-500" />
                     <span className="text-sm font-semibold text-sage-700 uppercase">
@@ -500,14 +500,14 @@ export function CheckoutClient() {
                         setCouponError("");
                       }}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())}
-                      placeholder="Código de cupón"
-                      className="flex-1 rounded-xl border border-warm-300 bg-warm-50 px-3.5 py-2.5 text-base text-warm-800 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
+                      placeholder="Cupón"
+                      className="flex-1 min-w-0 rounded-xl border border-warm-300 bg-warm-50 px-3 sm:px-3.5 py-2.5 text-base text-warm-800 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
                     />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
                       disabled={couponLoading || !couponInput.trim()}
-                      className="flex items-center gap-1.5 rounded-xl bg-warm-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-warm-900 disabled:opacity-40 transition-all"
+                      className="flex items-center gap-1.5 rounded-xl bg-warm-800 px-3 sm:px-4 py-2.5 text-sm font-semibold text-white hover:bg-warm-900 disabled:opacity-40 transition-all shrink-0"
                     >
                       {couponLoading
                         ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -523,7 +523,7 @@ export function CheckoutClient() {
             </div>
 
             {/* Totales */}
-            <div className="px-6 py-4 space-y-2.5">
+            <div className="px-4 sm:px-6 py-4 space-y-2.5">
               <div className="flex justify-between text-sm">
                 <span className="text-warm-500">Subtotal</span>
                 <span className="text-warm-800">{formatPrice(subtotal)}</span>
@@ -546,7 +546,7 @@ export function CheckoutClient() {
             </div>
 
             {/* Error y botón */}
-            <div className="px-6 pb-6 space-y-3">
+            <div className="px-4 sm:px-6 pb-6 space-y-3">
               {error && (
                 <div className="flex gap-3 items-start bg-red-50 border border-red-100 rounded-xl px-4 py-3">
                   <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
