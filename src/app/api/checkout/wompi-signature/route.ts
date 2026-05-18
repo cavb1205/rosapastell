@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const amountInCents = searchParams.get("amount");
   const currency = searchParams.get("currency") ?? "COP";
 
-  if (!reference || !amountInCents) {
+  if (!reference || !amountInCents || !/^\d+$/.test(amountInCents)) {
     return NextResponse.json({ error: "Parámetros requeridos" }, { status: 400 });
   }
 

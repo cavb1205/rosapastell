@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { wpRegister, AUTH_COOKIE_NAME, COOKIE_OPTIONS } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { registerSchema } from "@/lib/validations";
+import { sendEmail } from "@/lib/email";
+import { welcomeEmailHtml } from "@/lib/email-templates";
+import { SITE_NAME } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   const blocked = rateLimit(request, { limit: 3, windowMs: 60_000, prefix: "register" });
@@ -25,6 +28,17 @@ export async function POST(request: NextRequest) {
       lastName,
       phone,
     });
+
+    // Enviar email de bienvenida (no bloquea el registro si falla)
+    try {
+      await sendEmail({
+        to: [{ email: parsed.data.email, name: parsed.data.firstName }],
+        subject: `¡Bienvenida a ${SITE_NAME}!`,
+        htmlContent: welcomeEmailHtml({ firstName: parsed.data.firstName }),
+      });
+    } catch (err) {
+      console.error("[Email] Error enviando bienvenida:", err);
+    }
 
     const response = NextResponse.json({ user }, { status: 201 });
     response.cookies.set(AUTH_COOKIE_NAME, token, COOKIE_OPTIONS);

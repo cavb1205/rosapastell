@@ -44,7 +44,7 @@ export const profileUpdateSchema = z.object({
   last_name: z.string().max(100).optional(),
   billing: addressSchema.optional(),
   shipping: addressSchema.optional(),
-}).passthrough();
+}).strict();
 
 const lineItemSchema = z.object({
   product_id: z.number().int().positive(),

@@ -583,15 +583,17 @@ export function CheckoutClient() {
 function Field({
   label,
   error,
+  htmlFor,
   children,
 }: {
   label: string;
   error?: string;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold uppercase tracking-widest text-warm-500 mb-2">
+      <label htmlFor={htmlFor} className="block text-xs font-semibold uppercase tracking-widest text-warm-500 mb-2">
         {label}
       </label>
       {children}

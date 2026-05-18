@@ -40,7 +40,7 @@ Client state (cart items, wishlist, auth token) is managed by Zustand stores in 
 |---------|---------|-----------|
 | **WooCommerce** | Products, orders, categories, users | `src/lib/woocommerce.ts`, `src/lib/auth.ts` |
 | **Wompi** | Payment gateway (Colombia) | `src/components/checkout/WompiWidget.tsx`, `src/app/api/webhooks/wompi/` |
-| **Brevo** | Transactional email | `src/lib/brevo.ts`, `src/lib/email-templates.ts` |
+| **Resend** | Transactional email | `src/lib/email.ts`, `src/lib/email-templates.ts` |
 | **WordPress JWT** | Authentication (custom, no Auth.js) | `src/lib/auth.ts`, `src/app/api/auth/` |
 
 ### Auth
@@ -81,7 +81,7 @@ Brand palette defined as CSS custom properties and Tailwind theme tokens in `src
 
 ### Environment Variables
 
-Server-only: `WOOCOMMERCE_URL`, `WOOCOMMERCE_CONSUMER_KEY`, `WOOCOMMERCE_CONSUMER_SECRET`, `WOMPI_PRIVATE_KEY`, `WOMPI_INTEGRITY_SECRET`, `WOMPI_EVENTS_SECRET`, `BREVO_API_KEY`, `BREVO_FROM_EMAIL`, `BREVO_FROM_NAME`
+Server-only: `WOOCOMMERCE_URL`, `WOOCOMMERCE_CONSUMER_KEY`, `WOOCOMMERCE_CONSUMER_SECRET`, `WOMPI_PRIVATE_KEY`, `WOMPI_INTEGRITY_SECRET`, `WOMPI_EVENTS_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`
 
 Public: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_WHATSAPP_NUMBER`, `NEXT_PUBLIC_WOMPI_PUBLIC_KEY`
 

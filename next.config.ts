@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-src 'self' https://checkout.wompi.co; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.wompi.co https://www.googletagmanager.com;",
+          },
         ],
       },
     ];

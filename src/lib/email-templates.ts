@@ -1,6 +1,143 @@
 import { SITE_NAME, SITE_URL, WHATSAPP_URL } from "@/lib/constants";
 import { formatPrice } from "@/lib/formatters";
 
+/* ─── Email base wrapper ─── */
+function emailWrapper(title: string, body: string): string {
+  const logoUrl = `${SITE_URL}/logo-rosapastell.png`;
+  const primaryColor = "#F89BBB";
+  const mutedText = "#9c7c7c";
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background:#f7eef2;font-family:'Trebuchet MS',Calibri,'Gill Sans',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7eef2;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <img src="${logoUrl}" alt="${SITE_NAME}" height="48"
+                style="display:block;max-width:220px;height:auto;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#ffffff;border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(248,155,187,0.15);">
+              ${body}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 8px 0;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#c4a0a8;line-height:1.6;">
+                ${SITE_NAME} · Ibagué, Colombia<br />
+                <a href="${SITE_URL}" style="color:${primaryColor};text-decoration:none;">
+                  ${SITE_URL.replace("https://", "")}
+                </a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/* ─── Welcome email ─── */
+interface WelcomeEmailParams {
+  firstName: string;
+}
+
+export function welcomeEmailHtml({ firstName }: WelcomeEmailParams): string {
+  const primaryColor = "#F89BBB";
+  const darkText = "#3d2c2c";
+  const mutedText = "#9c7c7c";
+
+  const body = `
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:${primaryColor};">
+      Bienvenida
+    </p>
+    <h1 style="margin:0 0 8px;font-size:26px;color:${darkText};font-weight:700;">
+      ¡Hola, ${firstName}!
+    </h1>
+    <p style="margin:0 0 24px;font-size:14px;color:${mutedText};line-height:1.6;">
+      Tu cuenta en <strong style="color:${darkText};">${SITE_NAME}</strong> fue creada exitosamente.
+      Ya puedes explorar nuestras colecciones, guardar tus favoritos y hacer tus pedidos de forma más rápida.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td align="center">
+          <a href="${SITE_URL}/colecciones"
+            style="display:inline-block;background:${primaryColor};color:#ffffff;
+              font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
+              text-decoration:none;letter-spacing:0.3px;">
+            Ver Colecciones
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0;font-size:13px;color:${mutedText};line-height:1.6;text-align:center;">
+      ¿Tienes preguntas? Escríbenos por
+      <a href="${WHATSAPP_URL}" style="color:${primaryColor};text-decoration:none;font-weight:600;">WhatsApp</a>.
+    </p>`;
+
+  return emailWrapper(`Bienvenida a ${SITE_NAME}`, body);
+}
+
+/* ─── Password reset email ─── */
+interface PasswordResetEmailParams {
+  firstName: string;
+  resetUrl: string;
+}
+
+export function passwordResetEmailHtml({ firstName, resetUrl }: PasswordResetEmailParams): string {
+  const primaryColor = "#F89BBB";
+  const darkText = "#3d2c2c";
+  const mutedText = "#9c7c7c";
+
+  const body = `
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:${primaryColor};">
+      Recuperar contraseña
+    </p>
+    <h1 style="margin:0 0 8px;font-size:26px;color:${darkText};font-weight:700;">
+      Hola, ${firstName}
+    </h1>
+    <p style="margin:0 0 24px;font-size:14px;color:${mutedText};line-height:1.6;">
+      Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong style="color:${darkText};">${SITE_NAME}</strong>.
+      Haz clic en el botón para crear una nueva contraseña.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td align="center">
+          <a href="${resetUrl}"
+            style="display:inline-block;background:${primaryColor};color:#ffffff;
+              font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
+              text-decoration:none;letter-spacing:0.3px;">
+            Restablecer Contraseña
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 8px;font-size:13px;color:${mutedText};line-height:1.6;text-align:center;">
+      Este enlace expira en 1 hora. Si no solicitaste este cambio, puedes ignorar este email.
+    </p>
+    <p style="margin:0;font-size:11px;color:#c4a0a8;line-height:1.6;text-align:center;word-break:break-all;">
+      ${resetUrl}
+    </p>`;
+
+  return emailWrapper("Restablecer contraseña", body);
+}
+
+/* ─── Order confirmation email ─── */
 interface OrderItem {
   name: string;
   size: string;

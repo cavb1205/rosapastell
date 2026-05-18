@@ -124,6 +124,9 @@ export function WompiWidget({
     opened.current = false;
     setSignature(null);
     setError("");
+    // Remover script previo para forzar recarga limpia
+    const oldScript = document.getElementById("wompi-script");
+    if (oldScript) oldScript.remove();
     // Re-fetch firma para reintentar
     fetch(
       `/api/checkout/wompi-signature?reference=${reference}&amount=${amountInCents}&currency=COP`

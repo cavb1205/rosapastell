@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { WooCoupon } from "@/types/order";
+import { rateLimit } from "@/lib/rate-limit";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
 const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
 const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function GET(request: NextRequest) {
+  const blocked = rateLimit(request, { limit: 5, windowMs: 60_000, prefix: "coupon" });
+  if (blocked) return blocked;
+
   const code = request.nextUrl.searchParams.get("code")?.trim().toLowerCase();
   if (!code) {
     return NextResponse.json({ error: "Código requerido" }, { status: 400 });

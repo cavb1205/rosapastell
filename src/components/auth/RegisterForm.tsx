@@ -176,6 +176,7 @@ export function RegisterForm({ initialValues, onSuccess, onLoginClick }: Registe
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-300 hover:text-warm-600 transition-colors"
               tabIndex={-1}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
