@@ -38,26 +38,31 @@ export async function POST(request: NextRequest) {
 
     const order = await createOrder(orderPayload);
 
-    // Enviar email de confirmación — server-side, no puede ser cancelado por navegación
+    // Enviar email de confirmación antes de responder
+    // (await garantiza que la función no se cierre antes de enviar)
     const customerEmail = order.billing?.email;
     const firstName = order.billing?.first_name;
     if (customerEmail && emailMeta) {
-      sendEmail({
-        to: [{ email: customerEmail, name: firstName }],
-        subject: `Tu pedido #${order.number} en Rosa Pastell`,
-        htmlContent: orderConfirmationHtml({
-          orderNumber: order.number,
-          firstName: firstName || "Cliente",
-          items: emailMeta.items,
-          subtotal: emailMeta.subtotal,
-          discount: emailMeta.discount,
-          couponCode: emailMeta.couponCode,
-          total: emailMeta.total,
-          city: order.billing?.city || "",
-          address: order.billing?.address_1 || "",
-          paymentMethod: order.payment_method === "wompi" ? "wompi" : "whatsapp",
-        }),
-      }).catch((err) => console.error("[Email] Error enviando confirmación:", err));
+      try {
+        await sendEmail({
+          to: [{ email: customerEmail, name: firstName }],
+          subject: `Tu pedido #${order.number} en Rosa Pastell`,
+          htmlContent: orderConfirmationHtml({
+            orderNumber: order.number,
+            firstName: firstName || "Cliente",
+            items: emailMeta.items,
+            subtotal: emailMeta.subtotal,
+            discount: emailMeta.discount,
+            couponCode: emailMeta.couponCode,
+            total: emailMeta.total,
+            city: order.billing?.city || "",
+            address: order.billing?.address_1 || "",
+            paymentMethod: order.payment_method === "wompi" ? "wompi" : "whatsapp",
+          }),
+        });
+      } catch (err) {
+        console.error("[Email] Error enviando confirmación:", err);
+      }
     }
 
     return NextResponse.json(order, { status: 201 });
