@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
+  const blocked = rateLimit(request, { limit: 10, windowMs: 60_000, prefix: "wompi-sig" });
+  if (blocked) return blocked;
+
   const { searchParams } = new URL(request.url);
   const reference = searchParams.get("reference");
   const amountInCents = searchParams.get("amount");

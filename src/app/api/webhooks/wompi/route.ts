@@ -31,7 +31,6 @@ function verifyWompiSignature(event: WompiEvent): boolean {
   const secret = process.env.WOMPI_EVENTS_SECRET;
   if (!secret) return false;
 
-  // Extraer los valores de las propiedades dinámicas
   const values = event.signature.properties.map((prop) => {
     const keys = prop.split(".");
     let value: unknown = event.data;
@@ -50,6 +49,18 @@ function verifyWompiSignature(event: WompiEvent): boolean {
 
   return expected === event.signature.checksum;
 }
+
+// Idempotencia: evitar procesar el mismo webhook dos veces.
+// Wompi puede reenviar webhooks si no recibe respuesta a tiempo.
+const processedTransactions = new Map<string, number>();
+
+// Limpiar entradas viejas cada 10 minutos
+setInterval(() => {
+  const cutoff = Date.now() - 3_600_000; // 1 hora
+  for (const [key, ts] of processedTransactions) {
+    if (ts < cutoff) processedTransactions.delete(key);
+  }
+}, 600_000);
 
 export async function POST(request: NextRequest) {
   let event: WompiEvent;
@@ -74,11 +85,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const { reference, status } = event.data.transaction;
+  const { id: transactionId, reference, status } = event.data.transaction;
+
+  // Idempotencia: si ya procesamos esta transacción, responder OK sin re-procesar
+  const idempotencyKey = `${transactionId}-${status}`;
+  if (processedTransactions.has(idempotencyKey)) {
+    return NextResponse.json({ ok: true });
+  }
 
   // reference = "rp-{wooOrderId}"
   const match = reference.match(/^rp-(\d+)$/);
   if (!match) {
+    console.warn(`[Wompi Webhook] Referencia no reconocida: ${reference}`);
     return NextResponse.json({ ok: true });
   }
 
@@ -92,13 +110,21 @@ export async function POST(request: NextRequest) {
   };
 
   const wooStatus = statusMap[status];
-  if (wooStatus) {
-    try {
-      await updateOrderStatus(wooOrderId, wooStatus);
-    } catch (err) {
-      console.error(`[Wompi Webhook] Error actualizando orden ${wooOrderId}:`, err);
-      return NextResponse.json({ error: "Error interno" }, { status: 500 });
-    }
+  if (!wooStatus) {
+    console.warn(`[Wompi Webhook] Estado no mapeado: ${status} para transacción ${transactionId}`);
+    return NextResponse.json({ ok: true });
+  }
+
+  try {
+    await updateOrderStatus(wooOrderId, wooStatus);
+    processedTransactions.set(idempotencyKey, Date.now());
+    console.log(`[Wompi Webhook] Orden ${wooOrderId} actualizada a "${wooStatus}" (tx: ${transactionId})`);
+  } catch (err) {
+    console.error(
+      `[Wompi Webhook] Error actualizando orden ${wooOrderId} a "${wooStatus}" (tx: ${transactionId}):`,
+      err instanceof Error ? err.message : err,
+    );
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 
 interface WompiWidgetProps {
   orderId: number;
@@ -30,6 +30,7 @@ export function WompiWidget({
 }: WompiWidgetProps) {
   const [signature, setSignature] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [declined, setDeclined] = useState(false);
   const opened = useRef(false);
 
   const reference = `rp-${orderId}`;
@@ -77,6 +78,8 @@ export function WompiWidget({
       widget.open(({ transaction }) => {
         if (transaction.status === "APPROVED") {
           window.location.href = redirectUrl;
+        } else {
+          setDeclined(true);
         }
       });
     }
@@ -87,41 +90,89 @@ export function WompiWidget({
       return;
     }
 
-    // Inyectar script si no existe
-    if (!document.getElementById("wompi-script")) {
-      const script = document.createElement("script");
-      script.id = "wompi-script";
-      script.src = "https://checkout.wompi.co/widget.js";
-      script.async = true;
-      document.head.appendChild(script);
+    // Inyectar script
+    const existing = document.getElementById("wompi-script") as HTMLScriptElement | null;
+    if (existing) {
+      // Script ya inyectado pero aún cargando — esperar onload
+      existing.addEventListener("load", tryOpen);
+      return () => existing.removeEventListener("load", tryOpen);
     }
 
-    // Polling: esperar hasta que window.WidgetCheckout esté disponible
-    const interval = setInterval(() => {
-      if (window.WidgetCheckout) {
-        clearInterval(interval);
-        tryOpen();
-      }
-    }, 100);
+    const script = document.createElement("script");
+    script.id = "wompi-script";
+    script.src = "https://checkout.wompi.co/widget.js";
+    script.async = true;
 
-    // Timeout de seguridad a los 10 segundos
+    script.onload = () => tryOpen();
+    script.onerror = () =>
+      setError("No se pudo cargar el módulo de pago. Verifica tu conexión e intenta de nuevo.");
+
+    document.head.appendChild(script);
+
+    // Timeout de seguridad
     const timeout = setTimeout(() => {
-      clearInterval(interval);
       if (!opened.current) {
-        setError("No se pudo cargar el módulo de pago. Verifica tu conexión e intenta de nuevo.");
+        setError("El módulo de pago tardó demasiado en cargar. Intenta recargar la página.");
       }
-    }, 10_000);
+    }, 15_000);
 
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
+    return () => clearTimeout(timeout);
   }, [signature, publicKey, amountInCents, reference, redirectUrl, customerEmail, customerName, customerPhone]);
+
+  function handleRetry() {
+    setDeclined(false);
+    opened.current = false;
+    setSignature(null);
+    setError("");
+    // Re-fetch firma para reintentar
+    fetch(
+      `/api/checkout/wompi-signature?reference=${reference}&amount=${amountInCents}&currency=COP`
+    )
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.signature) setSignature(d.signature);
+        else setError("No se pudo generar la firma de pago.");
+      })
+      .catch(() => setError("Error al preparar el pago."));
+  }
+
+  if (declined) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-10 text-center">
+        <div className="w-14 h-14 flex items-center justify-center rounded-full bg-red-50">
+          <AlertCircle className="h-7 w-7 text-red-400" />
+        </div>
+        <div>
+          <p className="text-warm-800 font-semibold mb-1">Tu pago no fue aprobado</p>
+          <p className="text-sm text-warm-500">Puedes intentarlo de nuevo o elegir otro método de pago.</p>
+        </div>
+        <button
+          onClick={handleRetry}
+          className="flex items-center gap-2 rounded-full bg-burgundy-500 px-6 py-3 text-sm font-semibold text-white hover:bg-burgundy-600 transition-colors"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Intentar de nuevo
+        </button>
+        <a href="/checkout" className="text-sm text-warm-400 hover:text-warm-600 transition-colors">
+          Volver al checkout
+        </a>
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="rounded-xl bg-red-50 border border-red-100 px-5 py-4 text-sm text-red-600">
-        {error}
+      <div className="flex flex-col items-center gap-4 py-10 text-center">
+        <div className="rounded-xl bg-red-50 border border-red-100 px-5 py-4 text-sm text-red-600">
+          {error}
+        </div>
+        <button
+          onClick={handleRetry}
+          className="flex items-center gap-2 text-sm font-semibold text-burgundy-500 hover:text-burgundy-700 transition-colors"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reintentar
+        </button>
       </div>
     );
   }

@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
           total: emailMeta.total,
           city: order.billing?.city || "",
           address: order.billing?.address_1 || "",
+          paymentMethod: order.payment_method === "wompi" ? "wompi" : "whatsapp",
         }),
       }).catch((err) => console.error("[Email] Error enviando confirmación:", err));
     }
