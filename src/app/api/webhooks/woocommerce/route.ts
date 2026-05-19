@@ -55,8 +55,27 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("x-wc-webhook-signature");
 
   if (!verifySignature(rawBody, signature)) {
-    console.warn("[WC Webhook] Firma inválida");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Debug temporal — eliminar después de confirmar que funciona
+    const expected = WEBHOOK_SECRET
+      ? createHmac("sha256", WEBHOOK_SECRET).update(rawBody, "utf8").digest("base64")
+      : "NO_SECRET_CONFIGURED";
+    console.warn("[WC Webhook] Firma inválida", {
+      hasSecret: !!WEBHOOK_SECRET,
+      secretLength: WEBHOOK_SECRET?.length,
+      receivedSig: signature?.substring(0, 10) + "...",
+      expectedSig: expected.substring(0, 10) + "...",
+      bodyLength: rawBody.length,
+      bodyPreview: rawBody.substring(0, 100),
+    });
+    return NextResponse.json({
+      error: "Unauthorized",
+      debug: {
+        hasSecret: !!WEBHOOK_SECRET,
+        secretLength: WEBHOOK_SECRET?.length,
+        hasSignatureHeader: !!signature,
+        bodyLength: rawBody.length,
+      },
+    }, { status: 401 });
   }
 
   // WooCommerce envía un ping al crear el webhook — responder OK
