@@ -151,6 +151,7 @@ export function orderShippedEmailHtml(p: OrderShippedParams): string {
   const darkText = "#3d2c2c";
   const mutedText = "#9c7c7c";
   const bgLight = "#fdf6f8";
+  const waLink = `${WHATSAPP_URL}?text=${encodeURIComponent(`Hola, tengo una consulta sobre mi pedido #${p.orderNumber}`)}`;
 
   const body = `
     <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#5a9a6a;">
@@ -179,7 +180,7 @@ export function orderShippedEmailHtml(p: OrderShippedParams): string {
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td align="center">
-          <a href="${WHATSAPP_URL}"
+          <a href="${waLink}"
             style="display:inline-block;background:#25D366;color:#ffffff;
               font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
               text-decoration:none;letter-spacing:0.3px;">
@@ -202,6 +203,7 @@ interface OrderCancelledParams {
 export function orderCancelledEmailHtml(p: OrderCancelledParams): string {
   const darkText = "#3d2c2c";
   const mutedText = "#9c7c7c";
+  const waLink = `${WHATSAPP_URL}?text=${encodeURIComponent(`Hola, tengo una consulta sobre mi pedido #${p.orderNumber}`)}`;
 
   const body = `
     <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#d97706;">
@@ -222,7 +224,7 @@ export function orderCancelledEmailHtml(p: OrderCancelledParams): string {
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
         <td align="center">
-          <a href="${WHATSAPP_URL}"
+          <a href="${waLink}"
             style="display:inline-block;background:#25D366;color:#ffffff;
               font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
               text-decoration:none;letter-spacing:0.3px;">
@@ -258,6 +260,7 @@ interface OrderRefundedParams {
 export function orderRefundedEmailHtml(p: OrderRefundedParams): string {
   const darkText = "#3d2c2c";
   const mutedText = "#9c7c7c";
+  const waLink = `${WHATSAPP_URL}?text=${encodeURIComponent(`Hola, tengo una consulta sobre el reembolso de mi pedido #${p.orderNumber}`)}`;
 
   const body = `
     <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6366f1;">
@@ -279,7 +282,7 @@ export function orderRefundedEmailHtml(p: OrderRefundedParams): string {
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td align="center">
-          <a href="${WHATSAPP_URL}"
+          <a href="${waLink}"
             style="display:inline-block;background:#25D366;color:#ffffff;
               font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
               text-decoration:none;letter-spacing:0.3px;">
@@ -442,7 +445,7 @@ export function orderConfirmationHtml(p: OrderConfirmationParams): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="${WHATSAPP_URL}"
+                    <a href="${WHATSAPP_URL}?text=${encodeURIComponent(p.paymentMethod === "wompi" ? `Hola, tengo una consulta sobre mi pedido #${p.orderNumber}` : `Hola, quiero confirmar mi pedido #${p.orderNumber} y recibir los datos de pago`)}"
                       style="display:inline-block;background:#25D366;color:#ffffff;
                         font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
                         text-decoration:none;letter-spacing:0.3px;">
