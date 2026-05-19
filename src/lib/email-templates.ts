@@ -137,6 +137,161 @@ export function passwordResetEmailHtml({ firstName, resetUrl }: PasswordResetEma
   return emailWrapper("Restablecer contraseña", body);
 }
 
+/* ─── Order shipped / completed email ─── */
+interface OrderShippedParams {
+  orderNumber: string | number;
+  firstName: string;
+  total: string;
+  city: string;
+  address: string;
+}
+
+export function orderShippedEmailHtml(p: OrderShippedParams): string {
+  const primaryColor = "#F89BBB";
+  const darkText = "#3d2c2c";
+  const mutedText = "#9c7c7c";
+  const bgLight = "#fdf6f8";
+
+  const body = `
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#5a9a6a;">
+      Pedido enviado
+    </p>
+    <h1 style="margin:0 0 8px;font-size:26px;color:${darkText};font-weight:700;">
+      ¡Tu pedido va en camino!
+    </h1>
+    <p style="margin:0 0 24px;font-size:14px;color:${mutedText};line-height:1.6;">
+      ${p.firstName}, tu pedido <strong style="color:${darkText};">#${p.orderNumber}</strong>
+      por <strong style="color:${darkText};">${p.total}</strong> ha sido despachado.
+    </p>
+
+    <div style="background:${bgLight};border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;
+        letter-spacing:1px;color:${mutedText};">Envío a</p>
+      <p style="margin:0;font-size:13px;color:${darkText};">
+        ${p.address}, ${p.city}, Colombia
+      </p>
+    </div>
+
+    <p style="margin:0 0 24px;font-size:13px;color:${mutedText};line-height:1.6;text-align:center;">
+      Si tienes preguntas sobre tu envío, escríbenos por WhatsApp.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <a href="${WHATSAPP_URL}"
+            style="display:inline-block;background:#25D366;color:#ffffff;
+              font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
+              text-decoration:none;letter-spacing:0.3px;">
+            Contactar por WhatsApp
+          </a>
+        </td>
+      </tr>
+    </table>`;
+
+  return emailWrapper(`Pedido #${p.orderNumber} enviado`, body);
+}
+
+/* ─── Order cancelled email ─── */
+interface OrderCancelledParams {
+  orderNumber: string | number;
+  firstName: string;
+  total: string;
+}
+
+export function orderCancelledEmailHtml(p: OrderCancelledParams): string {
+  const darkText = "#3d2c2c";
+  const mutedText = "#9c7c7c";
+
+  const body = `
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#d97706;">
+      Pedido cancelado
+    </p>
+    <h1 style="margin:0 0 8px;font-size:26px;color:${darkText};font-weight:700;">
+      Tu pedido fue cancelado
+    </h1>
+    <p style="margin:0 0 24px;font-size:14px;color:${mutedText};line-height:1.6;">
+      ${p.firstName}, tu pedido <strong style="color:${darkText};">#${p.orderNumber}</strong>
+      por <strong style="color:${darkText};">${p.total}</strong> ha sido cancelado.
+    </p>
+
+    <p style="margin:0 0 24px;font-size:13px;color:${mutedText};line-height:1.6;text-align:center;">
+      Si crees que esto fue un error o necesitas ayuda, contáctanos por WhatsApp.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td align="center">
+          <a href="${WHATSAPP_URL}"
+            style="display:inline-block;background:#25D366;color:#ffffff;
+              font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
+              text-decoration:none;letter-spacing:0.3px;">
+            Contactar por WhatsApp
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <a href="${SITE_URL}/colecciones"
+            style="display:inline-block;color:${darkText};
+              font-size:13px;font-weight:600;text-decoration:underline;
+              text-underline-offset:3px;">
+            Seguir comprando
+          </a>
+        </td>
+      </tr>
+    </table>`;
+
+  return emailWrapper(`Pedido #${p.orderNumber} cancelado`, body);
+}
+
+/* ─── Order refunded email ─── */
+interface OrderRefundedParams {
+  orderNumber: string | number;
+  firstName: string;
+  total: string;
+}
+
+export function orderRefundedEmailHtml(p: OrderRefundedParams): string {
+  const darkText = "#3d2c2c";
+  const mutedText = "#9c7c7c";
+
+  const body = `
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6366f1;">
+      Reembolso procesado
+    </p>
+    <h1 style="margin:0 0 8px;font-size:26px;color:${darkText};font-weight:700;">
+      Tu reembolso fue procesado
+    </h1>
+    <p style="margin:0 0 24px;font-size:14px;color:${mutedText};line-height:1.6;">
+      ${p.firstName}, el reembolso de tu pedido <strong style="color:${darkText};">#${p.orderNumber}</strong>
+      por <strong style="color:${darkText};">${p.total}</strong> ha sido procesado.
+      El dinero puede tardar entre 3 a 10 días hábiles en reflejarse según tu banco.
+    </p>
+
+    <p style="margin:0 0 24px;font-size:13px;color:${mutedText};line-height:1.6;text-align:center;">
+      ¿Tienes preguntas? Escríbenos por WhatsApp.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <a href="${WHATSAPP_URL}"
+            style="display:inline-block;background:#25D366;color:#ffffff;
+              font-size:14px;font-weight:700;padding:14px 32px;border-radius:50px;
+              text-decoration:none;letter-spacing:0.3px;">
+            Contactar por WhatsApp
+          </a>
+        </td>
+      </tr>
+    </table>`;
+
+  return emailWrapper(`Reembolso del pedido #${p.orderNumber}`, body);
+}
+
 /* ─── Order confirmation email ─── */
 interface OrderItem {
   name: string;
