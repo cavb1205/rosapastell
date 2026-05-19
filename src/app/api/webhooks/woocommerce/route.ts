@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { sendEmail } from "@/lib/email";
 import { SITE_NAME } from "@/lib/constants";
 import { formatPrice } from "@/lib/formatters";
@@ -12,15 +12,44 @@ import {
 const WEBHOOK_SECRET = process.env.WOOCOMMERCE_WEBHOOK_SECRET!;
 
 /**
- * WooCommerce firma los webhooks con HMAC-SHA256 usando el secret configurado.
- * La firma viene en el header `x-wc-webhook-signature` como base64.
+ * Verificación dual:
+ * 1. HMAC-SHA256 via header x-wc-webhook-signature (método estándar)
+ * 2. Token secreto en query param ?secret= (fallback para versiones de WC
+ *    donde el header no llega — e.g. detrás de proxy/CDN que lo filtra)
  */
-function verifySignature(body: string, signature: string | null): boolean {
-  if (!signature || !WEBHOOK_SECRET) return false;
-  const expected = createHmac("sha256", WEBHOOK_SECRET)
-    .update(body, "utf8")
-    .digest("base64");
-  return expected === signature;
+function verifyRequest(
+  request: NextRequest,
+  rawBody: string,
+): boolean {
+  if (!WEBHOOK_SECRET) return false;
+
+  // Método 1: HMAC signature header
+  const signature = request.headers.get("x-wc-webhook-signature");
+  if (signature) {
+    const expected = createHmac("sha256", WEBHOOK_SECRET)
+      .update(rawBody, "utf8")
+      .digest("base64");
+    try {
+      return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    } catch {
+      return false;
+    }
+  }
+
+  // Método 2: Token en URL
+  const urlSecret = request.nextUrl.searchParams.get("secret");
+  if (urlSecret) {
+    try {
+      return timingSafeEqual(
+        Buffer.from(urlSecret),
+        Buffer.from(WEBHOOK_SECRET),
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 // Idempotencia: evitar enviar el mismo email dos veces si WooCommerce reenvía el webhook
@@ -52,29 +81,10 @@ interface WooWebhookOrder {
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
-  const signature = request.headers.get("x-wc-webhook-signature");
 
-  // Debug temporal — ver todos los headers de WooCommerce
-  const allHeaders: Record<string, string> = {};
-  request.headers.forEach((value, key) => {
-    if (key.startsWith("x-wc") || key.startsWith("x-wp")) {
-      allHeaders[key] = value;
-    }
-  });
-  console.log("[WC Webhook] Headers:", JSON.stringify(allHeaders));
-  console.log("[WC Webhook] Body preview:", rawBody.substring(0, 200));
-
-  if (!verifySignature(rawBody, signature)) {
-    return NextResponse.json({
-      error: "Unauthorized",
-      debug: {
-        hasSecret: !!WEBHOOK_SECRET,
-        secretLength: WEBHOOK_SECRET?.length,
-        hasSignatureHeader: !!signature,
-        bodyLength: rawBody.length,
-        wcHeaders: allHeaders,
-      },
-    }, { status: 401 });
+  if (!verifyRequest(request, rawBody)) {
+    console.warn("[WC Webhook] Verificación fallida");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // WooCommerce envía un ping al crear el webhook — responder OK
