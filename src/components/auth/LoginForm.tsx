@@ -43,15 +43,6 @@ export function LoginForm() {
       setAuth(data.user, "");
       setSuccess(true);
 
-      // Administradores van directo al dashboard de WordPress
-      const isAdmin = data.user.roles?.some((r: string) =>
-        ["administrator", "shop_manager"].includes(r)
-      );
-      if (isAdmin) {
-        window.location.href = "https://api.rosapastell.com/wp-admin";
-        return;
-      }
-
       router.push(redirectTo);
       router.refresh();
     } catch {

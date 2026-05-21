@@ -5,7 +5,7 @@ import { getUserFromCookie } from "@/lib/auth";
 import { SITE_NAME } from "@/lib/constants";
 import { OrderHistory } from "@/components/cuenta/OrderHistory";
 import { LogoutButton } from "@/components/cuenta/LogoutButton";
-import { Crown, ShoppingBag, User, Heart } from "lucide-react";
+import { Crown, ShoppingBag, User, Heart, Settings } from "lucide-react";
 
 export const metadata: Metadata = {
   title: `Mi Cuenta | ${SITE_NAME}`,
@@ -56,6 +56,26 @@ export default async function CuentaPage() {
 
       {/* Contenido */}
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        {/* Panel admin */}
+        {user.roles?.some((r) => ["administrator", "shop_manager"].includes(r)) && (
+          <a
+            href="https://api.rosapastell.com/wp-admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-5 bg-white border border-sage-200 rounded-2xl px-7 py-6 shadow-sm hover:border-sage-400 hover:shadow-md transition-all"
+          >
+            <div className="h-12 w-12 shrink-0 flex items-center justify-center rounded-full bg-sage-50">
+              <Settings className="h-5 w-5 text-sage-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-sage-800">Panel de Administración</p>
+              <p className="text-sm text-warm-400 mt-1">
+                Ir a WooCommerce para gestionar pedidos, productos e inventario.
+              </p>
+            </div>
+          </a>
+        )}
 
         {/* Badge mayorista */}
         {user.isWholesale && (
