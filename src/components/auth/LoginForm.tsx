@@ -48,7 +48,7 @@ export function LoginForm() {
         ["administrator", "shop_manager"].includes(r)
       );
       if (isAdmin) {
-        window.location.href = `${process.env.NEXT_PUBLIC_WP_ADMIN_URL || "https://www.rosapastell.com"}/wp-admin`;
+        window.location.href = "https://api.rosapastell.com/wp-admin";
         return;
       }
 
