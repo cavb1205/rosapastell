@@ -21,8 +21,8 @@ function emailWrapper(title: string, body: string): string {
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
           <tr>
             <td align="center" style="padding-bottom:24px;">
-              <img src="${logoUrl}" alt="${SITE_NAME}" height="48"
-                style="display:block;max-width:220px;height:auto;" />
+              <img src="${logoUrl}" alt="${SITE_NAME}" height="72"
+                style="display:block;max-width:320px;height:auto;" />
             </td>
           </tr>
           <tr>
@@ -383,8 +383,8 @@ export function orderConfirmationHtml(p: OrderConfirmationParams): string {
           <!-- Logo -->
           <tr>
             <td align="center" style="padding-bottom:24px;">
-              <img src="${logoUrl}" alt="${SITE_NAME}" height="48"
-                style="display:block;max-width:220px;height:auto;" />
+              <img src="${logoUrl}" alt="${SITE_NAME}" height="72"
+                style="display:block;max-width:320px;height:auto;" />
             </td>
           </tr>
 
