@@ -17,7 +17,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { RegisterModal } from "@/components/auth/RegisterModal";
 import { CartToastContainer } from "@/components/ui/CartToast";
 import { Analytics } from "@vercel/analytics/next";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 import "./globals.css";
 
 const dmSerif = DM_Serif_Display({
@@ -78,10 +78,9 @@ export default function RootLayout({
       className={`${dmSerif.variable} h-full antialiased`}
     >
       <head>
-        {/* Preconnect a orígenes externos para reducir latencia */}
-        <link rel="preconnect" href="https://www.rosapastell.com" />
-        <link rel="preconnect" href="https://i0.wp.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Preconnect al CDN de imágenes de WordPress (usado en páginas de producto/categoría) */}
+        <link rel="dns-prefetch" href="https://i0.wp.com" />
+        <link rel="dns-prefetch" href="https://api.rosapastell.com" />
       </head>
       <body className="min-h-full flex flex-col">
         <AuthProvider>
@@ -100,7 +99,13 @@ export default function RootLayout({
           <CartToastContainer />
           <Analytics />
         </AuthProvider>
-        <GoogleAnalytics gaId="G-DLZ93LHGPN" />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-DLZ93LHGPN"
+          strategy="lazyOnload"
+        />
+        <Script id="ga-init" strategy="lazyOnload">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-DLZ93LHGPN');`}
+        </Script>
       </body>
     </html>
   );
