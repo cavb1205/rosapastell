@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getProducts } from "@/lib/woocommerce";
+import { rateLimit } from "@/lib/rate-limit";
 import type { SearchIndexItem } from "@/components/catalog/SearchClient";
 
 export const revalidate = 3600; // 1 hora, se invalida con webhook
@@ -30,7 +31,10 @@ async function fetchAllInStock(): Promise<SearchIndexItem[]> {
   return items;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const blocked = rateLimit(request, { limit: 5, windowMs: 60_000, prefix: "search-index" });
+  if (blocked) return blocked;
+
   try {
     const items = await fetchAllInStock();
     return NextResponse.json(items, {

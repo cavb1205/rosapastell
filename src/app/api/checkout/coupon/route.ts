@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (blocked) return blocked;
 
   const code = request.nextUrl.searchParams.get("code")?.trim().toLowerCase();
-  if (!code) {
+  if (!code || code.length > 50) {
     return NextResponse.json({ error: "Código requerido" }, { status: 400 });
   }
 

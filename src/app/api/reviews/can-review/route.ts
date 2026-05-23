@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromCookie } from "@/lib/auth";
 import { getWooAuthHeader } from "@/lib/woocommerce";
+import { rateLimit } from "@/lib/rate-limit";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
 
 export async function GET(req: NextRequest) {
+  const blocked = rateLimit(req, { limit: 10, windowMs: 60_000, prefix: "can-review" });
+  if (blocked) return blocked;
+
   const productId = req.nextUrl.searchParams.get("product");
   if (!productId || !/^\d+$/.test(productId)) {
     return NextResponse.json({ canReview: false, reason: "missing_product" });
