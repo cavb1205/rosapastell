@@ -75,6 +75,7 @@ export function AddToCart({
       quantity,
       image,
       slug: product.slug,
+      stockQuantity: totalStock < 99 ? totalStock : undefined,
     });
 
     showCartToast({ name: product.name, size, quantity, image });

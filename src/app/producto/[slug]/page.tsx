@@ -122,7 +122,7 @@ export default async function ProductPage({ params }: PageProps) {
           <ProductDetail product={product} variations={variations} />
         </div>
 
-        <ProductReviews productId={product.id} />
+        <ProductReviews productId={product.id} reviews={reviews} />
 
         <RecentlyViewed
           current={{

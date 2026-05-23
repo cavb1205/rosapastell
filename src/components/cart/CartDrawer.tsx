@@ -141,7 +141,8 @@ export function CartDrawer() {
                       </span>
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variationId)}
-                        className="h-9 w-9 flex items-center justify-center text-warm-500 hover:bg-warm-50 transition-colors"
+                        disabled={item.stockQuantity != null && item.quantity >= item.stockQuantity}
+                        className="h-9 w-9 flex items-center justify-center text-warm-500 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         aria-label="Aumentar"
                       >
                         <Plus className="h-3.5 w-3.5" />

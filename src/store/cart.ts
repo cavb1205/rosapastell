@@ -22,10 +22,13 @@ export const useCartStore = create<CartState>()(
           );
 
           if (existingIndex >= 0) {
+            const existing = state.items[existingIndex];
+            const max = item.stockQuantity ?? existing.stockQuantity ?? 99;
             const updated = [...state.items];
             updated[existingIndex] = {
-              ...updated[existingIndex],
-              quantity: updated[existingIndex].quantity + item.quantity,
+              ...existing,
+              quantity: Math.min(existing.quantity + item.quantity, max),
+              stockQuantity: item.stockQuantity ?? existing.stockQuantity,
             };
             return { items: updated };
           }
@@ -57,12 +60,15 @@ export const useCartStore = create<CartState>()(
         }
 
         set((state) => ({
-          items: state.items.map((i) =>
-            i.productId === productId &&
-            i.variationId === (variationId ?? i.variationId)
-              ? { ...i, quantity }
-              : i
-          ),
+          items: state.items.map((i) => {
+            if (
+              i.productId !== productId ||
+              i.variationId !== (variationId ?? i.variationId)
+            )
+              return i;
+            const max = i.stockQuantity ?? 99;
+            return { ...i, quantity: Math.min(quantity, max) };
+          }),
         }));
       },
 

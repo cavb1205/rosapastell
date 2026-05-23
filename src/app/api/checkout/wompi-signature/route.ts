@@ -11,8 +11,14 @@ export async function GET(request: NextRequest) {
   const amountInCents = searchParams.get("amount");
   const currency = searchParams.get("currency") ?? "COP";
 
-  if (!reference || !amountInCents || !/^\d+$/.test(amountInCents)) {
-    return NextResponse.json({ error: "Parámetros requeridos" }, { status: 400 });
+  if (
+    !reference ||
+    !amountInCents ||
+    !/^rp-\d+$/.test(reference) ||
+    !/^\d+$/.test(amountInCents) ||
+    currency !== "COP"
+  ) {
+    return NextResponse.json({ error: "Parámetros inválidos" }, { status: 400 });
   }
 
   const integritySecret = process.env.WOMPI_INTEGRITY_SECRET;

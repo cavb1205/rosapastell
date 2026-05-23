@@ -92,7 +92,8 @@ export function CartPageClient() {
                   onClick={() =>
                     updateQuantity(item.productId, item.quantity + 1, item.variationId)
                   }
-                  className="h-9 w-9 flex items-center justify-center rounded-full border border-warm-200 text-warm-600 hover:bg-warm-50"
+                  disabled={item.stockQuantity != null && item.quantity >= item.stockQuantity}
+                  className="h-9 w-9 flex items-center justify-center rounded-full border border-warm-200 text-warm-600 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed"
                   aria-label="Aumentar cantidad"
                 >
                   <Plus className="h-3.5 w-3.5" />
