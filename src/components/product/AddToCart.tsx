@@ -21,6 +21,7 @@ export function AddToCart({
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const cartItems = useCartStore((s) => s.items);
   const showCartToast = useUIStore((s) => s.showCartToast);
   const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
 
@@ -37,13 +38,24 @@ export function AddToCart({
       ? selectedVariation.stock_status === "outofstock"
       : product.stock_status === "outofstock";
 
-  const maxStock =
+  const totalStock =
     selectedVariation?.stock_quantity ??
     product.stock_quantity ??
     99;
 
+  // Cantidad ya en el carrito para este producto/variación
+  const currentInCart = cartItems.find(
+    (i) =>
+      i.productId === product.id &&
+      i.variationId === (selectedVariation?.id ?? i.variationId)
+  )?.quantity ?? 0;
+
+  // Stock restante disponible para agregar
+  const maxAddable = Math.max(0, totalStock - currentInCart);
+  const atStockLimit = maxAddable === 0;
+
   function handleAddToCart() {
-    if (isDisabled || outOfStock) return;
+    if (isDisabled || outOfStock || atStockLimit) return;
 
     const source = selectedVariation ?? product;
     const price =
@@ -102,8 +114,8 @@ export function AddToCart({
           </span>
           <button
             type="button"
-            onClick={() => setQuantity((q) => Math.min(maxStock, q + 1))}
-            disabled={quantity >= maxStock}
+            onClick={() => setQuantity((q) => Math.min(maxAddable, q + 1))}
+            disabled={quantity >= maxAddable}
             aria-label="Aumentar cantidad"
             className="h-10 w-10 flex items-center justify-center text-warm-600 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
@@ -113,20 +125,28 @@ export function AddToCart({
       </div>
 
       {/* At-limit notice */}
-      {quantity >= maxStock && maxStock < 99 && (
+      {atStockLimit ? (
+        <p className="text-xs text-amber-600">
+          Ya tienes todas las unidades disponibles en tu carrito
+        </p>
+      ) : maxAddable < totalStock && totalStock < 99 ? (
+        <p className="text-xs text-amber-600">
+          Ya tienes {currentInCart} en tu carrito — quedan {maxAddable} disponibles
+        </p>
+      ) : quantity >= maxAddable && maxAddable < 99 ? (
         <p className="text-xs text-amber-600">
           Máximo disponible para esta talla
         </p>
-      )}
+      ) : null}
 
       {/* Add to cart button */}
       <button
         onClick={handleAddToCart}
-        disabled={isDisabled}
+        disabled={isDisabled || atStockLimit}
         className={`w-full flex items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-semibold transition-all ${
           added
             ? "bg-sage-300 text-white"
-            : isDisabled
+            : isDisabled || atStockLimit
             ? "bg-warm-200 text-warm-400 cursor-not-allowed"
             : "bg-burgundy-500 text-white hover:bg-burgundy-600 active:scale-98"
         }`}
@@ -136,6 +156,8 @@ export function AddToCart({
             <Check className="h-5 w-5" />
             Agregado al carrito
           </>
+        ) : atStockLimit ? (
+          "Stock máximo en carrito"
         ) : (
           <>
             <ShoppingBag className="h-5 w-5" />
