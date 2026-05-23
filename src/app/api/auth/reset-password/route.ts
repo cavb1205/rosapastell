@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash, timingSafeEqual } from "crypto";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 const resetSchema = z.object({
   email: z.string().email().max(255),
@@ -30,7 +29,8 @@ export async function POST(request: NextRequest) {
 
     // Buscar cliente por email
     const searchRes = await fetch(
-      `${WP_URL}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}&consumer_key=${CK}&consumer_secret=${CS}`,
+      `${WP_URL}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}`,
+      { headers: { Authorization: getWooAuthHeader() } },
     );
 
     if (!searchRes.ok) {
@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
 
     // Actualizar contraseña y limpiar token
     const updateRes = await fetch(
-      `${WP_URL}/wp-json/wc/v3/customers/${customer.id}?consumer_key=${CK}&consumer_secret=${CS}`,
+      `${WP_URL}/wp-json/wc/v3/customers/${customer.id}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: getWooAuthHeader() },
         body: JSON.stringify({
           password,
           meta_data: [

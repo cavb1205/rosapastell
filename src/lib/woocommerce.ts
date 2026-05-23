@@ -58,8 +58,9 @@ export class WooCommerceError extends Error {
   }
 }
 
-function getAuthParams(): string {
-  return `consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`;
+/** Basic Auth header para WooCommerce REST API (no expone credenciales en URLs/logs). */
+export function getWooAuthHeader(): string {
+  return "Basic " + Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString("base64");
 }
 
 async function wooFetch<T>(
@@ -72,12 +73,14 @@ async function wooFetch<T>(
     searchParams.set(key, String(value));
   });
 
-  const url = `${BASE_URL}/wp-json/wc/v3/${endpoint}?${getAuthParams()}&${searchParams.toString()}`;
+  const qs = searchParams.toString();
+  const url = `${BASE_URL}/wp-json/wc/v3/${endpoint}${qs ? `?${qs}` : ""}`;
 
   const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      Authorization: getWooAuthHeader(),
       ...options.headers,
     },
   });

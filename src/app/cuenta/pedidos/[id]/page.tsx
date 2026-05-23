@@ -19,12 +19,11 @@ export const metadata: Metadata = {
 
 async function fetchOrder(id: string): Promise<WooOrder | null> {
   const WP_URL = process.env.WOOCOMMERCE_URL!;
-  const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-  const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
+  const { getWooAuthHeader } = await import("@/lib/woocommerce");
   try {
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/orders/${id}?consumer_key=${CK}&consumer_secret=${CS}`,
-      { next: { revalidate: 60 } }
+      `${WP_URL}/wp-json/wc/v3/orders/${id}`,
+      { next: { revalidate: 60 }, headers: { Authorization: getWooAuthHeader() } }
     );
     if (!res.ok) return null;
     return res.json();

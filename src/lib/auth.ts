@@ -57,15 +57,13 @@ export async function wpRegister(payload: {
   lastName: string;
   phone?: string;
 }): Promise<{ token: string; user: WPUser }> {
-  const CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-  const CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
-
   // Crear cliente en WooCommerce (crea usuario de WordPress al mismo tiempo)
+  const { getWooAuthHeader } = await import("@/lib/woocommerce");
   const res = await fetch(
-    `${WP_URL}/wp-json/wc/v3/customers?consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`,
+    `${WP_URL}/wp-json/wc/v3/customers`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: getWooAuthHeader() },
       body: JSON.stringify({
         email: payload.email,
         password: payload.password,

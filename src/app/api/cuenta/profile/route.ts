@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { profileUpdateSchema } from "@/lib/validations";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function GET() {
   const user = await getUserFromCookie();
@@ -13,8 +12,8 @@ export async function GET() {
 
   try {
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/customers/${user.id}?consumer_key=${CK}&consumer_secret=${CS}`,
-      { next: { revalidate: 0 } },
+      `${WP_URL}/wp-json/wc/v3/customers/${user.id}`,
+      { next: { revalidate: 0 }, headers: { Authorization: getWooAuthHeader() } },
     );
     if (!res.ok) throw new Error("Error al obtener perfil");
     const data = await res.json();
@@ -42,10 +41,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/customers/${user.id}?consumer_key=${CK}&consumer_secret=${CS}`,
+      `${WP_URL}/wp-json/wc/v3/customers/${user.id}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: getWooAuthHeader() },
         body: JSON.stringify(parsed.data),
       },
     );

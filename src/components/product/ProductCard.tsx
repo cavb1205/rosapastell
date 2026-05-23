@@ -1,11 +1,8 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import type { WooProduct } from "@/types/product";
-import { formatPrice } from "@/lib/formatters";
-import { useAuthStore } from "@/store/auth";
 import { WishlistButton } from "./WishlistButton";
+import { ProductPriceClient, ProductBadgeClient } from "./ProductPriceClient";
 
 interface ProductCardProps {
   product: WooProduct;
@@ -13,27 +10,15 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
-  const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
-
   const mainImage = product.images[0];
-
-  // Precio efectivo según rol
-  const displayPrice = isWholesale && product.wholesalePrice !== null
-    ? product.wholesaleSalePrice ?? product.wholesalePrice
-    : product.on_sale && product.sale_price
-    ? product.sale_price
-    : product.price;
-
-  const crossedPrice = isWholesale && product.wholesalePrice !== null
-    ? product.wholesaleSalePrice !== null ? String(product.wholesalePrice) : null
-    : product.on_sale && product.sale_price ? product.regular_price : null;
-
-  const showWholesaleBadge = isWholesale && product.wholesalePrice !== null;
-  const showSaleBadge = !isWholesale && product.on_sale && product.sale_price;
-
   const stock = product.stock_quantity;
   const lowStock = stock !== null && stock > 0 && stock <= 3;
   const lastUnit = stock === 1;
+
+  // Fallback price for wishlist button (retail price)
+  const displayPrice = product.on_sale && product.sale_price
+    ? product.sale_price
+    : product.price;
 
   return (
     <Link
@@ -55,24 +40,16 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             <span className="text-sm">Sin imagen</span>
           </div>
         )}
-        {/* Badges top-left: prioridad mayorista > oferta */}
-        {showWholesaleBadge && (
-          <span className="absolute top-3 left-3 bg-burgundy-700 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-            Mayorista
-          </span>
-        )}
-        {showSaleBadge && (
-          <span className="absolute top-3 left-3 bg-burgundy-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-            Oferta
-          </span>
-        )}
-        {/* Badge stock bajo — esquina inferior izquierda */}
+        <ProductBadgeClient
+          onSale={product.on_sale}
+          salePrice={product.sale_price}
+          wholesalePrice={product.wholesalePrice}
+        />
         {lowStock && (
           <span className="absolute bottom-3 left-3 bg-amber-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
             {lastUnit ? "¡Última unidad!" : `Solo quedan ${stock}`}
           </span>
         )}
-        {/* Wishlist — esquina superior derecha */}
         <WishlistButton
           productId={product.id}
           name={product.name}
@@ -86,16 +63,14 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         <h3 className="text-sm font-medium text-warm-800 line-clamp-2 group-hover:text-burgundy-500 transition-colors">
           {product.name}
         </h3>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-base font-semibold text-burgundy-700">
-            {formatPrice(displayPrice)}
-          </span>
-          {crossedPrice && (
-            <span className="text-sm text-warm-400 line-through">
-              {formatPrice(crossedPrice)}
-            </span>
-          )}
-        </div>
+        <ProductPriceClient
+          price={product.price}
+          regularPrice={product.regular_price}
+          salePrice={product.sale_price}
+          onSale={product.on_sale}
+          wholesalePrice={product.wholesalePrice}
+          wholesaleSalePrice={product.wholesaleSalePrice}
+        />
         {product.attributes.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {product.attributes

@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { reviewSchema } from "@/lib/validations";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
-
-function auth() {
-  return `consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`;
-}
 
 export async function GET(req: NextRequest) {
   const productId = req.nextUrl.searchParams.get("product");
@@ -17,8 +12,8 @@ export async function GET(req: NextRequest) {
   }
 
   const res = await fetch(
-    `${WP_URL}/wp-json/wc/v3/products/reviews?product=${encodeURIComponent(productId)}&per_page=20&status=approved&${auth()}`,
-    { next: { revalidate: 60 } },
+    `${WP_URL}/wp-json/wc/v3/products/reviews?product=${encodeURIComponent(productId)}&per_page=20&status=approved`,
+    { next: { revalidate: 60 }, headers: { Authorization: getWooAuthHeader() } },
   );
 
   if (!res.ok) {
@@ -41,10 +36,10 @@ export async function POST(req: NextRequest) {
   const { product_id, review, rating, reviewer, reviewer_email } = parsed.data;
 
   const res = await fetch(
-    `${WP_URL}/wp-json/wc/v3/products/reviews?${auth()}`,
+    `${WP_URL}/wp-json/wc/v3/products/reviews`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: getWooAuthHeader() },
       body: JSON.stringify({ product_id, review, rating, reviewer, reviewer_email }),
     },
   );

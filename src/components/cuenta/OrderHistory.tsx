@@ -18,13 +18,12 @@ interface OrderHistoryProps {
 
 async function fetchOrders(userId: number): Promise<WooOrder[]> {
   const WP_URL = process.env.WOOCOMMERCE_URL!;
-  const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-  const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
+  const { getWooAuthHeader } = await import("@/lib/woocommerce");
 
   try {
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/orders?customer=${userId}&per_page=20&orderby=date&order=desc&consumer_key=${CK}&consumer_secret=${CS}`,
-      { next: { revalidate: 60 } }
+      `${WP_URL}/wp-json/wc/v3/orders?customer=${userId}&per_page=20&orderby=date&order=desc`,
+      { next: { revalidate: 60 }, headers: { Authorization: getWooAuthHeader() } }
     );
     if (!res.ok) return [];
     return res.json();

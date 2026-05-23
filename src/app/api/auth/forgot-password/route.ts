@@ -5,10 +5,9 @@ import { forgotPasswordSchema } from "@/lib/validations";
 import { sendEmail } from "@/lib/email";
 import { passwordResetEmailHtml } from "@/lib/email-templates";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function POST(request: NextRequest) {
   const blocked = rateLimit(request, { limit: 3, windowMs: 60_000, prefix: "forgot" });
@@ -24,7 +23,8 @@ export async function POST(request: NextRequest) {
 
     // Buscar cliente por email en WooCommerce
     const searchRes = await fetch(
-      `${WP_URL}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}&consumer_key=${CK}&consumer_secret=${CS}`,
+      `${WP_URL}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}`,
+      { headers: { Authorization: getWooAuthHeader() } },
     );
 
     if (searchRes.ok) {
@@ -41,10 +41,10 @@ export async function POST(request: NextRequest) {
 
         // Guardar hash del token en meta del cliente
         await fetch(
-          `${WP_URL}/wp-json/wc/v3/customers/${customer.id}?consumer_key=${CK}&consumer_secret=${CS}`,
+          `${WP_URL}/wp-json/wc/v3/customers/${customer.id}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", Authorization: getWooAuthHeader() },
             body: JSON.stringify({
               meta_data: [
                 { key: "_rp_reset_token", value: tokenHash },

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { getUserFromCookie } from "@/lib/auth";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function GET() {
   try {
@@ -13,7 +12,8 @@ export async function GET() {
     }
 
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/orders?customer=${user.id}&per_page=20&orderby=date&order=desc&consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`
+      `${WP_URL}/wp-json/wc/v3/orders?customer=${user.id}&per_page=20&orderby=date&order=desc`,
+      { headers: { Authorization: getWooAuthHeader() } }
     );
 
     if (!res.ok) throw new Error("Error al obtener pedidos");

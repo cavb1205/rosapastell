@@ -1,14 +1,13 @@
 import type { WooReview } from "@/types/review";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function getProductReviews(productId: number): Promise<WooReview[]> {
   try {
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/products/reviews?status=approved&product=${productId}&per_page=20&consumer_key=${CK}&consumer_secret=${CS}`,
-      { next: { revalidate: 60 } }
+      `${WP_URL}/wp-json/wc/v3/products/reviews?status=approved&product=${productId}&per_page=20`,
+      { next: { revalidate: 60 }, headers: { Authorization: getWooAuthHeader() } }
     );
     if (!res.ok) return [];
     return await res.json();
@@ -20,8 +19,8 @@ export async function getProductReviews(productId: number): Promise<WooReview[]>
 export async function getFeaturedReviews(limit = 12): Promise<WooReview[]> {
   try {
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/products/reviews?status=approved&per_page=${limit}&orderby=date_gmt&order=desc&consumer_key=${CK}&consumer_secret=${CS}`,
-      { next: { revalidate: 300 } }
+      `${WP_URL}/wp-json/wc/v3/products/reviews?status=approved&per_page=${limit}&orderby=date_gmt&order=desc`,
+      { next: { revalidate: 300 }, headers: { Authorization: getWooAuthHeader() } }
     );
     if (!res.ok) return [];
     const data: WooReview[] = await res.json();

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromCookie } from "@/lib/auth";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function GET(req: NextRequest) {
   const productId = req.nextUrl.searchParams.get("product");
@@ -18,8 +17,8 @@ export async function GET(req: NextRequest) {
 
   // Verificar si el usuario tiene al menos un pedido completado con este producto
   const res = await fetch(
-    `${WP_URL}/wp-json/wc/v3/orders?customer=${user.id}&product=${productId}&status=completed&per_page=1&consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`,
-    { next: { revalidate: 300 } }
+    `${WP_URL}/wp-json/wc/v3/orders?customer=${user.id}&product=${productId}&status=completed&per_page=1`,
+    { next: { revalidate: 300 }, headers: { Authorization: getWooAuthHeader() } }
   );
 
   if (!res.ok) {

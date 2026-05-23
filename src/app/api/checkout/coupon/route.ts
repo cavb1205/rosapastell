@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { WooCoupon } from "@/types/order";
 import { rateLimit } from "@/lib/rate-limit";
+import { getWooAuthHeader } from "@/lib/woocommerce";
 
 const WP_URL = process.env.WOOCOMMERCE_URL!;
-const CK = process.env.WOOCOMMERCE_CONSUMER_KEY!;
-const CS = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function GET(request: NextRequest) {
   const blocked = rateLimit(request, { limit: 5, windowMs: 60_000, prefix: "coupon" });
@@ -17,8 +16,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/coupons?code=${encodeURIComponent(code)}&consumer_key=${CK}&consumer_secret=${CS}`,
-      { next: { revalidate: 0 } }
+      `${WP_URL}/wp-json/wc/v3/coupons?code=${encodeURIComponent(code)}`,
+      { next: { revalidate: 0 }, headers: { Authorization: getWooAuthHeader() } }
     );
 
     if (!res.ok) throw new Error("Error al consultar cupón");
