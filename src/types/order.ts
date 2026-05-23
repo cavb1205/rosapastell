@@ -4,6 +4,8 @@ export interface OrderLineItem {
   quantity: number;
   name?: string;
   price?: string;
+  subtotal?: string;
+  total?: string;
 }
 
 export interface OrderShipping {
@@ -32,6 +34,7 @@ export interface CreateOrderPayload {
   payment_method_title: string;
   set_paid: boolean;
   status: "pending" | "on-hold" | "processing";
+  customer_id?: number;
   billing: OrderBilling;
   shipping: OrderShipping;
   line_items: OrderLineItem[];

@@ -12,7 +12,7 @@ type WooMetaItem = { key: string; value: unknown };
 type WithMeta<T> = T & { meta_data?: WooMetaItem[] };
 
 /** Lee _role_based_price de meta_data y devuelve los precios mayoristas parseados. */
-function parseWholesalePrice(meta_data?: WooMetaItem[]): {
+export function parseWholesalePrice(meta_data?: WooMetaItem[]): {
   wholesalePrice: number | null;
   wholesaleSalePrice: number | null;
 } {
