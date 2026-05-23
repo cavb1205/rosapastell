@@ -54,6 +54,11 @@ export function AddToCart({
   const maxAddable = Math.max(0, totalStock - currentInCart);
   const atStockLimit = maxAddable === 0;
 
+  // Clampear cantidad si el stock disponible baja (ej: después de agregar al carrito)
+  useEffect(() => {
+    setQuantity((q) => Math.min(q, Math.max(1, maxAddable)));
+  }, [maxAddable]);
+
   function handleAddToCart() {
     if (isDisabled || outOfStock || atStockLimit) return;
 
