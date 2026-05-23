@@ -33,7 +33,17 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "frame-src 'self' https://checkout.wompi.co; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.wompi.co https://www.googletagmanager.com;",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.wompi.co https://www.googletagmanager.com https://www.google-analytics.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https://www.rosapastell.com https://api.rosapastell.com https://i0.wp.com https://i1.wp.com https://i2.wp.com https://www.google-analytics.com",
+              "font-src 'self' data:",
+              "connect-src 'self' https://api.rosapastell.com https://www.google-analytics.com https://checkout.wompi.co https://vitals.vercel-insights.com",
+              "frame-src 'self' https://checkout.wompi.co",
+              "object-src 'none'",
+              "base-uri 'self'",
+            ].join("; "),
           },
         ],
       },

@@ -7,7 +7,7 @@ const CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET!;
 
 export async function GET(req: NextRequest) {
   const productId = req.nextUrl.searchParams.get("product");
-  if (!productId) {
+  if (!productId || !/^\d+$/.test(productId)) {
     return NextResponse.json({ canReview: false, reason: "missing_product" });
   }
 

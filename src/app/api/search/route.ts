@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchProducts } from "@/lib/woocommerce";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
+  const blocked = rateLimit(request, { limit: 20, windowMs: 60_000, prefix: "search" });
+  if (blocked) return blocked;
+
   try {
     const { searchParams } = request.nextUrl;
     const query = searchParams.get("q");

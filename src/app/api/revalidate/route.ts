@@ -35,12 +35,15 @@ function revalidateCatalog(): string[] {
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
 
-  if (WEBHOOK_SECRET) {
-    const signature = request.headers.get("x-wc-webhook-signature") ?? "";
-    if (!signature || !verifySignature(rawBody, signature)) {
-      console.warn("[WC Webhook] Firma inválida — request rechazado");
-      return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
-    }
+  if (!WEBHOOK_SECRET) {
+    console.error("[WC Webhook] WOOCOMMERCE_WEBHOOK_SECRET no configurado");
+    return NextResponse.json({ error: "Configuración inválida" }, { status: 500 });
+  }
+
+  const signature = request.headers.get("x-wc-webhook-signature") ?? "";
+  if (!signature || !verifySignature(rawBody, signature)) {
+    console.warn("[WC Webhook] Firma inválida — request rechazado");
+    return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
   }
 
   let body: Record<string, unknown>;

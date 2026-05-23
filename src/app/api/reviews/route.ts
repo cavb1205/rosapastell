@@ -12,12 +12,12 @@ function auth() {
 
 export async function GET(req: NextRequest) {
   const productId = req.nextUrl.searchParams.get("product");
-  if (!productId) {
+  if (!productId || !/^\d+$/.test(productId)) {
     return NextResponse.json({ error: "product requerido" }, { status: 400 });
   }
 
   const res = await fetch(
-    `${WP_URL}/wp-json/wc/v3/products/reviews?product=${productId}&per_page=20&status=approved&${auth()}`,
+    `${WP_URL}/wp-json/wc/v3/products/reviews?product=${encodeURIComponent(productId)}&per_page=20&status=approved&${auth()}`,
     { next: { revalidate: 60 } },
   );
 

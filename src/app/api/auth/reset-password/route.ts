@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHash } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -69,9 +69,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar token
+    // Verificar token (constant-time comparison)
     const tokenHash = createHash("sha256").update(token).digest("hex");
-    if (tokenHash !== storedHash) {
+    if (
+      tokenHash.length !== storedHash.length ||
+      !timingSafeEqual(Buffer.from(tokenHash), Buffer.from(storedHash))
+    ) {
       return NextResponse.json(
         { error: "El enlace no es válido o ya expiró." },
         { status: 400 },
