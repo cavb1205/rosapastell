@@ -101,9 +101,9 @@ export default function RootLayout({
         </AuthProvider>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-DLZ93LHGPN"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
         />
-        <Script id="ga-init" strategy="lazyOnload">
+        <Script id="ga-init" strategy="afterInteractive">
           {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-DLZ93LHGPN');`}
         </Script>
       </body>
