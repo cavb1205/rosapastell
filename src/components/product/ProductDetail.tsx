@@ -83,6 +83,7 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
       {variations.length > 0 && (
         <div className="mt-6">
           <SizeSelector
+            productId={product.id}
             variations={variations}
             selectedVariation={selectedVariation}
             onSelect={handleSizeSelect}

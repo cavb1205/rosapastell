@@ -2,28 +2,41 @@
 
 import { useState } from "react";
 import type { WooVariation } from "@/types/product";
+import { useCartStore } from "@/store/cart";
 import { SizeGuideModal } from "./SizeGuideModal";
 
 interface SizeSelectorProps {
+  productId: number;
   variations: WooVariation[];
   selectedVariation: WooVariation | null;
   onSelect: (variation: WooVariation, size: string) => void;
 }
 
 export function SizeSelector({
+  productId,
   variations,
   selectedVariation,
   onSelect,
 }: SizeSelectorProps) {
   const [guideOpen, setGuideOpen] = useState(false);
+  const cartItems = useCartStore((s) => s.items);
   const lowStockThreshold = 5;
-  const selectedStock = selectedVariation?.stock_quantity ?? null;
+  const totalStock = selectedVariation?.stock_quantity ?? null;
+
+  // Restar las unidades ya en el carrito
+  const inCart = selectedVariation
+    ? cartItems.find(
+        (i) => i.productId === productId && i.variationId === selectedVariation.id
+      )?.quantity ?? 0
+    : 0;
+  const availableStock = totalStock !== null ? totalStock - inCart : null;
+
   const showLowStock =
     selectedVariation &&
     selectedVariation.stock_status !== "outofstock" &&
-    selectedStock !== null &&
-    selectedStock <= lowStockThreshold &&
-    selectedStock > 0;
+    availableStock !== null &&
+    availableStock <= lowStockThreshold &&
+    availableStock > 0;
 
   return (
     <div>
@@ -41,7 +54,7 @@ export function SizeSelector({
         </div>
         {showLowStock ? (
           <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-            {selectedStock === 1 ? "¡Última unidad!" : `Solo quedan ${selectedStock}`}
+            {availableStock === 1 ? "¡Última unidad!" : `Solo quedan ${availableStock}`}
           </span>
         ) : selectedVariation ? (
           <span className="text-sm text-warm-500">
