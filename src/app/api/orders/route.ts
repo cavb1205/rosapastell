@@ -56,13 +56,18 @@ async function resolveWholesalePrices(
 
         if (wholesalePrice === null) return item; // Sin precio mayorista
 
+        // subtotal = precio retail original (para que WC muestre el descuento)
+        const retailPrice = parseFloat(data.regular_price || data.price);
+        const retailLineTotal = (retailPrice * item.quantity).toFixed(2);
+
+        // total = precio mayorista real que paga el cliente
         const unitPrice = wholesaleSalePrice ?? wholesalePrice;
-        const lineTotal = (unitPrice * item.quantity).toFixed(2);
+        const wholesaleLineTotal = (unitPrice * item.quantity).toFixed(2);
 
         return {
           ...item,
-          subtotal: lineTotal,
-          total: lineTotal,
+          subtotal: retailLineTotal,
+          total: wholesaleLineTotal,
         };
       } catch {
         return item; // Si hay error de red, dejar sin modificar
