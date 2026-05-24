@@ -1,6 +1,6 @@
 export const SITE_NAME = "Rosa Pastell";
 export const SITE_DESCRIPTION =
-  "Pijamas para mujer en Colombia. Envíos a todo el país. Más de 10 años vistiendo tus sueños.";
+  "Tienda de pijamas para mujer en Ibagué, Colombia. Envíos a todo el país. Más de 10 años vistiendo tus sueños con estilo y comodidad.";
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rosapastell.com";
 export const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "573156082381";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
