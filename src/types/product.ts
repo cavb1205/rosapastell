@@ -51,6 +51,8 @@ export interface WooProduct {
   // Precios mayoristas — parseados de _role_based_price en meta_data
   wholesalePrice: number | null;
   wholesaleSalePrice: number | null;
+  /** Tallas con stock > 0 (solo para productos variables, poblado en listados) */
+  inStockSizes?: string[];
 }
 
 export interface WooVariation {

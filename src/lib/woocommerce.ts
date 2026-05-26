@@ -116,11 +116,42 @@ export async function getProducts(
     ...params,
   });
 
+  const products: WooProduct[] = data.map(({ meta_data, ...p }) => ({
+    ...p,
+    ...parseWholesalePrice(meta_data),
+  }));
+
+  // Para productos variables, obtener las tallas realmente en stock
+  const variableProducts = products.filter(
+    (p) => p.type === "variable" && p.variations.length > 0
+  );
+  if (variableProducts.length > 0) {
+    const variationsMap = await Promise.all(
+      variableProducts.map(async (p) => {
+        try {
+          const { data: vars } = await wooFetch<{ stock_status: string; attributes: { name: string; option: string }[] }[]>(
+            `products/${p.id}/variations`,
+            { per_page: 100, _fields: "stock_status,attributes" }
+          );
+          const inStock = vars
+            .filter((v) => v.stock_status === "instock")
+            .map((v) => v.attributes.find((a) => a.name.toLowerCase() === "talla")?.option)
+            .filter(Boolean) as string[];
+          return { id: p.id, inStockSizes: inStock };
+        } catch {
+          return { id: p.id, inStockSizes: undefined };
+        }
+      })
+    );
+    const map = new Map(variationsMap.map((v) => [v.id, v.inStockSizes]));
+    for (const p of products) {
+      const sizes = map.get(p.id);
+      if (sizes) p.inStockSizes = sizes;
+    }
+  }
+
   return {
-    data: data.map(({ meta_data, ...p }) => ({
-      ...p,
-      ...parseWholesalePrice(meta_data),
-    })),
+    data: products,
     totalPages: Number(headers.get("x-wp-totalpages") || 1),
     total: Number(headers.get("x-wp-total") || 0),
   };

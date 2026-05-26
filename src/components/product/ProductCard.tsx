@@ -71,11 +71,12 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           wholesalePrice={product.wholesalePrice}
           wholesaleSalePrice={product.wholesaleSalePrice}
         />
-        {product.attributes.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {product.attributes
-              .find((a) => a.name.toLowerCase() === "talla")
-              ?.options.map((size) => (
+        {(() => {
+          const sizes = product.inStockSizes
+            ?? product.attributes.find((a) => a.name.toLowerCase() === "talla")?.options;
+          return sizes && sizes.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {sizes.map((size) => (
                 <span
                   key={size}
                   className="text-[11px] text-warm-500 border border-warm-200 rounded px-1.5 py-0.5"
@@ -83,8 +84,9 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                   {size}
                 </span>
               ))}
-          </div>
-        )}
+            </div>
+          ) : null;
+        })()}
       </div>
     </Link>
   );
