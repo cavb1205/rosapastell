@@ -14,7 +14,7 @@ import { SizeFilter } from "@/components/catalog/SizeFilter";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

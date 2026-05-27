@@ -16,9 +16,9 @@ import { formatPrice } from "@/lib/formatters";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { getProductReviews } from "@/lib/reviews";
 
-// ISR: páginas generadas bajo demanda en el primer request, cacheadas 60s
+// ISR: páginas generadas bajo demanda en el primer request, cacheadas 5min
 // No usamos generateStaticParams para evitar sobrecargar WordPress en el build
-export const revalidate = 60;
+export const revalidate = 300;
 export const dynamicParams = true;
 
 interface PageProps {
