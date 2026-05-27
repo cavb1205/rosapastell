@@ -116,34 +116,11 @@ export async function getProducts(
     ...params,
   });
 
-  const products: WooProduct[] = data.map(({ meta_data, ...p }) => ({
-    ...p,
-    ...parseWholesalePrice(meta_data),
-  }));
-
-  // Para productos variables, obtener las tallas realmente en stock
-  // Se ejecutan secuencialmente para no saturar el VPS de WooCommerce
-  const variableProducts = products.filter(
-    (p) => p.type === "variable" && p.variations.length > 0
-  );
-  for (const p of variableProducts) {
-    try {
-      const { data: vars } = await wooFetch<{ stock_status: string; attributes: { name: string; option: string }[] }[]>(
-        `products/${p.id}/variations`,
-        { per_page: 100, _fields: "stock_status,attributes" },
-        { next: { revalidate: 120 } },
-      );
-      p.inStockSizes = vars
-        .filter((v) => v.stock_status === "instock")
-        .map((v) => v.attributes.find((a) => a.name.toLowerCase() === "talla")?.option)
-        .filter(Boolean) as string[];
-    } catch {
-      // Si falla, no asignamos inStockSizes — el card usa attributes como fallback
-    }
-  }
-
   return {
-    data: products,
+    data: data.map(({ meta_data, ...p }) => ({
+      ...p,
+      ...parseWholesalePrice(meta_data),
+    })),
     totalPages: Number(headers.get("x-wp-totalpages") || 1),
     total: Number(headers.get("x-wp-total") || 0),
   };

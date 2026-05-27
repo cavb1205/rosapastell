@@ -90,19 +90,15 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     ...sortParams,
   });
 
-  // Filtrar por talla con stock real (inStockSizes) o atributos como fallback
+  // Filtrar por talla sobre los resultados (atributo local de WooCommerce)
   const products = talla
-    ? rawProducts.filter((p) => {
-        if (p.inStockSizes) {
-          return p.inStockSizes.some((s) => s.toLowerCase() === talla.toLowerCase());
-        }
-        // Fallback para productos simples (sin variaciones)
-        return p.attributes.some(
+    ? rawProducts.filter((p) =>
+        p.attributes.some(
           (a) =>
             a.name.toLowerCase() === "talla" &&
             a.options.some((o) => o.toLowerCase() === talla.toLowerCase())
-        );
-      })
+        )
+      )
     : rawProducts;
 
   return (
