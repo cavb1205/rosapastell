@@ -23,7 +23,7 @@ async function fetchOrder(id: string): Promise<WooOrder | null> {
   try {
     const res = await fetch(
       `${WP_URL}/wp-json/wc/v3/orders/${id}`,
-      { next: { revalidate: 60 }, headers: { Authorization: getWooAuthHeader() } }
+      { cache: "no-store", headers: { Authorization: getWooAuthHeader() } }
     );
     if (!res.ok) return null;
     return res.json();

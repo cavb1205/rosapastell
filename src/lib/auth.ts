@@ -109,7 +109,7 @@ export async function getUserFromCookie(): Promise<WPUser | null> {
 
     const res = await fetch(`${WP_URL}/wp-json/wp/v2/users/me?context=edit`, {
       headers: { Authorization: `Bearer ${token}` },
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
 
     if (!res.ok) return null;
