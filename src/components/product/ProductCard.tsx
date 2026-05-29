@@ -71,19 +71,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           wholesalePrice={product.wholesalePrice}
           wholesaleSalePrice={product.wholesaleSalePrice}
         />
-        {product.attributes.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {product.attributes
-              .find((a) => a.name.toLowerCase() === "talla")
-              ?.options.map((size) => (
-                <span
-                  key={size}
-                  className="text-[11px] text-warm-500 border border-warm-200 rounded px-1.5 py-0.5"
-                >
-                  {size}
-                </span>
-              ))}
-          </div>
+        {product.attributes.some((a) => a.name.toLowerCase() === "talla") && (
+          <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-burgundy-500 group-hover:text-burgundy-600 transition-colors">
+            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z" />
+              <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
+              <line x1="12" y1="22.08" x2="12" y2="11.73" />
+            </svg>
+            Ver tallas disponibles
+          </span>
         )}
       </div>
     </Link>
