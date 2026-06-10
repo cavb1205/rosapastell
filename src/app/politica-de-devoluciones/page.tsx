@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FaqJsonLd } from "@/components/seo/FaqJsonLd";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -18,6 +19,30 @@ export default function PoliticaDevolucionesPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
+      <FaqJsonLd
+        items={[
+          {
+            question: "¿Puedo realizar un cambio si la pijama no me queda?",
+            answer:
+              "Sí. Aceptamos cambios por talla o color dentro de los 5 días hábiles siguientes a la recepción del pedido, siempre que la prenda esté sin uso, con sus etiquetas originales y en su empaque original.",
+          },
+          {
+            question: "¿Quién asume el costo del envío del cambio?",
+            answer:
+              "El costo del envío para el cambio corre por cuenta del cliente. Rosa Pastell no cubre los gastos de transporte generados por cambios de talla o color.",
+          },
+          {
+            question: "¿Qué productos no tienen cambio ni devolución?",
+            answer:
+              "Por disposición legal, las prendas de uso personal y los artículos en oferta o liquidación no tienen cambio ni devolución. Tampoco aplican las prendas usadas, sin etiqueta o sin empaque original.",
+          },
+          {
+            question: "¿Cómo solicito un cambio?",
+            answer:
+              "Escríbenos por WhatsApp con tu número de pedido y el motivo del cambio. Confirmaremos la disponibilidad, te indicaremos la dirección de envío y, una vez recibamos y verifiquemos la prenda, enviamos el cambio.",
+          },
+        ]}
+      />
       <h1 className="font-heading text-4xl text-warm-900 mb-2">
         Política de Cambios y Devoluciones
       </h1>

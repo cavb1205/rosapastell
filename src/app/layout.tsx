@@ -76,7 +76,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="es"
+      lang="es-CO"
       className={`${dmSerif.variable} h-full antialiased`}
     >
       <head>

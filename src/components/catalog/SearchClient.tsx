@@ -38,8 +38,8 @@ function normalize(str: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-export function SearchClient() {
-  const [query, setQuery] = useState("");
+export function SearchClient({ initialQuery = "" }: { initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [products, setProducts] = useState<WooProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);

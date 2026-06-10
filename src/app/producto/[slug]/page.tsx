@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getProductBySlug,
@@ -30,7 +31,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = await getProductBySlug(slug);
   if (!product) return {};
 
-  const description = `Compra ${product.name} en ${SITE_NAME}. ${formatPrice(product.price)} COP. Envíos a toda Colombia.`;
+  // Descripción única basada en el short_description real del producto (mejor
+  // CTR en resultados). Cae a una plantilla si el producto no tiene resumen.
+  const summary = product.short_description
+    ? product.short_description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+    : "";
+  const description = summary
+    ? `${summary.slice(0, 150)}${summary.length > 150 ? "…" : ""} | ${formatPrice(product.price)} COP. Envíos a toda Colombia.`.slice(0, 160)
+    : `Compra ${product.name} en ${SITE_NAME}. ${formatPrice(product.price)} COP. Envíos a toda Colombia.`;
   const canonical = `${SITE_URL}/producto/${slug}`;
   const ogImages = product.images.map((img) => ({
     url: img.src,
@@ -96,17 +104,17 @@ export default async function ProductPage({ params }: PageProps) {
         {/* Breadcrumb */}
         <nav className="text-sm text-warm-400 mb-6" aria-label="Ruta de navegación">
           <ol className="flex items-center gap-2 flex-wrap">
-            <li><a href="/" className="hover:text-burgundy-500 transition-colors">Inicio</a></li>
+            <li><Link href="/" className="hover:text-burgundy-500 transition-colors">Inicio</Link></li>
             {category && (
               <>
                 <li aria-hidden>/</li>
                 <li>
-                  <a
+                  <Link
                     href={`/categorias/${category.slug}`}
                     className="hover:text-burgundy-500 transition-colors"
                   >
                     {category.name}
-                  </a>
+                  </Link>
                 </li>
               </>
             )}
@@ -150,12 +158,12 @@ export default async function ProductPage({ params }: PageProps) {
                 </h2>
               </div>
               {category && (
-                <a
+                <Link
                   href={`/categorias/${category.slug}`}
                   className="shrink-0 text-sm font-medium text-burgundy-500 hover:text-burgundy-700 transition-colors underline underline-offset-4"
                 >
                   Ver colección →
-                </a>
+                </Link>
               )}
             </div>
             <ProductGrid products={relatedProducts} />

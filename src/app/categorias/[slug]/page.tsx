@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
@@ -12,6 +13,7 @@ import { Pagination } from "@/components/catalog/Pagination";
 import { SortSelector } from "@/components/catalog/SortSelector";
 import { SizeFilter } from "@/components/catalog/SizeFilter";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
+import { sanitizeHTML } from "@/lib/sanitize";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 
 export const revalidate = 300;
@@ -109,15 +111,34 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           { name: category.name, href: `/categorias/${slug}` },
         ]}
       />
+      {products.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              name: category.name,
+              numberOfItems: products.length,
+              itemListElement: products.map((p, i) => ({
+                "@type": "ListItem",
+                position: i + 1,
+                url: `${SITE_URL}/producto/${p.slug}`,
+                name: p.name,
+              })),
+            }),
+          }}
+        />
+      )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="text-sm text-warm-400 mb-6" aria-label="Ruta de navegación">
           <ol className="flex items-center gap-2">
             <li>
-              <a href="/" className="hover:text-burgundy-500 transition-colors">
+              <Link href="/" className="hover:text-burgundy-500 transition-colors">
                 Inicio
-              </a>
+              </Link>
             </li>
             <li aria-hidden>/</li>
             <li className="text-warm-700 font-medium">{category.name}</li>
@@ -140,7 +161,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
               .filter((c) => c.count > 0 && c.slug !== "uncategorized")
               .slice(0, 6)
               .map((c) => (
-                <a
+                <Link
                   key={c.id}
                   href={`/categorias/${c.slug}`}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
@@ -150,10 +171,18 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                   }`}
                 >
                   {c.name}
-                </a>
+                </Link>
               ))}
           </div>
         </div>
+
+        {/* Descripción de categoría — contenido único indexable (SEO) */}
+        {category.description && (
+          <div
+            className="prose-category mb-8 max-w-3xl text-sm text-warm-600 leading-relaxed [&_a]:text-burgundy-500 [&_a:hover]:underline [&_h2]:font-heading [&_h2]:text-warm-900 [&_h2]:text-lg [&_h2]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1"
+            dangerouslySetInnerHTML={{ __html: sanitizeHTML(category.description) }}
+          />
+        )}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <Suspense>
