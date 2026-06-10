@@ -70,11 +70,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  // El "ping" que WooCommerce envía al guardar el webhook trae el cuerpo vacío
+  // o no-JSON. Respondemos 200 para que la prueba de entrega pase sin error.
+  if (!rawBody.trim()) {
+    return NextResponse.json({ ok: true, ping: true });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = JSON.parse(rawBody);
   } catch {
-    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+    return NextResponse.json({ ok: true, ping: true });
   }
 
   const topic = request.headers.get("x-wc-webhook-topic") ?? "";
