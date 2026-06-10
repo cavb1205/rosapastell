@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* Century Gothic — fuente de marca (sistema: Windows/macOS; fallback geométrico) */
 @font-face {

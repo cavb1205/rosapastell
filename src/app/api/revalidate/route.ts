@@ -5,22 +5,47 @@ import crypto from "crypto";
 const WEBHOOK_SECRET = process.env.WOOCOMMERCE_WEBHOOK_SECRET;
 
 /**
- * WooCommerce firma el cuerpo crudo con HMAC-SHA256 y lo envía en
- * X-WC-Webhook-Signature como Base64. Verificamos antes de procesar.
+ * Verificación dual: acepta el request si CUALQUIERA de los dos métodos es válido.
+ * 1. HMAC-SHA256 via header x-wc-webhook-signature (método estándar de WC)
+ * 2. Token secreto en query param ?secret= (fallback porque el header suele
+ *    filtrarse detrás de proxy/CDN antes de llegar a la función)
+ *
+ * Importante: si el header está presente pero NO coincide, igual se intenta
+ * el token de la URL (no se corta en el método 1).
  */
-function verifySignature(rawBody: string, signature: string): boolean {
+function verifyRequest(request: NextRequest, rawBody: string): boolean {
   if (!WEBHOOK_SECRET) return false;
 
-  const expected = crypto
-    .createHmac("sha256", WEBHOOK_SECRET)
-    .update(rawBody, "utf8")
-    .digest("base64");
+  // Método 1: HMAC signature header
+  const signature = request.headers.get("x-wc-webhook-signature");
+  if (signature) {
+    const expected = crypto
+      .createHmac("sha256", WEBHOOK_SECRET)
+      .update(rawBody, "utf8")
+      .digest("base64");
+    try {
+      if (crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+        return true;
+      }
+    } catch {
+      // longitudes distintas u otro error — seguimos al método 2
+    }
+  }
 
-  const a = Buffer.from(expected);
-  const b = Buffer.from(signature);
-  if (a.length !== b.length) return false;
+  // Método 2: Token en URL (fallback)
+  const urlSecret = request.nextUrl.searchParams.get("secret");
+  if (urlSecret) {
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(urlSecret),
+        Buffer.from(WEBHOOK_SECRET),
+      );
+    } catch {
+      return false;
+    }
+  }
 
-  return crypto.timingSafeEqual(a, b);
+  return false;
 }
 
 /** Invalida las páginas que muestran stock: categorías, colecciones, homepage e índice de búsqueda. */
@@ -40,10 +65,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Configuración inválida" }, { status: 500 });
   }
 
-  const signature = request.headers.get("x-wc-webhook-signature") ?? "";
-  if (!signature || !verifySignature(rawBody, signature)) {
-    console.warn("[WC Webhook] Firma inválida — request rechazado");
-    return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
+  if (!verifyRequest(request, rawBody)) {
+    console.warn("[WC Webhook] Verificación fallida — request rechazado");
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   let body: Record<string, unknown>;

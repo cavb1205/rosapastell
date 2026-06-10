@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
@@ -12,6 +12,8 @@ export function CartDrawer() {
   const { items, drawerOpen, closeDrawer, removeItem, updateQuantity, getTotal } = useCartStore();
   const hydrated = useHydration();
   const total = getTotal();
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   // Bloquear scroll del body cuando el drawer está abierto
   useEffect(() => {
@@ -21,6 +23,17 @@ export function CartDrawer() {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
+  }, [drawerOpen]);
+
+  // Gestión de foco: al abrir, mover el foco al diálogo; al cerrar, devolverlo
+  useEffect(() => {
+    if (drawerOpen) {
+      triggerRef.current = document.activeElement as HTMLElement | null;
+      closeBtnRef.current?.focus();
+    } else {
+      triggerRef.current?.focus();
+      triggerRef.current = null;
+    }
   }, [drawerOpen]);
 
   // Cerrar con Escape
@@ -50,6 +63,7 @@ export function CartDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Carrito de compras"
+        inert={!drawerOpen}
         className={`fixed top-0 right-0 h-full w-full max-w-[95vw] sm:max-w-md bg-white z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
@@ -66,6 +80,7 @@ export function CartDrawer() {
             )}
           </div>
           <button
+            ref={closeBtnRef}
             onClick={closeDrawer}
             className="p-2 text-warm-400 hover:text-warm-700 transition-colors rounded-lg hover:bg-warm-50"
             aria-label="Cerrar carrito"
