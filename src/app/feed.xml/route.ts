@@ -81,6 +81,20 @@ function buildItem(p: WooProduct, base: string): string | null {
     ? `    <g:mpn>${escapeXml(p.sku)}</g:mpn>`
     : `    <g:identifier_exists>no</g:identifier_exists>`;
 
+  // Atributos de ropa. Solo emitimos color/talla cuando el producto tiene UN
+  // único valor (sin ambigüedad); con varias tallas se omite, porque a nivel
+  // de producto sería dato incorrecto y enumerarlas exige traer variaciones
+  // (carga extra al VPS que queremos evitar). Usa p.attributes ya presente.
+  const singleAttr = (names: string[]): string | null => {
+    const attr = p.attributes?.find((a) =>
+      names.includes(a.name.toLowerCase().trim())
+    );
+    const opt = attr?.options?.[0]?.trim();
+    return attr && attr.options.length === 1 && opt ? opt : null;
+  };
+  const color = singleAttr(["color"]);
+  const size = singleAttr(["talla", "size", "tamaño"]);
+
   return [
     "  <item>",
     `    <g:id>${p.id}</g:id>`,
@@ -95,6 +109,10 @@ function buildItem(p: WooProduct, base: string): string | null {
     salePrice ? `    <g:sale_price>${salePrice}</g:sale_price>` : "",
     `    <g:brand>${escapeXml(SITE_NAME)}</g:brand>`,
     identifierLines,
+    `    <g:gender>female</g:gender>`,
+    `    <g:age_group>adult</g:age_group>`,
+    color ? `    <g:color>${escapeXml(color)}</g:color>` : "",
+    size ? `    <g:size>${escapeXml(size)}</g:size>` : "",
     `    <g:google_product_category>${escapeXml(GOOGLE_PRODUCT_CATEGORY)}</g:google_product_category>`,
     productType
       ? `    <g:product_type>${escapeXml(productType)}</g:product_type>`
