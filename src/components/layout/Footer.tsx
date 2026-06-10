@@ -55,6 +55,14 @@ export function Footer() {
                   Cómo Comprar
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/politica-de-devoluciones"
+                  className="text-sm text-warm-600 hover:text-burgundy-500 transition-colors"
+                >
+                  Cambios y Devoluciones
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -134,12 +142,20 @@ export function Footer() {
           <p className="text-xs text-warm-500">
             &copy; {new Date().getFullYear()} {SITE_NAME}. Todos los derechos reservados.
           </p>
-          <Link
-            href="/politica-de-privacidad"
-            className="text-xs text-warm-500 hover:text-warm-200 transition-colors"
-          >
-            Política de privacidad
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/politica-de-privacidad"
+              className="text-xs text-warm-500 hover:text-warm-200 transition-colors"
+            >
+              Política de privacidad
+            </Link>
+            <Link
+              href="/politica-de-devoluciones"
+              className="text-xs text-warm-500 hover:text-warm-200 transition-colors"
+            >
+              Cambios y devoluciones
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
