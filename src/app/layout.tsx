@@ -80,8 +80,9 @@ export default function RootLayout({
       className={`${dmSerif.variable} h-full antialiased`}
     >
       <head>
-        {/* Preconnect al CDN de imágenes de WordPress (usado en páginas de producto/categoría) */}
-        <link rel="dns-prefetch" href="https://i0.wp.com" />
+        {/* Preconnect al CDN de imágenes (LCP en producto/categoría sale de aquí) */}
+        <link rel="preconnect" href="https://i0.wp.com" crossOrigin="anonymous" />
+        {/* API server-side: solo adelantamos el DNS */}
         <link rel="dns-prefetch" href="https://api.rosapastell.com" />
       </head>
       <body className="min-h-full flex flex-col">

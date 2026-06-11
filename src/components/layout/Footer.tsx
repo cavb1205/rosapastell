@@ -145,13 +145,13 @@ export function Footer() {
           <div className="flex gap-4">
             <Link
               href="/politica-de-privacidad"
-              className="text-xs text-warm-500 hover:text-warm-200 transition-colors"
+              className="text-xs text-warm-500 hover:text-burgundy-500 transition-colors"
             >
               Política de privacidad
             </Link>
             <Link
               href="/politica-de-devoluciones"
-              className="text-xs text-warm-500 hover:text-warm-200 transition-colors"
+              className="text-xs text-warm-500 hover:text-burgundy-500 transition-colors"
             >
               Cambios y devoluciones
             </Link>

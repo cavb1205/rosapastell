@@ -30,11 +30,11 @@ export function SiteHeader() {
         {/* Tagline */}
         <div className="flex items-center justify-center gap-3 pb-4">
           <span className="block h-px w-10 bg-burgundy-300" />
-          <span className="text-burgundy-400">♥</span>
+          <span className="text-burgundy-400" aria-hidden="true">♥</span>
           <span className="text-xs tracking-widest uppercase text-warm-500">
             Más de 10 años vistiendo tus sueños
           </span>
-          <span className="text-burgundy-400">♥</span>
+          <span className="text-burgundy-400" aria-hidden="true">♥</span>
           <span className="block h-px w-10 bg-burgundy-300" />
         </div>
 

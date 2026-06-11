@@ -129,6 +129,8 @@ export function DesktopActions() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="relative p-2 text-warm-600 hover:text-burgundy-500 transition-colors"
                   aria-label="Mi cuenta"
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
                 >
                   <User className="h-5 w-5" />
                   {user.isWholesale && (
@@ -215,9 +217,13 @@ export function MobileHeader() {
   const hydrated = useHydration();
   const router = useRouter();
 
-  useEffect(() => {
+  // Cerrar el menú al navegar (incluye botón atrás/adelante del navegador).
+  // Patrón de ajuste de estado en render — evita un efecto con setState síncrono.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setMobileMenuOpen(false);
-  }, [pathname]);
+  }
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -234,7 +240,9 @@ export function MobileHeader() {
           type="button"
           className="-ml-2 p-2 text-warm-600 hover:text-warm-800"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Abrir menú"
+          aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-menu"
         >
           {mobileMenuOpen ? (
             <X className="h-6 w-6" />
@@ -262,7 +270,7 @@ export function MobileHeader() {
       {/* Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-warm-100 bg-white">
-          <nav className="px-4 py-4 space-y-1">
+          <nav id="mobile-menu" className="px-4 py-4 space-y-1">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
