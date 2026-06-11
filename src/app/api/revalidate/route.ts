@@ -57,6 +57,25 @@ function revalidateCatalog(): string[] {
   return ["/categorias/[slug]", "/colecciones", "/", "/api/search/index"];
 }
 
+/**
+ * Extrae el slug del producto desde el payload del webhook.
+ * Los productos traen `slug`; las variaciones NO, pero sí traen `permalink`
+ * (ej. ".../producto/afrodita-verde/?attribute_talla=S"), del que tomamos el
+ * último segmento de la ruta. Así revalidamos la página de detalle también
+ * cuando el stock cambia a nivel de variación.
+ */
+function extractProductSlug(body: Record<string, unknown>): string | null {
+  if (typeof body.slug === "string" && body.slug) return body.slug;
+
+  const permalink = typeof body.permalink === "string" ? body.permalink : "";
+  if (permalink) {
+    const path = permalink.split("?")[0].replace(/\/+$/, "");
+    const last = path.split("/").pop();
+    if (last) return last;
+  }
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
 
@@ -86,9 +105,10 @@ export async function POST(request: NextRequest) {
   const topic = request.headers.get("x-wc-webhook-topic") ?? "";
   const revalidated: string[] = [];
 
-  // ── Eventos de PRODUCTO (actualización manual de stock/precio/imagen) ──
+  // ── Eventos de PRODUCTO (actualización manual o por venta de stock/precio) ──
+  // Cubre product.updated tanto del producto padre como de variaciones.
   if (topic.startsWith("product.")) {
-    const slug = body.slug as string | undefined;
+    const slug = extractProductSlug(body);
 
     if (slug) {
       revalidatePath(`/producto/${slug}`);
