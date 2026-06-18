@@ -10,6 +10,7 @@ const metadataBaseUrl = process.env.NEXT_PUBLIC_SITE_URL
   ? new URL(`https://${process.env.VERCEL_URL}`)
   : new URL(SITE_URL);
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { StorePauseBanner } from "@/components/layout/StorePauseBanner";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { AuthProvider } from "@/components/auth/AuthProvider";
@@ -98,6 +99,9 @@ export default async function RootLayout({
             >
               Saltar al contenido principal
             </a>
+            {storeStatus.paused && (
+              <StorePauseBanner message={storeStatus.message} />
+            )}
             <SiteHeader />
             <main id="main-content" className="flex-1">{children}</main>
             <Footer />
