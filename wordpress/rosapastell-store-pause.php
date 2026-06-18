@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * 0. Configuración (wp-config.php tiene prioridad si define las constantes)
  * ---------------------------------------------------------------------- */
 if ( ! defined( 'RP_FRONTEND_URL' ) ) {
-    define( 'RP_FRONTEND_URL', 'https://rosapastell.com' );
+    define( 'RP_FRONTEND_URL', 'https://www.rosapastell.com' );
 }
 if ( ! defined( 'RP_REVALIDATE_SECRET' ) ) {
     define( 'RP_REVALIDATE_SECRET', '__RP_REVALIDATE_SECRET__' );
