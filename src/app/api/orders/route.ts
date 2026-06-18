@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, getWooAuthHeader, parseWholesalePrice, WooCommerceError } from "@/lib/woocommerce";
+import { createOrder, getWooAuthHeader, getStoreStatus, parseWholesalePrice, WooCommerceError } from "@/lib/woocommerce";
 import { getUserFromCookie } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml } from "@/lib/email-templates";
@@ -81,6 +81,20 @@ async function resolveWholesalePrices(
 export async function POST(request: NextRequest) {
   const blocked = rateLimit(request, { limit: 5, windowMs: 60_000, prefix: "orders" });
   if (blocked) return blocked;
+
+  // Gate de pausa de tienda: aunque el frontend oculta los botones, esta es la
+  // verificación real que impide crear pedidos durante un lanzamiento. Se lee
+  // sin caché para que el bloqueo aplique al instante al activar el interruptor.
+  const storeStatus = await getStoreStatus({ fresh: true });
+  if (storeStatus.paused) {
+    return NextResponse.json(
+      {
+        error: storeStatus.message || "Las compras están en pausa temporalmente.",
+        storePaused: true,
+      },
+      { status: 403 },
+    );
+  }
 
   try {
     const parsed = orderSchema.safeParse(await request.json());

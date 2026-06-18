@@ -13,6 +13,8 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { StoreStatusProvider } from "@/components/StoreStatusProvider";
+import { getStoreStatus } from "@/lib/woocommerce";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { RegisterModal } from "@/components/auth/RegisterModal";
 import { CartToastContainer } from "@/components/ui/CartToast";
@@ -69,11 +71,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const storeStatus = await getStoreStatus();
+
   return (
     <html
       lang="es-CO"
@@ -86,22 +90,24 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://api.rosapastell.com" />
       </head>
       <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-burgundy-500 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
-          >
-            Saltar al contenido principal
-          </a>
-          <SiteHeader />
-          <main id="main-content" className="flex-1">{children}</main>
-          <Footer />
-          <WhatsAppButton />
-          <CartDrawer />
-          <RegisterModal />
-          <CartToastContainer />
-          <Analytics />
-        </AuthProvider>
+        <StoreStatusProvider value={storeStatus}>
+          <AuthProvider>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-burgundy-500 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+            >
+              Saltar al contenido principal
+            </a>
+            <SiteHeader />
+            <main id="main-content" className="flex-1">{children}</main>
+            <Footer />
+            <WhatsAppButton />
+            <CartDrawer />
+            <RegisterModal />
+            <CartToastContainer />
+            <Analytics />
+          </AuthProvider>
+        </StoreStatusProvider>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-DLZ93LHGPN"
           strategy="afterInteractive"

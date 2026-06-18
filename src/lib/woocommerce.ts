@@ -104,6 +104,46 @@ async function wooFetch<T>(
   return { data, headers: res.headers };
 }
 
+// Store status (pausa de tienda / modo catálogo)
+
+export interface StoreStatus {
+  /** Cuando es true, se deshabilita la compra en todo el sitio (lanzamiento de colección). */
+  paused: boolean;
+  /** Mensaje a mostrar mientras la tienda está en pausa. */
+  message: string;
+}
+
+const STORE_OPEN: StoreStatus = { paused: false, message: "" };
+
+/**
+ * Lee el interruptor de pausa desde el endpoint propio de WordPress
+ * (`/wp-json/rosapastell/v1/store-status`, definido en el mu-plugin
+ * `rosapastell-store-pause.php`).
+ *
+ * Fail-safe: ante cualquier error (endpoint caído, red, JSON inválido) se
+ * asume tienda ABIERTA, para que un problema del backend nunca congele las
+ * ventas. El bloqueo real es una decisión explícita del cliente, no un fallo.
+ *
+ * @param opts.fresh  Salta la caché ISR (úsalo en la validación de `/api/orders`).
+ */
+export async function getStoreStatus(opts?: { fresh?: boolean }): Promise<StoreStatus> {
+  try {
+    const res = await fetch(`${BASE_URL}/wp-json/rosapastell/v1/store-status`, {
+      ...(opts?.fresh
+        ? { cache: "no-store" }
+        : { next: { revalidate: 60, tags: ["store-status"] } }),
+    });
+    if (!res.ok) return STORE_OPEN;
+    const data = (await res.json()) as Partial<StoreStatus>;
+    return {
+      paused: Boolean(data.paused),
+      message: typeof data.message === "string" ? data.message : "",
+    };
+  } catch {
+    return STORE_OPEN;
+  }
+}
+
 // Products
 
 export async function getProducts(

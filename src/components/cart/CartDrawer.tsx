@@ -7,9 +7,11 @@ import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/formatters";
 import { useHydration } from "@/hooks/useHydration";
+import { useStoreStatus } from "@/components/StoreStatusProvider";
 
 export function CartDrawer() {
   const { items, drawerOpen, closeDrawer, removeItem, updateQuantity, getTotal } = useCartStore();
+  const { paused, message } = useStoreStatus();
   const hydrated = useHydration();
   const total = getTotal();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
@@ -193,13 +195,27 @@ export function CartDrawer() {
             <p className="text-xs text-warm-400 -mt-2">
               Envío se coordina al confirmar el pedido
             </p>
-            <Link
-              href="/checkout"
-              onClick={closeDrawer}
-              className="block w-full text-center rounded-full bg-burgundy-500 px-6 py-4 text-sm font-semibold text-white hover:bg-burgundy-600 transition-colors"
-            >
-              Finalizar compra
-            </Link>
+            {paused ? (
+              <div className="space-y-2">
+                <button
+                  disabled
+                  className="block w-full text-center rounded-full bg-warm-200 px-6 py-4 text-sm font-semibold text-warm-500 cursor-not-allowed"
+                >
+                  Compras en pausa
+                </button>
+                <p className="text-xs text-warm-500 text-center">
+                  {message || "Estamos preparando la nueva colección ✨"}
+                </p>
+              </div>
+            ) : (
+              <Link
+                href="/checkout"
+                onClick={closeDrawer}
+                className="block w-full text-center rounded-full bg-burgundy-500 px-6 py-4 text-sm font-semibold text-white hover:bg-burgundy-600 transition-colors"
+              >
+                Finalizar compra
+              </Link>
+            )}
             <button
               onClick={closeDrawer}
               className="block w-full text-center text-sm text-warm-500 hover:text-warm-700 transition-colors"

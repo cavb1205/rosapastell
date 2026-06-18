@@ -5,6 +5,7 @@ import { ShoppingBag, Check, Minus, Plus } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useUIStore } from "@/store/ui";
+import { useStoreStatus } from "@/components/StoreStatusProvider";
 import type { WooProduct, WooVariation } from "@/types/product";
 
 interface AddToCartProps {
@@ -24,6 +25,7 @@ export function AddToCart({
   const cartItems = useCartStore((s) => s.items);
   const showCartToast = useUIStore((s) => s.showCartToast);
   const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
+  const { paused, message } = useStoreStatus();
 
   // Reset quantity when the user switches size
   useEffect(() => {
@@ -60,7 +62,7 @@ export function AddToCart({
   }, [maxAddable]);
 
   function handleAddToCart() {
-    if (isDisabled || outOfStock || atStockLimit) return;
+    if (paused || isDisabled || outOfStock || atStockLimit) return;
 
     const source = selectedVariation ?? product;
     const price =
@@ -87,6 +89,24 @@ export function AddToCart({
     setAdded(true);
     setQuantity(1);
     setTimeout(() => setAdded(false), 2000);
+  }
+
+  // Tienda en pausa (lanzamiento de colección): prevalece sobre el resto de
+  // estados. Se muestran los productos pero no se puede comprar todavía.
+  if (paused) {
+    return (
+      <div className="space-y-2">
+        <button
+          disabled
+          className="w-full rounded-full bg-warm-200 px-8 py-4 text-sm font-semibold text-warm-500 cursor-not-allowed"
+        >
+          Próximamente
+        </button>
+        {message ? (
+          <p className="text-xs text-warm-500 text-center">{message}</p>
+        ) : null}
+      </div>
+    );
   }
 
   if (outOfStock) {

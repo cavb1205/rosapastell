@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import crypto from "crypto";
 
 const WEBHOOK_SECRET = process.env.WOOCOMMERCE_WEBHOOK_SECRET;
@@ -100,6 +100,16 @@ export async function POST(request: NextRequest) {
     body = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ ok: true, ping: true });
+  }
+
+  // ── Interruptor de pausa de tienda (mu-plugin rosapastell-store-pause) ──
+  // El plugin hace POST con { event: "store-status" } al activar/desactivar el
+  // switch. Invalidamos el tag para que el nuevo estado se vea de inmediato en
+  // todo el sitio (el estado se lee en el layout raíz con tag "store-status").
+  if (body.event === "store-status") {
+    revalidateTag("store-status", "max");
+    console.log("[Revalidate] store-status → tag invalidado");
+    return NextResponse.json({ revalidated: true, tag: "store-status" });
   }
 
   const topic = request.headers.get("x-wc-webhook-topic") ?? "";
