@@ -277,3 +277,18 @@ export async function updateOrderStatus(
   });
   return data;
 }
+
+/** Actualización genérica de orden (estado, meta_data, etc.). */
+export async function updateOrder(
+  orderId: number,
+  payload: Record<string, unknown>
+): Promise<WooOrder> {
+  const { data } = await wooFetch<WooOrder>(`orders/${orderId}`, {}, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return data;
+}
+
+/** Marca de meta que identifica una cancelación automática por sobreventa. */
+export const OVERSOLD_AUTOCANCEL_META = "_rp_autocancel_oversold";

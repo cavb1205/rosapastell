@@ -8,6 +8,7 @@ import {
   orderCancelledEmailHtml,
   orderRefundedEmailHtml,
 } from "@/lib/email-templates";
+import { OVERSOLD_AUTOCANCEL_META } from "@/lib/woocommerce";
 
 const WEBHOOK_SECRET = process.env.WOOCOMMERCE_WEBHOOK_SECRET!;
 
@@ -77,6 +78,7 @@ interface WooWebhookOrder {
     address_1: string;
     city: string;
   };
+  meta_data?: { key: string; value: unknown }[];
 }
 
 export async function POST(request: NextRequest) {
@@ -135,6 +137,15 @@ export async function POST(request: NextRequest) {
       }
 
       case "cancelled": {
+        // No notificar cancelaciones automáticas por sobreventa: el cliente nunca
+        // llegó a tener un pedido válido (perdió la carrera por la última unidad)
+        // y ya vio el mensaje de "agotado" en el checkout.
+        const autoCancel = order.meta_data?.some(
+          (m) => m.key === OVERSOLD_AUTOCANCEL_META && m.value === "yes",
+        );
+        if (autoCancel) {
+          return NextResponse.json({ ok: true, skipped: "oversold-autocancel" });
+        }
         await sendEmail({
           to: [{ email, name: firstName }],
           subject: `Tu pedido #${order.number} fue cancelado — ${SITE_NAME}`,

@@ -48,6 +48,8 @@ export function CheckoutClient() {
   const [error, setError] = useState("");
   const [stockError, setStockError] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
+  // Aviso temprano: nombres de ítems del carrito que ya están agotados (G5).
+  const [unavailable, setUnavailable] = useState<string[]>([]);
 
   // Cupón
   const [couponInput, setCouponInput] = useState("");
@@ -109,6 +111,40 @@ export function CheckoutClient() {
       })
       .catch(() => {});
   }, [user, prefilled, reset]);
+
+  // Aviso temprano de stock (G5): al entrar al checkout, verifica si algún ítem
+  // del carrito ya está agotado para avisar antes de llenar el formulario. Es
+  // un aviso "suave"; la validación dura sigue en POST /api/orders al confirmar.
+  useEffect(() => {
+    if (!hydrated || items.length === 0) {
+      setUnavailable([]);
+      return;
+    }
+    const controller = new AbortController();
+    fetch("/api/checkout/stock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: items.map((i) => ({
+          product_id: i.productId,
+          variation_id: i.variationId,
+          quantity: i.quantity,
+        })),
+      }),
+      signal: controller.signal,
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { outOfStock?: number[] } | null) => {
+        if (!data?.outOfStock) return;
+        const names = data.outOfStock
+          .map((idx) => items[idx])
+          .filter((it) => Boolean(it))
+          .map((it) => `${it.name} (${variantSummary(it.attributes, it.size)})`);
+        setUnavailable(names);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [hydrated, items]);
 
   // Aplicar cupón
   async function handleApplyCoupon() {
@@ -275,6 +311,27 @@ export function CheckoutClient() {
 
         {/* ── Formulario ── */}
         <div className="lg:col-span-2 space-y-6">
+
+          {/* Aviso temprano de stock (G5) */}
+          {unavailable.length > 0 && (
+            <div className="flex gap-3 items-start bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+              <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-amber-800">
+                  {unavailable.length === 1
+                    ? "Un producto de tu carrito se agotó"
+                    : "Algunos productos de tu carrito se agotaron"}
+                </p>
+                <p className="text-sm text-amber-700">{unavailable.join(", ")}.</p>
+                <Link
+                  href="/carrito"
+                  className="inline-block text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900 transition-colors"
+                >
+                  Actualizar carrito →
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Banner de login para invitados */}
           {!authLoading && !user && (

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, getWooAuthHeader, getStoreStatus, parseWholesalePrice, WooCommerceError } from "@/lib/woocommerce";
+import { createOrder, getWooAuthHeader, getStoreStatus, parseWholesalePrice, updateOrder, OVERSOLD_AUTOCANCEL_META, WooCommerceError } from "@/lib/woocommerce";
 import { getUserFromCookie } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
 import { orderSchema } from "@/lib/validations";
+import { findInsufficientStock, findOversold } from "@/lib/stock";
 import type { OrderLineItem, CreateOrderPayload } from "@/types/order";
 
 // Códigos de error de WooCommerce relacionados con stock insuficiente
@@ -21,60 +22,6 @@ function isStockError(error: WooCommerceError): boolean {
     error.message.toLowerCase().includes("agotado") ||
     error.message.toLowerCase().includes("existencias")
   );
-}
-
-/**
- * Revalida el stock REAL (sin caché) de cada ítem justo antes de crear el pedido.
- *
- * La REST API de WooCommerce NO valida stock al crear órdenes (deja el inventario
- * en negativo → sobreventa). Como el cliente puede llegar con una página/carrito
- * cacheado de cuando aún había stock, este chequeo es la única defensa confiable
- * contra vender algo ya agotado.
- *
- * Devuelve los índices de los line_items sin stock suficiente. Fail-open: si no se
- * puede verificar un ítem (red caída, etc.) no se bloquea, para no congelar ventas
- * por un fallo transitorio del backend.
- */
-async function findOutOfStockItems(
-  lineItems: OrderLineItem[]
-): Promise<number[]> {
-  const WP_URL = process.env.WOOCOMMERCE_URL!;
-  const authHeader = getWooAuthHeader();
-
-  const results = await Promise.all(
-    lineItems.map(async (item, index) => {
-      try {
-        const endpoint = item.variation_id
-          ? `${WP_URL}/wp-json/wc/v3/products/${item.product_id}/variations/${item.variation_id}`
-          : `${WP_URL}/wp-json/wc/v3/products/${item.product_id}`;
-
-        const res = await fetch(endpoint, {
-          headers: { Authorization: authHeader },
-          cache: "no-store",
-        });
-        if (!res.ok) return null; // no se pudo verificar → fail-open
-
-        const data = await res.json();
-
-        // El dueño habilitó backorders para este producto: vender sin stock es
-        // intencional, no se bloquea.
-        if (data.backorders_allowed === true) return null;
-
-        if (data.stock_status === "outofstock") return index;
-
-        // Stock gestionado: bloquear si se piden más unidades de las que quedan.
-        if (data.manage_stock && typeof data.stock_quantity === "number") {
-          if (item.quantity > data.stock_quantity) return index;
-        }
-
-        return null;
-      } catch {
-        return null; // fail-open ante error de red
-      }
-    })
-  );
-
-  return results.filter((i): i is number => i !== null);
 }
 
 /**
@@ -161,22 +108,24 @@ export async function POST(request: NextRequest) {
 
     const { _emailMeta: emailMeta, ...parsedPayload } = parsed.data;
 
-    // Revalidación de stock fresca: impide la sobreventa de ítems agotados que
-    // pasaron el filtro por venir de una página/carrito cacheado.
-    const outOfStock = await findOutOfStockItems(parsedPayload.line_items);
-    if (outOfStock.length > 0) {
-      const names = outOfStock
+    // Nombres legibles para el mensaje de "agotado", a partir de los índices.
+    const stockErrorBody = (indices: number[]) => {
+      const names = indices
         .map((i) => emailMeta?.items[i]?.name)
         .filter((n): n is string => Boolean(n));
-      return NextResponse.json(
-        {
-          error: names.length
-            ? `Estos productos se agotaron justo antes de confirmar: ${names.join(", ")}.`
-            : "Uno o más productos se agotaron justo antes de confirmar tu pedido.",
-          stockError: true,
-        },
-        { status: 400 },
-      );
+      return {
+        error: names.length
+          ? `Estos productos se agotaron justo antes de confirmar: ${names.join(", ")}.`
+          : "Uno o más productos se agotaron justo antes de confirmar tu pedido.",
+        stockError: true,
+      };
+    };
+
+    // 1) Pre-chequeo: impide la sobreventa de ítems agotados que pasaron el
+    //    filtro por venir de una página/carrito cacheado.
+    const insufficient = await findInsufficientStock(parsedPayload.line_items);
+    if (insufficient.length > 0) {
+      return NextResponse.json(stockErrorBody(insufficient), { status: 400 });
     }
 
     // Construir payload — puede agregar customer_id y precios mayoristas
@@ -195,6 +144,30 @@ export async function POST(request: NextRequest) {
     }
 
     const order = await createOrder(orderPayload);
+
+    // 2) Guarda post-creación contra la carrera de concurrencia: si el descuento
+    //    de stock dejó algún ítem en negativo, este pedido perdió la carrera por
+    //    la última unidad. Se cancela (WooCommerce restaura el stock) y se informa
+    //    al cliente, para no quedar con un pedido imposible de despachar.
+    //    (Solo aplica a pedidos que descuentan stock al crearse, p.ej. on-hold;
+    //    los pendientes de Wompi no descuentan, así que no disparan aquí.)
+    const oversold = await findOversold(parsedPayload.line_items);
+    if (oversold.length > 0) {
+      try {
+        // Cancela (restaura el stock) y marca la cancelación como automática por
+        // sobreventa, para que el webhook no envíe el email de "pedido cancelado".
+        await updateOrder(order.id, {
+          status: "cancelled",
+          meta_data: [{ key: OVERSOLD_AUTOCANCEL_META, value: "yes" }],
+        });
+      } catch (err) {
+        console.error(
+          `[Orders] No se pudo cancelar el pedido sobrevendido ${order.id}:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+      return NextResponse.json(stockErrorBody(oversold), { status: 409 });
+    }
 
     // Enviar email de confirmación antes de responder
     // (await garantiza que la función no se cierre antes de enviar)
