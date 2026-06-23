@@ -299,6 +299,8 @@ export function orderRefundedEmailHtml(p: OrderRefundedParams): string {
 interface OrderItem {
   name: string;
   size: string;
+  /** Texto de variante "Talla: M · Color: Negro" (si no, se usa la talla). */
+  variant?: string;
   quantity: number;
   price: number;
   image?: string;
@@ -341,7 +343,7 @@ export function orderConfirmationHtml(p: OrderConfirmationParams): string {
               </td>
               <td style="padding-left:12px;vertical-align:top;">
                 <p style="margin:0;font-size:14px;font-weight:600;color:${darkText};">${item.name}</p>
-                <p style="margin:4px 0 0;font-size:12px;color:${mutedText};">Talla ${item.size} × ${item.quantity}</p>
+                <p style="margin:4px 0 0;font-size:12px;color:${mutedText};">${item.variant || `Talla ${item.size}`} × ${item.quantity}</p>
               </td>
               <td style="text-align:right;vertical-align:top;white-space:nowrap;">
                 <p style="margin:0;font-size:14px;font-weight:600;color:${darkText};">

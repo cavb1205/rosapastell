@@ -10,6 +10,8 @@ export interface CartToast {
   id: number;
   name: string;
   size: string;
+  /** Texto de variante "Talla: M · Color: Negro" (si no, se usa la talla). */
+  variant?: string;
   quantity: number;
   image: string;
 }

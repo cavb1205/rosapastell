@@ -10,6 +10,7 @@ import { Tag, X, Loader2, CheckCircle2, LogIn, AlertCircle, CreditCard, MessageC
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { formatPrice } from "@/lib/formatters";
+import { variantText, variantSummary } from "@/lib/variations";
 import { COLOMBIAN_DEPARTMENTS } from "@/lib/constants";
 import { useHydration } from "@/hooks/useHydration";
 import Link from "next/link";
@@ -198,6 +199,7 @@ export function CheckoutClient() {
             items: items.map((i) => ({
               name: i.name,
               size: i.size,
+              variant: variantText(i.attributes, i.size),
               quantity: i.quantity,
               price: i.price,
               image: i.image,
@@ -461,7 +463,7 @@ export function CheckoutClient() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-warm-700 line-clamp-1">{item.name}</p>
-                    <p className="text-xs text-warm-400">T: {item.size} × {item.quantity}</p>
+                    <p className="text-xs text-warm-400">{variantSummary(item.attributes, item.size)} × {item.quantity}</p>
                   </div>
                   <p className="text-xs font-semibold text-warm-800 shrink-0">
                     {formatPrice(item.price * item.quantity)}

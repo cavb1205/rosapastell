@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import type { WooProduct, WooVariation } from "@/types/product";
+import type { WooProduct, WooVariation, WooAttribute } from "@/types/product";
 import { formatPrice } from "@/lib/formatters";
-import { SizeSelector } from "./SizeSelector";
+import { VariantSelector } from "./VariantSelector";
 import { AddToCart } from "./AddToCart";
 import { useAuthStore } from "@/store/auth";
 import { sanitizeHTML } from "@/lib/sanitize";
@@ -12,18 +11,22 @@ import { WishlistButton } from "./WishlistButton";
 
 interface ProductDetailProps {
   product: WooProduct;
+  axes: WooAttribute[];
   variations: WooVariation[];
+  selection: Record<string, string>;
+  selectedVariation: WooVariation | null;
+  onChange: (axisName: string, option: string) => void;
 }
 
-export function ProductDetail({ product, variations }: ProductDetailProps) {
-  const [selectedVariation, setSelectedVariation] = useState<WooVariation | null>(null);
-  const [selectedSize, setSelectedSize] = useState("");
+export function ProductDetail({
+  product,
+  axes,
+  variations,
+  selection,
+  selectedVariation,
+  onChange,
+}: ProductDetailProps) {
   const isWholesale = useAuthStore((s) => s.user?.isWholesale ?? false);
-
-  function handleSizeSelect(variation: WooVariation, size: string) {
-    setSelectedVariation(variation);
-    setSelectedSize(size);
-  }
 
   // Fuente de precios: variación seleccionada o producto base
   const source = selectedVariation ?? product;
@@ -79,14 +82,16 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
         />
       )}
 
-      {/* Size selector */}
-      {variations.length > 0 && (
+      {/* Variant selector (talla, color, …) */}
+      {axes.length > 0 && variations.length > 0 && (
         <div className="mt-6">
-          <SizeSelector
-            productId={product.id}
+          <VariantSelector
+            product={product}
+            axes={axes}
             variations={variations}
+            selection={selection}
             selectedVariation={selectedVariation}
-            onSelect={handleSizeSelect}
+            onChange={onChange}
           />
         </div>
       )}
@@ -95,8 +100,9 @@ export function ProductDetail({ product, variations }: ProductDetailProps) {
       <div className="mt-6">
         <AddToCart
           product={product}
+          axes={axes}
+          selection={selection}
           selectedVariation={selectedVariation}
-          selectedSize={selectedSize}
         />
       </div>
 

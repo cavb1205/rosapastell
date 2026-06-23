@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/formatters";
+import { variantText, variantSummary } from "@/lib/variations";
 import { useHydration } from "@/hooks/useHydration";
 import { useStoreStatus } from "@/components/StoreStatusProvider";
 
@@ -73,7 +74,7 @@ export function CartPageClient() {
                   {item.name}
                 </h3>
               </Link>
-              <p className="text-xs text-warm-400 mt-0.5">Talla: {item.size}</p>
+              <p className="text-xs text-warm-400 mt-0.5">{variantText(item.attributes, item.size)}</p>
               <p className="text-sm font-semibold text-burgundy-500 mt-1">
                 {formatPrice(item.price)}
               </p>
@@ -129,7 +130,7 @@ export function CartPageClient() {
                 className="flex justify-between text-sm text-warm-600"
               >
                 <span className="truncate mr-2">
-                  {item.name} ({item.size}) ×{item.quantity}
+                  {item.name} ({variantSummary(item.attributes, item.size)}) ×{item.quantity}
                 </span>
                 <span className="flex-shrink-0">
                   {formatPrice(item.price * item.quantity)}

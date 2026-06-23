@@ -46,7 +46,7 @@ export function CartToastContainer() {
             </p>
             <p className="text-sm font-medium text-warm-900 truncate">{toast.name}</p>
             <p className="text-xs text-warm-400">
-              Talla {toast.size} · {toast.quantity > 1 ? `${toast.quantity} uds.` : "1 ud."}
+              {toast.variant ?? `Talla ${toast.size}`} · {toast.quantity > 1 ? `${toast.quantity} uds.` : "1 ud."}
             </p>
           </div>
 

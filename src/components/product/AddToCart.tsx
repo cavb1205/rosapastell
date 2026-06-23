@@ -6,18 +6,21 @@ import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useUIStore } from "@/store/ui";
 import { useStoreStatus } from "@/components/StoreStatusProvider";
-import type { WooProduct, WooVariation } from "@/types/product";
+import type { WooProduct, WooVariation, WooAttribute } from "@/types/product";
+import { buildCartAttributes, getSizeFromVariation, variantText } from "@/lib/variations";
 
 interface AddToCartProps {
   product: WooProduct;
+  axes: WooAttribute[];
+  selection: Record<string, string>;
   selectedVariation: WooVariation | null;
-  selectedSize: string;
 }
 
 export function AddToCart({
   product,
+  axes,
+  selection,
   selectedVariation,
-  selectedSize,
 }: AddToCartProps) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -34,6 +37,14 @@ export function AddToCart({
 
   const isDisabled =
     product.type === "variable" && !selectedVariation;
+
+  // Ejes aún sin elegir → mensaje "Selecciona talla y color"
+  const missingAxes = axes.filter(
+    (a) => !selection[a.name.trim().toLowerCase()]
+  );
+  const missingLabel = missingAxes
+    .map((a) => a.name.toLowerCase())
+    .join(" y ");
 
   const outOfStock =
     selectedVariation
@@ -70,8 +81,12 @@ export function AddToCart({
         ? (source.wholesaleSalePrice ?? source.wholesalePrice)
         : parseFloat(source.price);
 
-    const size = selectedSize || "Única";
-    const image = product.images[0]?.src || "";
+    const size = getSizeFromVariation(selectedVariation);
+    const attributes = selectedVariation
+      ? buildCartAttributes(axes, selectedVariation)
+      : undefined;
+    // Imagen de la variación (color) si tiene una propia, si no la principal
+    const image = selectedVariation?.image?.src || product.images[0]?.src || "";
 
     addItem({
       productId: product.id,
@@ -79,13 +94,20 @@ export function AddToCart({
       name: product.name,
       price,
       size,
+      attributes,
       quantity,
       image,
       slug: product.slug,
       stockQuantity: totalStock < 99 ? totalStock : undefined,
     });
 
-    showCartToast({ name: product.name, size, quantity, image });
+    showCartToast({
+      name: product.name,
+      size,
+      variant: attributes ? variantText(attributes) : undefined,
+      quantity,
+      image,
+    });
     setAdded(true);
     setQuantity(1);
     setTimeout(() => setAdded(false), 2000);
@@ -187,7 +209,9 @@ export function AddToCart({
         ) : (
           <>
             <ShoppingBag className="h-5 w-5" />
-            {isDisabled ? "Selecciona una talla" : "Agregar al carrito"}
+            {isDisabled
+              ? `Selecciona ${missingLabel || "una opción"}`
+              : "Agregar al carrito"}
           </>
         )}
       </button>

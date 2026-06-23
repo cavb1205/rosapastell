@@ -1,9 +1,17 @@
+export interface CartVariantAttribute {
+  name: string;
+  option: string;
+}
+
 export interface CartItem {
   productId: number;
   variationId?: number;
   name: string;
   price: number;
+  /** Talla (o "Única"). Se conserva por compatibilidad y para mostrar la talla. */
   size: string;
+  /** Atributos de la variación elegida (Talla, Color, …) para mostrar al cliente. */
+  attributes?: CartVariantAttribute[];
   quantity: number;
   image: string;
   slug: string;

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/formatters";
+import { variantText } from "@/lib/variations";
 import { useHydration } from "@/hooks/useHydration";
 import { useStoreStatus } from "@/components/StoreStatusProvider";
 
@@ -138,7 +139,7 @@ export function CartDrawer() {
                   >
                     {item.name}
                   </Link>
-                  <p className="text-xs text-warm-400 mt-0.5">Talla: {item.size}</p>
+                  <p className="text-xs text-warm-400 mt-0.5">{variantText(item.attributes, item.size)}</p>
                   <p className="text-sm font-semibold text-burgundy-500 mt-1">
                     {formatPrice(item.price)}
                   </p>

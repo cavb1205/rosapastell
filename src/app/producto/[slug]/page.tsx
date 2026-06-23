@@ -6,8 +6,7 @@ import {
   getProductVariations,
   getProducts,
 } from "@/lib/woocommerce";
-import { ProductGallery } from "@/components/product/ProductGallery";
-import { ProductDetail } from "@/components/product/ProductDetail";
+import { ProductView } from "@/components/product/ProductView";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
@@ -125,10 +124,7 @@ export default async function ProductPage({ params }: PageProps) {
           </ol>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-          <ProductGallery images={product.images} productName={product.name} />
-          <ProductDetail product={product} variations={variations} />
-        </div>
+        <ProductView product={product} variations={variations} />
 
         <ProductReviews productId={product.id} reviews={reviews} />
 

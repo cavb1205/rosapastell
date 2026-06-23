@@ -83,6 +83,7 @@ export const orderSchema = z.object({
     items: z.array(z.object({
       name: z.string(),
       size: z.string(),
+      variant: z.string().optional(),
       quantity: z.number(),
       price: z.number(),
       image: z.string().optional(),

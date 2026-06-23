@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { WooProduct } from "@/types/product";
 import { WishlistButton } from "./WishlistButton";
 import { ProductPriceClient, ProductBadgeClient } from "./ProductPriceClient";
+import { getColorOptions } from "@/lib/variations";
+import { colorToHex, colorNeedsBorder } from "@/lib/colors";
 
 interface ProductCardProps {
   product: WooProduct;
@@ -19,6 +21,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const displayPrice = product.on_sale && product.sale_price
     ? product.sale_price
     : product.price;
+
+  const colorOptions = getColorOptions(product);
+  const hasSizeAxis = product.attributes.some(
+    (a) => a.name.toLowerCase() === "talla"
+  );
 
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-[0_8px_30px_rgba(248,155,187,0.35)] transition-shadow duration-300">
@@ -61,7 +68,27 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             wholesalePrice={product.wholesalePrice}
             wholesaleSalePrice={product.wholesaleSalePrice}
           />
-          {product.attributes.some((a) => a.name.toLowerCase() === "talla") && (
+          {colorOptions.length > 0 && (
+            <div className="mt-2 flex items-center gap-1.5" aria-label={`Colores: ${colorOptions.join(", ")}`}>
+              {colorOptions.slice(0, 5).map((name) => {
+                const hex = colorToHex(name);
+                return (
+                  <span
+                    key={name}
+                    title={name}
+                    className={`h-3.5 w-3.5 rounded-full ${
+                      colorNeedsBorder(hex) ? "ring-1 ring-inset ring-warm-300" : ""
+                    }`}
+                    style={{ backgroundColor: hex ?? "#E5E0DC" }}
+                  />
+                );
+              })}
+              {colorOptions.length > 5 && (
+                <span className="text-[11px] text-warm-400">+{colorOptions.length - 5}</span>
+              )}
+            </div>
+          )}
+          {hasSizeAxis && colorOptions.length === 0 && (
             <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-burgundy-500 group-hover:text-burgundy-600 transition-colors">
               <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z" />

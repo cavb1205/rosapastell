@@ -8,11 +8,24 @@ import type { WooImage } from "@/types/product";
 interface ProductGalleryProps {
   images: WooImage[];
   productName: string;
+  /** Id de la imagen de la variación elegida (color); salta a ella si existe. */
+  activeImageId?: number | null;
 }
 
-export function ProductGallery({ images, productName }: ProductGalleryProps) {
+export function ProductGallery({ images, productName, activeImageId }: ProductGalleryProps) {
   const [selected, setSelected] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  // Sincroniza la galería con la variación seleccionada (color con foto propia).
+  // Patrón "ajuste en render" guardando el id previo: salta a la imagen de la
+  // variación solo cuando cambia, dejando que el usuario navegue libremente.
+  // Defensivo: solo salta si esa imagen está en la galería del producto.
+  const [prevActiveId, setPrevActiveId] = useState(activeImageId);
+  if (activeImageId != null && activeImageId !== prevActiveId) {
+    setPrevActiveId(activeImageId);
+    const idx = images.findIndex((img) => img.id === activeImageId);
+    if (idx >= 0) setSelected(idx);
+  }
 
   // Pinch-to-zoom state
   const [scale, setScale] = useState(1);
