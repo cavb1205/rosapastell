@@ -43,6 +43,10 @@ Client state (cart items, wishlist, auth token) is managed by Zustand stores in 
 | **Resend** | Transactional email | `src/lib/email.ts`, `src/lib/email-templates.ts` |
 | **WordPress JWT** | Authentication (custom, no Auth.js) | `src/lib/auth.ts`, `src/app/api/auth/` |
 
+### Inventory & payments (anti-oversell)
+
+Selling out-of-stock items is prevented by a layered defense split between code and WooCommerce config — **both are required**. WooCommerce REST does NOT validate stock on order creation, so `POST /api/orders` does a fresh pre-check (`src/lib/stock.ts`) before creating, and a post-creation guard that cancels + restocks if a concurrency race left stock negative. Wompi (`pending`) relies on WooCommerce's "Hold stock = 30 min" setting. Wompi shows only to retail customers; all wholesale pays via WhatsApp/transfer. **Full details and the required WooCommerce settings: [`docs/inventario-y-pagos.md`](docs/inventario-y-pagos.md).**
+
 ### Auth
 
 JWT tokens from WordPress JWT-Auth plugin, stored as HttpOnly cookies (`rp_auth_token`). Auth state hydrated client-side via `AuthProvider` component calling `/api/auth/me`. Wholesale pricing is role-based — detected from WooCommerce `meta_data._role_based_price`.
