@@ -216,7 +216,7 @@ export function CheckoutClient() {
         const errData = await res.json().catch(() => ({}));
         if (errData.stockError) {
           setStockError(true);
-          setError("Uno o más productos se agotaron justo antes de confirmar tu pedido.");
+          setError(errData.error || "Uno o más productos se agotaron justo antes de confirmar tu pedido.");
         } else {
           setError("Ocurrió un error al procesar tu pedido. Por favor intenta de nuevo.");
         }

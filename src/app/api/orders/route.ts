@@ -24,6 +24,60 @@ function isStockError(error: WooCommerceError): boolean {
 }
 
 /**
+ * Revalida el stock REAL (sin caché) de cada ítem justo antes de crear el pedido.
+ *
+ * La REST API de WooCommerce NO valida stock al crear órdenes (deja el inventario
+ * en negativo → sobreventa). Como el cliente puede llegar con una página/carrito
+ * cacheado de cuando aún había stock, este chequeo es la única defensa confiable
+ * contra vender algo ya agotado.
+ *
+ * Devuelve los índices de los line_items sin stock suficiente. Fail-open: si no se
+ * puede verificar un ítem (red caída, etc.) no se bloquea, para no congelar ventas
+ * por un fallo transitorio del backend.
+ */
+async function findOutOfStockItems(
+  lineItems: OrderLineItem[]
+): Promise<number[]> {
+  const WP_URL = process.env.WOOCOMMERCE_URL!;
+  const authHeader = getWooAuthHeader();
+
+  const results = await Promise.all(
+    lineItems.map(async (item, index) => {
+      try {
+        const endpoint = item.variation_id
+          ? `${WP_URL}/wp-json/wc/v3/products/${item.product_id}/variations/${item.variation_id}`
+          : `${WP_URL}/wp-json/wc/v3/products/${item.product_id}`;
+
+        const res = await fetch(endpoint, {
+          headers: { Authorization: authHeader },
+          cache: "no-store",
+        });
+        if (!res.ok) return null; // no se pudo verificar → fail-open
+
+        const data = await res.json();
+
+        // El dueño habilitó backorders para este producto: vender sin stock es
+        // intencional, no se bloquea.
+        if (data.backorders_allowed === true) return null;
+
+        if (data.stock_status === "outofstock") return index;
+
+        // Stock gestionado: bloquear si se piden más unidades de las que quedan.
+        if (data.manage_stock && typeof data.stock_quantity === "number") {
+          if (item.quantity > data.stock_quantity) return index;
+        }
+
+        return null;
+      } catch {
+        return null; // fail-open ante error de red
+      }
+    })
+  );
+
+  return results.filter((i): i is number => i !== null);
+}
+
+/**
  * Para usuarios mayoristas, consulta el precio mayorista de cada producto/variación
  * en WooCommerce y lo sobreescribe en los line_items.
  * Esto garantiza que WooCommerce registre el precio correcto.
@@ -106,6 +160,24 @@ export async function POST(request: NextRequest) {
     }
 
     const { _emailMeta: emailMeta, ...parsedPayload } = parsed.data;
+
+    // Revalidación de stock fresca: impide la sobreventa de ítems agotados que
+    // pasaron el filtro por venir de una página/carrito cacheado.
+    const outOfStock = await findOutOfStockItems(parsedPayload.line_items);
+    if (outOfStock.length > 0) {
+      const names = outOfStock
+        .map((i) => emailMeta?.items[i]?.name)
+        .filter((n): n is string => Boolean(n));
+      return NextResponse.json(
+        {
+          error: names.length
+            ? `Estos productos se agotaron justo antes de confirmar: ${names.join(", ")}.`
+            : "Uno o más productos se agotaron justo antes de confirmar tu pedido.",
+          stockError: true,
+        },
+        { status: 400 },
+      );
+    }
 
     // Construir payload — puede agregar customer_id y precios mayoristas
     const orderPayload: CreateOrderPayload = { ...parsedPayload };
