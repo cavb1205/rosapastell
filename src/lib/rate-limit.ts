@@ -28,17 +28,25 @@ function getIP(request: NextRequest): string {
 /**
  * In-memory rate limiter. Returns null if allowed, or a 429 Response if blocked.
  *
- * @param request  - incoming request (used to extract IP)
- * @param limit    - max requests allowed in the window
- * @param windowMs - time window in milliseconds
- * @param prefix   - unique key prefix per route
+ * @param request    - incoming request (used to extract IP)
+ * @param limit      - max requests allowed in the window
+ * @param windowMs   - time window in milliseconds
+ * @param prefix     - unique key prefix per route
+ * @param identifier - clave en vez de la IP (p. ej. email). Útil bajo CGNAT,
+ *                     donde muchos clientes legítimos comparten una IP y un
+ *                     límite por-IP los bloquearía durante un lanzamiento.
  */
 export function rateLimit(
   request: NextRequest,
-  { limit, windowMs, prefix }: { limit: number; windowMs: number; prefix: string },
+  {
+    limit,
+    windowMs,
+    prefix,
+    identifier,
+  }: { limit: number; windowMs: number; prefix: string; identifier?: string },
 ): NextResponse | null {
-  const ip = getIP(request);
-  const key = `${prefix}:${ip}`;
+  const subject = identifier ? identifier.trim().toLowerCase() : getIP(request);
+  const key = `${prefix}:${subject}`;
   const now = Date.now();
 
   const entry = store.get(key);

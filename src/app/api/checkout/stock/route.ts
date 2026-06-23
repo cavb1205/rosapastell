@@ -22,7 +22,9 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const blocked = rateLimit(request, { limit: 20, windowMs: 60_000, prefix: "stock-check" });
+  // Holgado a propósito: es un read que dispara cada cliente al abrir el checkout
+  // y muchos comparten IP (CGNAT). Su fallo solo omite el aviso temprano.
+  const blocked = rateLimit(request, { limit: 60, windowMs: 60_000, prefix: "stock-check" });
   if (blocked) return blocked;
 
   const parsed = schema.safeParse(await request.json().catch(() => null));

@@ -80,7 +80,11 @@ async function resolveWholesalePrices(
 }
 
 export async function POST(request: NextRequest) {
-  const blocked = rateLimit(request, { limit: 5, windowMs: 60_000, prefix: "orders" });
+  // Backstop por IP holgado: corta a una sola IP que inunde, pero alto para no
+  // castigar a clientes legítimos que comparten IP de operador móvil (CGNAT)
+  // durante el pico de un lanzamiento. El límite estricto real va por email
+  // (más abajo, tras parsear el pedido).
+  const blocked = rateLimit(request, { limit: 30, windowMs: 60_000, prefix: "orders-ip" });
   if (blocked) return blocked;
 
   // Gate de pausa de tienda: aunque el frontend oculta los botones, esta es la
@@ -107,6 +111,19 @@ export async function POST(request: NextRequest) {
     }
 
     const { _emailMeta: emailMeta, ...parsedPayload } = parsed.data;
+
+    // Límite estricto por email: una misma persona/bot no puede crear muchos
+    // pedidos por minuto, sin afectar a otras clientas que comparten su IP.
+    const customerEmailRL = parsedPayload.billing?.email;
+    if (customerEmailRL) {
+      const tooMany = rateLimit(request, {
+        limit: 5,
+        windowMs: 60_000,
+        prefix: "orders-email",
+        identifier: customerEmailRL,
+      });
+      if (tooMany) return tooMany;
+    }
 
     // Nombres legibles para el mensaje de "agotado", a partir de los índices.
     const stockErrorBody = (indices: number[]) => {
