@@ -27,6 +27,11 @@ cliente puede intentar comprar algo que ya se agotó.
   verificar un ítem (red caída, etc.) no bloquean, para no congelar ventas por un
   fallo transitorio del backend. Respetan `backorders_allowed` (si el dueño
   permite backorders en un producto, no se bloquea).
+- **Lecturas en lote:** para no golpear WooCommerce con una petición por ítem en
+  el pico de un lanzamiento, `lib/stock.ts` agrupa las lecturas: los productos
+  simples se piden juntos con `?include=` y las variaciones se agrupan por
+  producto padre. N ítems se resuelven en `(1 + nº de padres distintos)`
+  peticiones en vez de N (con `_fields=` para aligerar el payload).
 - **Capa 2 (post-creación):** si tras crear el pedido el stock quedó negativo, el
   pedido perdió la carrera → se **cancela** vía `updateOrder` (WooCommerce
   restaura el stock) y se devuelve `stockError` (HTTP 409). La cancelación se
