@@ -43,7 +43,6 @@ export default async function HomePage() {
 
   const mainCategories = categoriesResult
     .filter((c) => c.count > 0 && c.slug !== "uncategorized")
-    .slice(0, 8);
 
   return (
     <>

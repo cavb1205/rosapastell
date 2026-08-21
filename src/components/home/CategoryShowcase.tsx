@@ -17,13 +17,6 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
           <p className="mt-2 text-warm-500">
             Encuentra el estilo perfecto para ti
           </p>
-          <Link
-            href="/colecciones"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-burgundy-500 underline decoration-burgundy-200 underline-offset-4 transition-colors hover:text-burgundy-700 hover:decoration-burgundy-400"
-          >
-            Ver más
-            <span aria-hidden="true" className="text-base leading-none">→</span>
-          </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((category) => (
