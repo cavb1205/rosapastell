@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const page = Number(searchParams.get("page") || 1);
     const category = searchParams.get("category");
-    const orderby = searchParams.get("orderby") || "popularity";
+    const orderby = searchParams.get("orderby") || "date";
     const order = searchParams.get("order") || "desc";
     const perPage = Math.min(Number(searchParams.get("per_page") || 16), 100);
 

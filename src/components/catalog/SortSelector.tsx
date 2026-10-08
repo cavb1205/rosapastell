@@ -8,7 +8,7 @@ export function SortSelector() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const current = searchParams.get("orderby") || "popularity";
+  const current = searchParams.get("orderby") || "date";
   const [pending, startTransition] = useTransition();
 
   function handleChange(value: string) {

@@ -43,8 +43,8 @@ export const COLOMBIAN_DEPARTMENTS = [
 ] as const;
 
 export const SORT_OPTIONS = [
-  { value: "popularity", label: "Más populares" },
   { value: "date", label: "Más recientes" },
+  { value: "popularity", label: "Más populares" },
   { value: "price", label: "Precio: menor a mayor" },
   { value: "price-desc", label: "Precio: mayor a menor" },
 ] as const;

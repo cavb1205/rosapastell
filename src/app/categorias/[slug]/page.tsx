@@ -65,7 +65,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { page: pageParam, orderby = "popularity", talla } = await searchParams;
+  const { page: pageParam, orderby = "date", talla } = await searchParams;
   const page = Math.max(1, Number(pageParam || 1));
 
   const [category, allCategories] = await Promise.all([
@@ -82,7 +82,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     "price-desc": { orderby: "price", order: "desc" },
   };
 
-  const sortParams = sortMap[orderby] || sortMap.popularity;
+  const sortParams = sortMap[orderby] || sortMap.date;
 
   const { data: rawProducts, totalPages } = await getProducts({
     category: String(category.id),
@@ -207,7 +207,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             currentPage={page}
             totalPages={totalPages}
             basePath={`/categorias/${slug}`}
-            searchParams={orderby !== "popularity" ? { orderby } : {}}
+            searchParams={orderby !== "date" ? { orderby } : {}}
           />
         )}
       </div>
