@@ -1,4 +1,56 @@
-# Inventario y pagos — estrategia anti-sobreventa
+# Inventario y pagos — contrato vigente (23 de octubre de 2026)
+
+El código nuevo ya está en producción. La API apunta a `167.71.118.184`; la IP
+anterior reenvía únicamente esa API al mismo backend para cubrir la propagación
+DNS. Las compras están abiertas por WhatsApp/transferencia, con Wompi apagado.
+Se verificaron PHP 8.4.27, MySQL 8.4.13, WordPress 7.1.3 y WooCommerce 11.2.1.
+El cron local ejecuta tareas cada minuto; `wp-cron.php` público sigue bloqueado.
+
+- La validación de pausa y disponibilidad es **fail-closed**: si no se puede
+  verificar, no se acepta la compra. Next.js usa exclusivamente el endpoint
+  `wc/v3/rp-checkout/orders` del MU-plugin `rosapastell-stock-guard.php`.
+- Ese endpoint vuelve a validar producto/variación, agrupa cantidades por dueño
+  real del stock, bloquea, verifica la reserva y descuenta una sola vez para
+  WhatsApp/transferencia. Solo entonces devuelve éxito y estado `on-hold`.
+  Una clave de idempotencia evita duplicar pedidos al reintentar.
+- La confirmación comprueba el pedido real. Un redirect o un pedido pendiente
+  no demuestra pago. No se usa el endpoint genérico como fallback.
+- Se autorizó abrir **temporalmente sin Wompi**: retail y mayoristas por
+  WhatsApp/transferencia. `NEXT_PUBLIC_WOMPI_ENABLED=false` y la opción backend
+  `rp_wompi_enabled=no` bloquean nuevos pagos Wompi; se conservan sus llaves.
+  Falta configurar `WOMPI_PRIVATE_KEY` y verificar el circuito antes de reactivar.
+- Los eventos de pagos anteriores se manejan aparte y fallan de forma segura
+  cuando no se puede consultar al proveedor. Antes de la pausa final no había
+  pedidos Wompi pendientes/en espera en WooCommerce; no equivale a conciliación
+  completa del panel del proveedor, al que no se tuvo acceso durante el corte.
+- Mantener gestión de stock activa, reserva **30 minutos** y backorders en
+  **No permitir**. El checkout controlado exige stock físico suficiente.
+  Los pedidos de transferencia `on-hold` ya descuentan: su cancelación por falta
+  de pago no es automáticamente la misma reserva de 30 minutos de un pendiente.
+- Esta defensa cubre el checkout controlado, no escrituras arbitrarias desde
+  administración, integraciones ajenas o SQL directo. Los negativos históricos
+  requieren conteo/revisión, no inventar unidades.
+- No habilitar HPOS ni activar YITH POS/Barcodes durante este corte. Se conservan
+  sus datos históricos. La rotación de secretos productivos queda para el final.
+- Una vez aceptadas escrituras de clientes en el VPS nuevo, nunca volver a una
+  base antigua como reversión: se perderían los pedidos posteriores.
+
+Pendientes operativos: renovación SSL automática en el nuevo VPS, política de
+respaldos periódicos/off-site, retiro controlado de legados y revisión de los
+otros sitios PHP del servidor anterior. El certificado actual vence el 17 de
+diciembre de 2026. No apagar el VPS anterior: mantiene el puente temporal y los
+otros sitios. La migración de Rosa Pastell no equivale a haber corregido todos
+los sitios ni a certificar ausencia de malware.
+
+Las pruebas privadas utilizan datos sintéticos y verifican concurrencia de la
+última unidad, reintentos, tallas/colores, roles/precios y bloqueo de Wompi. No
+equivalen a un cobro real. Evidencias y respaldos cifrados fuera del repositorio:
+`/Users/camilo/Documents/respaldos-vps/pre-migracion-20261022T154925Z/`.
+
+## Diseño anterior — histórico, sustituido por el contrato anterior
+
+**Las afirmaciones fail-open, la guarda post-creación y el estado de Wompi que
+siguen a continuación describen la implementación anterior, no la vigente.**
 
 Documento operativo. Explica cómo evitamos vender productos sin stock (crítico
 en lanzamientos de colección) y cómo se rutean los pagos. **Parte de esto vive en
