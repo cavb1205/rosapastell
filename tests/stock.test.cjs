@@ -1,16 +1,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-const ts = require('typescript');
+const { harness } = require('./ts-harness.cjs');
 
 function load(fetch) {
-  const exports = {};
-  const source = ts.transpileModule(fs.readFileSync('src/lib/stock.ts', 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  vm.runInNewContext(source, { exports, require: () => ({ getWooAuthHeader: () => 'synthetic-only' }), process: { env: { WOOCOMMERCE_URL: 'https://example.invalid' } }, fetch });
-  return exports;
+  return harness({ fetch })('src/lib/stock.ts');
 }
 const item = { product_id: 1, quantity: 1 };
 const row = { id: 1, stock_status: 'instock', stock_quantity: 1, manage_stock: true, backorders_allowed: false };

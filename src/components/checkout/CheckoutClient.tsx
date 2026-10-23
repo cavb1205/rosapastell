@@ -16,17 +16,19 @@ import { isWompiCheckoutEnabled } from "@/lib/payment-methods";
 import { useHydration } from "@/hooks/useHydration";
 import Link from "next/link";
 import type { CreateOrderPayload, WooCoupon } from "@/types/order";
+import { orderSchema } from "@/lib/validations";
+import { orderValidationMessage } from "@/lib/order-validation";
 
 const schema = z.object({
-  firstName: z.string().min(2, "Nombre requerido"),
-  lastName: z.string().min(2, "Apellido requerido"),
-  email: z.string().email("Email inválido"),
-  phone: z.string().min(7, "Teléfono requerido"),
-  department: z.string().min(1, "Selecciona tu departamento"),
-  city: z.string().min(2, "Ciudad requerida"),
-  address: z.string().min(5, "Dirección requerida"),
+  firstName: z.string().trim().min(2, "Nombre requerido").max(100, "El nombre admite máximo 100 caracteres"),
+  lastName: z.string().trim().min(2, "Apellido requerido").max(100, "El apellido admite máximo 100 caracteres"),
+  email: z.string().trim().email("Email inválido").max(255, "El correo admite máximo 255 caracteres"),
+  phone: z.string().trim().min(7, "Teléfono requerido").max(30, "El teléfono admite máximo 30 caracteres"),
+  department: z.string().trim().min(1, "Selecciona tu departamento").max(100, "Revisa el departamento"),
+  city: z.string().trim().min(2, "Ciudad requerida").max(100, "La ciudad admite máximo 100 caracteres"),
+  address: z.string().trim().min(5, "Dirección requerida").max(255, "La dirección admite máximo 255 caracteres"),
   paymentMethod: z.enum(["whatsapp", "wompi"]),
-  notes: z.string().optional(),
+  notes: z.string().max(500, "Las observaciones admiten máximo 500 caracteres").optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -226,6 +228,22 @@ export function CheckoutClient() {
         customer_note: data.notes,
       };
 
+      const requestPayload = {
+        ...orderPayload,
+        _emailMeta: {
+          items: items.map((i) => ({ name: i.name, size: i.size, variant: variantText(i.attributes, i.size), quantity: i.quantity, price: i.price, image: i.image })),
+          subtotal,
+          discount: discount > 0 ? discount : undefined,
+          couponCode: appliedCoupon?.code,
+          total,
+        },
+      };
+      const validation = orderSchema.safeParse(requestPayload);
+      if (!validation.success) {
+        setError(orderValidationMessage(validation.error));
+        return;
+      }
+
       const attemptPayload = JSON.stringify(orderPayload);
       if (checkoutAttempt.current?.payload !== attemptPayload) {
         checkoutAttempt.current = { payload: attemptPayload, key: crypto.randomUUID() };
@@ -233,23 +251,7 @@ export function CheckoutClient() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": checkoutAttempt.current.key },
-        body: JSON.stringify({
-          ...orderPayload,
-          _emailMeta: {
-            items: items.map((i) => ({
-              name: i.name,
-              size: i.size,
-              variant: variantText(i.attributes, i.size),
-              quantity: i.quantity,
-              price: i.price,
-              image: i.image,
-            })),
-            subtotal,
-            discount: discount > 0 ? discount : undefined,
-            couponCode: appliedCoupon?.code,
-            total,
-          },
-        }),
+        body: JSON.stringify(validation.data),
       });
 
       if (!res.ok) {
@@ -408,7 +410,8 @@ export function CheckoutClient() {
               </div>
               <div className="sm:col-span-2">
                 <Field label="Notas adicionales (opcional)">
-                  <textarea {...register("notes")} rows={2} placeholder="Instrucciones de entrega..." className={inputClass(false)} />
+                  <textarea {...register("notes")} rows={2} placeholder="Instrucciones de entrega..." className={inputClass(!!errors.notes)} />
+                  {errors.notes && <p className="mt-1 text-xs text-red-600" role="alert">{errors.notes.message}</p>}
                 </Field>
               </div>
             </div>

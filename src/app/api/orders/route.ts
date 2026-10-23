@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, getWooAuthHeader, getStoreStatus, parseWholesalePrice, WooCommerceError } from "@/lib/woocommerce";
+import { createOrder, getStoreStatus, WooCommerceError } from "@/lib/woocommerce";
 import { getUserFromCookie, AUTH_COOKIE_NAME } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
 import { orderSchema } from "@/lib/validations";
 import { findInsufficientStock, StockValidationError } from "@/lib/stock";
-import type { OrderLineItem, CreateOrderPayload } from "@/types/order";
+import type { CreateOrderPayload } from "@/types/order";
 import { isWompiCheckoutEnabled } from "@/lib/payment-methods";
+import { orderValidationMessage } from "@/lib/order-validation";
+import { resolveWholesalePrices } from "@/lib/wholesale-checkout";
 
 // Códigos de error de WooCommerce relacionados con stock insuficiente
 const STOCK_ERROR_CODES = [
@@ -24,62 +26,6 @@ function isStockError(error: WooCommerceError): boolean {
     error.message.toLowerCase().includes("agotado") ||
     error.message.toLowerCase().includes("existencias")
   );
-}
-
-/**
- * Para usuarios mayoristas, consulta el precio mayorista de cada producto/variación
- * en WooCommerce y lo sobreescribe en los line_items.
- * Esto garantiza que WooCommerce registre el precio correcto.
- */
-async function resolveWholesalePrices(
-  lineItems: OrderLineItem[]
-): Promise<OrderLineItem[]> {
-  const WP_URL = process.env.WOOCOMMERCE_URL!;
-  const authHeader = getWooAuthHeader();
-
-  const resolved = await Promise.all(
-    lineItems.map(async (item) => {
-      try {
-        // Si es variación, consultar la variación; si no, el producto
-        const endpoint = item.variation_id
-          ? `${WP_URL}/wp-json/wc/v3/products/${item.product_id}/variations/${item.variation_id}`
-          : `${WP_URL}/wp-json/wc/v3/products/${item.product_id}`;
-
-        const res = await fetch(endpoint, {
-          headers: { Authorization: authHeader },
-          next: { revalidate: 0 },
-        });
-
-        if (!res.ok) throw new StockValidationError();
-
-        const data = await res.json();
-        const { wholesalePrice, wholesaleSalePrice } = parseWholesalePrice(
-          data.meta_data
-        );
-
-        if (wholesalePrice === null) return item; // Sin precio mayorista
-
-        // subtotal = precio retail original (para que WC muestre el descuento)
-        const retailPrice = parseFloat(data.regular_price || data.price);
-        const retailLineTotal = (retailPrice * item.quantity).toFixed(2);
-
-        // total = precio mayorista real que paga el cliente
-        const unitPrice = wholesaleSalePrice ?? wholesalePrice;
-        if (!Number.isFinite(unitPrice) || !Number.isFinite(retailPrice)) throw new StockValidationError();
-        const wholesaleLineTotal = (unitPrice * item.quantity).toFixed(2);
-
-        return {
-          ...item,
-          subtotal: retailLineTotal,
-          total: wholesaleLineTotal,
-        };
-      } catch {
-        throw new StockValidationError();
-      }
-    })
-  );
-
-  return resolved;
 }
 
 export async function POST(request: NextRequest) {
@@ -107,10 +53,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsed = orderSchema.safeParse(await request.json());
+    const parsed = orderSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
+      // Diagnóstico sin emails, direcciones, nombres ni valores del carrito.
+      console.warn("[Checkout] Validación rechazada", parsed.error.issues.slice(0, 5).map((issue) => ({ field: issue.path.join("."), code: issue.code })));
       return NextResponse.json(
-        { error: "Datos del pedido incompletos o inválidos" },
+        { error: orderValidationMessage(parsed.error), validationError: true },
         { status: 400 },
       );
     }

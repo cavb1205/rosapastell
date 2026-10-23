@@ -1,5 +1,6 @@
 import { getWooAuthHeader } from "@/lib/woocommerce";
 import type { OrderLineItem } from "@/types/order";
+import { checkoutBatches, readCheckoutBatches } from "./checkout-batches";
 
 /**
  * Lectura fresca (sin caché) contra WooCommerce para detectar carritos obsoletos.
@@ -68,44 +69,11 @@ async function fetchStockMap(
   const WP_URL = process.env.WOOCOMMERCE_URL!;
   const map = new Map<string, StockData>();
 
-  // Agrupar: productos simples juntos; variaciones por producto padre.
-  const simpleIds = new Set<number>();
-  const variationIdsByParent = new Map<number, Set<number>>();
-  for (const item of lineItems) {
-    if (item.variation_id) {
-      const set = variationIdsByParent.get(item.product_id) ?? new Set<number>();
-      set.add(item.variation_id);
-      variationIdsByParent.set(item.product_id, set);
-    } else {
-      simpleIds.add(item.product_id);
-    }
-  }
-
-  const tasks: Promise<void>[] = [];
-
-  if (simpleIds.size > 0) {
-    const url = `${WP_URL}/wp-json/wc/v3/products?include=${[...simpleIds].join(
-      ","
-    )}&per_page=100&_fields=${STOCK_FIELDS}`;
-    tasks.push(
-      fetchJson(url).then((rows) => {
-        for (const row of rows) map.set(`${row.id}:0`, row);
-      })
-    );
-  }
-
-  for (const [parentId, variationIds] of variationIdsByParent) {
-    const url = `${WP_URL}/wp-json/wc/v3/products/${parentId}/variations?include=${[
-      ...variationIds,
-    ].join(",")}&per_page=100&_fields=${STOCK_FIELDS}`;
-    tasks.push(
-      fetchJson(url).then((rows) => {
-        for (const row of rows) map.set(`${parentId}:${row.id}`, row);
-      })
-    );
-  }
-
-  await Promise.all(tasks);
+  await readCheckoutBatches(checkoutBatches(lineItems), async ({ parentId, ids }) => {
+    const endpoint = parentId ? `products/${parentId}/variations` : "products";
+    const rows = await fetchJson(`${WP_URL}/wp-json/wc/v3/${endpoint}?include=${ids.join(",")}&per_page=100&_fields=${STOCK_FIELDS}`);
+    for (const row of rows) map.set(parentId ? `${parentId}:${row.id}` : `${row.id}:0`, row);
+  });
   if (lineItems.some((item) => !map.has(keyOf(item)))) throw new StockValidationError();
   return map;
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
 import { findInsufficientStock } from "@/lib/stock";
+import { MAX_CART_LINES, MAX_ITEM_QUANTITY } from "@/lib/checkout-limits";
 
 /**
  * Chequeo de stock de solo lectura para el checkout (aviso temprano). NO crea
@@ -13,12 +14,12 @@ const schema = z.object({
     .array(
       z.object({
         product_id: z.number().int().positive(),
-        variation_id: z.number().int().positive().optional(),
-        quantity: z.number().int().positive(),
+        variation_id: z.number().int().nonnegative().optional(),
+        quantity: z.number().int().positive().max(MAX_ITEM_QUANTITY),
       })
     )
     .min(1)
-    .max(50),
+    .max(MAX_CART_LINES),
 });
 
 export async function POST(request: NextRequest) {

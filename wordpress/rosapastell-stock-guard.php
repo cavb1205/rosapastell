@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Rosa Pastell — Checkout con inventario reservado
  * Description: Endpoints privados WooCommerce para reservar, confirmar y liberar inventario.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Requires PHP: 8.4
  *
  * Instalar como MU-plugin en el backend modernizado ANTES del frontend compatible.
@@ -11,6 +11,7 @@
 defined('ABSPATH') || exit;
 
 final class RP_Stock_Guard {
+    public const MAX_CART_LINES = 200;
     private static $locks = [];
     private static $status_locks = [];
     public static $internal = false;
@@ -35,7 +36,8 @@ final class RP_Stock_Guard {
     }
 
     public static function products($items) {
-        if (!is_array($items) || !$items || count($items) > 50) throw new InvalidArgumentException('Carrito inválido.');
+        if (!is_array($items) || !$items) throw new InvalidArgumentException('Carrito vacío o inválido.');
+        if (count($items) > self::MAX_CART_LINES) throw new InvalidArgumentException('El pedido admite hasta 200 combinaciones de producto, talla y color.');
         $products = []; $required = [];
         foreach ($items as $item) {
             $parent = (int) ($item['product_id'] ?? 0);

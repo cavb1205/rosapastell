@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_CART_LINES, MAX_ITEM_QUANTITY } from "./checkout-limits";
 
 export const loginSchema = z.object({
   username: z.string().min(1).max(255),
@@ -49,7 +50,7 @@ export const profileUpdateSchema = z.object({
 const lineItemSchema = z.object({
   product_id: z.number().int().positive(),
   variation_id: z.number().int().nonnegative().optional(),
-  quantity: z.number().int().min(1).max(99),
+  quantity: z.number().int().min(1).max(MAX_ITEM_QUANTITY),
 });
 
 export const orderSchema = z.object({
@@ -76,7 +77,7 @@ export const orderSchema = z.object({
     country: z.string().max(2),
     phone: z.string().max(30).default(""),
   }),
-  line_items: z.array(lineItemSchema).min(1).max(50),
+  line_items: z.array(lineItemSchema).min(1).max(MAX_CART_LINES),
   coupon_lines: z.array(z.object({ code: z.string().max(50) })).optional(),
   customer_note: z.string().max(500).optional(),
   _emailMeta: z.object({
