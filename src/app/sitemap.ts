@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── Categorías ────────────────────────────────────────────────────
   let categoryPages: MetadataRoute.Sitemap = [];
   try {
-    const categories = await getCategories({ hide_empty: 1 });
+    const categories = await getCategories({ hide_empty: 1 }, { revalidate: 3600 });
     categoryPages = categories
       .filter((c) => c.slug !== "uncategorized" && c.count > 0)
       .map((c) => ({
@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         page,
         status: "publish",
         _fields: "slug,date_modified",
-      });
+      }, { revalidate: 3600 });
 
       for (const p of result.data) {
         productPages.push({

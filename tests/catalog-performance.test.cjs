@@ -79,6 +79,28 @@ test('order reads and mutations never inherit the catalog cache', async () => {
   assert.equal(calls[3].options.cache, 'no-store');
 });
 
+test('catalog requests exclude plugin payloads but preserve wholesale metadata and variants', async () => {
+  const { woo, calls } = wooHarness();
+  await woo.getProducts();
+  await woo.getProductBySlug('qa');
+  await woo.getProductVariations(1);
+  for (const { url } of calls) {
+    const fields = new URL(url).searchParams.get('_fields').split(',');
+    assert.ok(fields.includes('meta_data'));
+    assert.ok(fields.includes('attributes'));
+    assert.ok(fields.includes('stock_quantity'));
+    assert.ok(!fields.includes('yoast_head'));
+  }
+});
+
+test('bulk consumers can request small payloads with their own revalidation interval', async () => {
+  const { woo, calls } = wooHarness();
+  await woo.getProducts({ per_page: 100, _fields: 'slug,date_modified' }, { revalidate: 3600 });
+  assert.equal(new URL(calls[0].url).searchParams.get('_fields'), 'slug,date_modified');
+  assert.equal(calls[0].options.next.revalidate, 3600);
+  assert.equal(calls[0].options.next.tags[0], 'catalog-products');
+});
+
 test('checkout always obtains a fresh store pause status', async () => {
   const { woo, calls } = wooHarness();
   assert.equal((await woo.getStoreStatus({ fresh: true })).paused, true);

@@ -11,7 +11,11 @@ async function fetchAllInStock(): Promise<SearchIndexItem[]> {
   let totalPages = 1;
 
   while (page <= totalPages) {
-    const result = await getProducts({ per_page: 100, page });
+    const result = await getProducts({
+      per_page: 100,
+      page,
+      _fields: "id,name,slug,price,images,categories",
+    }, { revalidate: 3600 });
     totalPages = result.totalPages;
 
     for (const p of result.data) {

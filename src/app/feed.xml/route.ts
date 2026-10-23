@@ -133,7 +133,11 @@ export async function GET(): Promise<Response> {
 
     // getProducts ya filtra status=publish y stock_status=instock.
     while (page <= totalPages) {
-      const result = await getProducts({ per_page: 100, page });
+      const result = await getProducts({
+        per_page: 100,
+        page,
+        _fields: "id,name,slug,description,short_description,sku,price,regular_price,sale_price,on_sale,categories,images,attributes",
+      }, { revalidate: 21600 });
       for (const p of result.data) {
         const item = buildItem(p, base);
         if (item) items.push(item);

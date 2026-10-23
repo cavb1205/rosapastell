@@ -148,15 +148,23 @@ export async function getStoreStatus(opts?: { fresh?: boolean }): Promise<StoreS
 
 // Products
 
+// Excluir anexos de plugins (por ejemplo HTML de SEO) que la tienda no usa.
+// meta_data se conserva para resolver los precios mayoristas existentes.
+const PRODUCT_FIELDS = "id,name,slug,type,status,description,short_description,sku,price,regular_price,sale_price,on_sale,stock_status,stock_quantity,categories,images,attributes,variations,related_ids,date_created,date_modified,permalink,meta_data";
+const VARIATION_FIELDS = "id,sku,price,regular_price,sale_price,on_sale,stock_status,stock_quantity,attributes,image,meta_data";
+const CATEGORY_FIELDS = "id,name,slug,parent,description,image,count";
+
 export async function getProducts(
-  params: Record<string, string | number> = {}
+  params: Record<string, string | number> = {},
+  options?: { revalidate: number }
 ): Promise<WooPaginatedResponse<WooProduct>> {
   const { data, headers } = await wooFetch<WithMeta<WooProduct>[]>("products", {
     per_page: 16,
     status: "publish",
     stock_status: "instock",
+    _fields: PRODUCT_FIELDS,
     ...params,
-  }, PRODUCT_CACHE);
+  }, options ? { next: { ...PRODUCT_CACHE.next, revalidate: options.revalidate } } : PRODUCT_CACHE);
 
   return {
     data: data.map(({ meta_data, ...p }) => ({
@@ -175,6 +183,7 @@ export async function getProductBySlug(
     slug,
     status: "publish",
     stock_status: "instock",
+    _fields: PRODUCT_FIELDS,
   }, PRODUCT_CACHE);
   if (!data[0]) return null;
   const { meta_data, ...p } = data[0];
@@ -186,7 +195,7 @@ export async function getProductVariations(
 ): Promise<WooVariation[]> {
   const { data } = await wooFetch<WithMeta<WooVariation>[]>(
     `products/${productId}/variations`,
-    { per_page: 100 },
+    { per_page: 100, _fields: VARIATION_FIELDS },
     PRODUCT_CACHE
   );
   return data.map(({ meta_data, ...v }) => ({
@@ -225,13 +234,15 @@ export async function searchProducts(
 // Categories
 
 export async function getCategories(
-  params: Record<string, string | number> = {}
+  params: Record<string, string | number> = {},
+  options?: { revalidate: number }
 ): Promise<WooCategory[]> {
   const { data } = await wooFetch<WooCategory[]>("products/categories", {
     per_page: 100,
     hide_empty: 1,
+    _fields: CATEGORY_FIELDS,
     ...params,
-  }, CATEGORY_CACHE);
+  }, options ? { next: { ...CATEGORY_CACHE.next, revalidate: options.revalidate } } : CATEGORY_CACHE);
   return data;
 }
 
@@ -240,6 +251,7 @@ export async function getCategoryBySlug(
 ): Promise<WooCategory | null> {
   const { data } = await wooFetch<WooCategory[]>("products/categories", {
     slug,
+    _fields: CATEGORY_FIELDS,
   }, CATEGORY_CACHE);
   return data[0] || null;
 }
