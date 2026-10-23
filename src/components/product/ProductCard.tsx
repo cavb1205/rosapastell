@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { CatalogLink } from "@/components/catalog/CatalogLink";
 import type { WooProduct } from "@/types/product";
 import { WishlistButton } from "./WishlistButton";
 import { ProductPriceClient, ProductBadgeClient } from "./ProductPriceClient";
@@ -29,7 +29,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-[0_8px_30px_rgba(248,155,187,0.35)] transition-shadow duration-300">
-      <Link href={`/producto/${product.slug}`} className="block">
+      <CatalogLink href={`/producto/${product.slug}`} className="relative block">
         <div className="relative aspect-square overflow-hidden bg-cream-100">
           {mainImage ? (
             <Image
@@ -99,7 +99,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             </span>
           )}
         </div>
-      </Link>
+      </CatalogLink>
       <WishlistButton
         productId={product.id}
         name={product.name}

@@ -5,7 +5,7 @@
 export default function CategoryLoading() {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-
+      <p role="status" className="mb-4 text-sm text-warm-500">Cargando colección…</p>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6">
         <div className="skeleton h-3.5 w-10 rounded" />

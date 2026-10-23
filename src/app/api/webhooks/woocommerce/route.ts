@@ -9,6 +9,7 @@ import {
   orderRefundedEmailHtml,
 } from "@/lib/email-templates";
 import { OVERSOLD_AUTOCANCEL_META } from "@/lib/woocommerce";
+import { revalidateCatalogData } from "@/lib/catalog-revalidation";
 
 const WEBHOOK_SECRET = process.env.WOOCOMMERCE_WEBHOOK_SECRET!;
 
@@ -100,6 +101,12 @@ export async function POST(request: NextRequest) {
     order = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Estos son los webhooks de pedidos activos en WooCommerce. Invalidar antes
+  // de la deduplicación de emails: un mismo estado puede cambiar existencias.
+  if (topic === "order.created" || topic === "order.updated") {
+    revalidateCatalogData();
   }
 
   const email = order.billing?.email;

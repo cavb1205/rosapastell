@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { CatalogLink } from "@/components/catalog/CatalogLink";
 import { useRecentlyViewedStore, type RecentItem } from "@/store/recently-viewed";
 import { formatPrice } from "@/lib/formatters";
 import { useHydration } from "@/hooks/useHydration";
@@ -37,10 +37,10 @@ export function RecentlyViewed({ current }: RecentlyViewedProps) {
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {others.map((item) => (
-          <Link
+          <CatalogLink
             key={item.id}
             href={`/producto/${item.slug}`}
-            className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-[0_8px_30px_rgba(248,155,187,0.35)] transition-shadow"
+            className="group relative block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-[0_8px_30px_rgba(248,155,187,0.35)] transition-shadow"
           >
             <div className="relative aspect-square bg-cream-100 overflow-hidden">
               {item.image ? (
@@ -65,7 +65,7 @@ export function RecentlyViewed({ current }: RecentlyViewedProps) {
                 {formatPrice(item.price)}
               </p>
             </div>
-          </Link>
+          </CatalogLink>
         ))}
       </div>
     </section>

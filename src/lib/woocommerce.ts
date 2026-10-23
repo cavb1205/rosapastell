@@ -6,6 +6,7 @@ import type {
 } from "@/types/product";
 import type { CreateOrderPayload, WooOrder } from "@/types/order";
 import { WHOLESALE_ROLES } from "@/types/auth";
+import { PRODUCT_CACHE, CATEGORY_CACHE } from "./catalog-cache";
 
 // Tipo interno para la respuesta cruda de la API (incluye meta_data)
 type WooMetaItem = { key: string; value: unknown };
@@ -155,7 +156,7 @@ export async function getProducts(
     status: "publish",
     stock_status: "instock",
     ...params,
-  });
+  }, PRODUCT_CACHE);
 
   return {
     data: data.map(({ meta_data, ...p }) => ({
@@ -174,7 +175,7 @@ export async function getProductBySlug(
     slug,
     status: "publish",
     stock_status: "instock",
-  });
+  }, PRODUCT_CACHE);
   if (!data[0]) return null;
   const { meta_data, ...p } = data[0];
   return { ...p, ...parseWholesalePrice(meta_data) };
@@ -185,7 +186,8 @@ export async function getProductVariations(
 ): Promise<WooVariation[]> {
   const { data } = await wooFetch<WithMeta<WooVariation>[]>(
     `products/${productId}/variations`,
-    { per_page: 100 }
+    { per_page: 100 },
+    PRODUCT_CACHE
   );
   return data.map(({ meta_data, ...v }) => ({
     ...v,
@@ -229,7 +231,7 @@ export async function getCategories(
     per_page: 100,
     hide_empty: 1,
     ...params,
-  });
+  }, CATEGORY_CACHE);
   return data;
 }
 
@@ -238,7 +240,7 @@ export async function getCategoryBySlug(
 ): Promise<WooCategory | null> {
   const { data } = await wooFetch<WooCategory[]>("products/categories", {
     slug,
-  });
+  }, CATEGORY_CACHE);
   return data[0] || null;
 }
 

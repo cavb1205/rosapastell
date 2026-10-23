@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import crypto from "crypto";
+import { revalidateCatalogData } from "@/lib/catalog-revalidation";
 
 const WEBHOOK_SECRET = process.env.WOOCOMMERCE_WEBHOOK_SECRET;
 
@@ -50,6 +51,7 @@ function verifyRequest(request: NextRequest, rawBody: string): boolean {
 
 /** Invalida las páginas que muestran stock: categorías, colecciones, homepage e índice de búsqueda. */
 function revalidateCatalog(): string[] {
+  revalidateCatalogData();
   revalidatePath("/categorias/[slug]", "page");
   revalidatePath("/colecciones");
   revalidatePath("/");

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { CatalogLink } from "@/components/catalog/CatalogLink";
 import { getCategories } from "@/lib/woocommerce";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
@@ -82,7 +83,7 @@ export default async function ColeccionesPage() {
         {/* Grid de categorías */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
           {filtered.map((category, index) => (
-            <Link
+            <CatalogLink
               key={category.id}
               href={`/categorias/${category.slug}`}
               className="group relative aspect-square rounded-2xl overflow-hidden bg-cream-100 shadow-sm hover:shadow-md transition-shadow"
@@ -117,7 +118,7 @@ export default async function ColeccionesPage() {
                   Ver →
                 </span>
               </div>
-            </Link>
+            </CatalogLink>
           ))}
         </div>
 

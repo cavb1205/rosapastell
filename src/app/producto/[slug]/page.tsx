@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import {
   getProductBySlug,
   getProductVariations,
@@ -15,12 +16,12 @@ import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { formatPrice } from "@/lib/formatters";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { getProductReviews } from "@/lib/reviews";
+import type { WooProduct } from "@/types/product";
 
-// ISR: páginas generadas bajo demanda en el primer request, cacheadas 5min
-// No usamos generateStaticParams para evitar sobrecargar WordPress en el build
+// Cacheamos los datos públicos, no la generación completa de cada prenda:
+// así la primera visita también puede mostrar la prenda antes de las reseñas.
 export const revalidate = 300;
 export const dynamicParams = true;
-
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -74,21 +75,12 @@ export default async function ProductPage({ params }: PageProps) {
 
   const category = product.categories[0];
 
-  const [variations, relatedResult, reviews] = await Promise.all([
-    product.type === "variable" ? getProductVariations(product.id) : Promise.resolve([]),
-    product.related_ids.length > 0
-      ? getProducts({ include: product.related_ids.slice(0, 4).join(","), per_page: 4 })
-      : category
-        ? getProducts({ category: String(category.id), per_page: 5, exclude: String(product.id) })
-        : Promise.resolve({ data: [], totalPages: 0, total: 0 }),
-    getProductReviews(product.id),
-  ]);
-
-  const relatedProducts = relatedResult.data.slice(0, 4);
+  const variations = product.type === "variable"
+    ? await getProductVariations(product.id)
+    : [];
 
   return (
     <>
-      <ProductJsonLd product={product} reviews={reviews} />
       <BreadcrumbJsonLd
         items={[
           { name: "Inicio", href: "/" },
@@ -126,7 +118,9 @@ export default async function ProductPage({ params }: PageProps) {
 
         <ProductView product={product} variations={variations} />
 
-        <ProductReviews productId={product.id} reviews={reviews} />
+        <Suspense fallback={null}>
+          <ProductReviewsSection product={product} />
+        </Suspense>
 
         <RecentlyViewed
           current={{
@@ -138,34 +132,66 @@ export default async function ProductPage({ params }: PageProps) {
           }}
         />
 
-        {relatedProducts.length > 0 && (
-          <section className="mt-16 pt-14 border-t border-warm-100">
-            <div className="flex items-end justify-between gap-4 mb-8">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-rose-400 mb-1.5">
-                  También te puede gustar
-                </p>
-                <h2 className="font-heading text-2xl sm:text-3xl text-warm-900">
-                  {product.related_ids.length > 0
-                    ? "Productos Relacionados"
-                    : category
-                      ? `Más de ${category.name}`
-                      : "Más Productos"}
-                </h2>
-              </div>
-              {category && (
-                <Link
-                  href={`/categorias/${category.slug}`}
-                  className="shrink-0 text-sm font-medium text-burgundy-500 hover:text-burgundy-700 transition-colors underline underline-offset-4"
-                >
-                  Ver colección →
-                </Link>
-              )}
-            </div>
-            <ProductGrid products={relatedProducts} />
-          </section>
-        )}
+        <Suspense fallback={null}>
+          <RelatedProducts product={product} />
+        </Suspense>
       </div>
     </>
+  );
+}
+
+async function ProductReviewsSection({ product }: { product: WooProduct }) {
+  const reviews = await getProductReviews(product.id);
+  return (
+    <>
+      <ProductJsonLd product={product} reviews={reviews} />
+      <ProductReviews productId={product.id} reviews={reviews} />
+    </>
+  );
+}
+
+async function RelatedProducts({ product }: { product: WooProduct }) {
+  const category = product.categories[0];
+  let relatedProducts: WooProduct[];
+  try {
+    const result = product.related_ids.length > 0
+      ? await getProducts({ include: product.related_ids.slice(0, 4).join(","), per_page: 4 })
+      : category
+        ? await getProducts({ category: String(category.id), per_page: 5, exclude: String(product.id) })
+        : { data: [] };
+    relatedProducts = result.data.slice(0, 4);
+  } catch {
+    // Un fallo en recomendaciones no debe impedir seleccionar/comprar la prenda.
+    console.error("[Catalog] No se pudieron cargar los productos relacionados");
+    return null;
+  }
+
+  if (relatedProducts.length === 0) return null;
+  return (
+    <section className="mt-16 pt-14 border-t border-warm-100">
+      <div className="flex items-end justify-between gap-4 mb-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-rose-400 mb-1.5">
+            También te puede gustar
+          </p>
+          <h2 className="font-heading text-2xl sm:text-3xl text-warm-900">
+            {product.related_ids.length > 0
+              ? "Productos Relacionados"
+              : category
+                ? `Más de ${category.name}`
+                : "Más Productos"}
+          </h2>
+        </div>
+        {category && (
+          <Link
+            href={`/categorias/${category.slug}`}
+            className="shrink-0 text-sm font-medium text-burgundy-500 hover:text-burgundy-700 transition-colors underline underline-offset-4"
+          >
+            Ver colección →
+          </Link>
+        )}
+      </div>
+      <ProductGrid products={relatedProducts} />
+    </section>
   );
 }

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { CatalogLink } from "@/components/catalog/CatalogLink";
 import type { WooCategory } from "@/types/product";
 
 interface CategoryShowcaseProps {
@@ -20,7 +20,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((category) => (
-            <Link
+            <CatalogLink
               key={category.id}
               href={`/categorias/${category.slug}`}
               className="group relative aspect-square rounded-xl overflow-hidden bg-cream-100"
@@ -45,7 +45,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
                   {category.count} productos
                 </p>
               </div>
-            </Link>
+            </CatalogLink>
           ))}
         </div>
       </div>

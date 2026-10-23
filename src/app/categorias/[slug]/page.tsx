@@ -6,7 +6,6 @@ import {
   getCategories,
   getCategoryBySlug,
   getProducts,
-  getAllCategorySlugs,
 } from "@/lib/woocommerce";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Pagination } from "@/components/catalog/Pagination";
@@ -21,11 +20,6 @@ export const revalidate = 300;
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string; orderby?: string; talla?: string }>;
-}
-
-export async function generateStaticParams() {
-  const slugs = await getAllCategorySlugs();
-  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
@@ -164,6 +158,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                 <Link
                   key={c.id}
                   href={`/categorias/${c.slug}`}
+                  prefetch={false}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                     c.slug === slug
                       ? "bg-burgundy-500 text-white border-burgundy-500"

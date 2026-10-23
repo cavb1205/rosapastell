@@ -5,6 +5,7 @@
 export default function Loading() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-7">
+      <p role="status" className="text-sm text-warm-500">Cargando…</p>
       {/* Rosa Pastell mark — pulsing gently */}
       <div className="animate-pulse">
         <svg
