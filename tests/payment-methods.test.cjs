@@ -1,0 +1,10 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const ts=require('typescript');
+const source=ts.transpileModule(fs.readFileSync('src/lib/payment-methods.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+function enabled(env){const exports={};vm.runInNewContext(source,{exports,process:{env}});return exports.isWompiCheckoutEnabled();}
+test('existing keys alone never enable Wompi',()=>assert.equal(enabled({NEXT_PUBLIC_WOMPI_PUBLIC_KEY:'pub_prod_synthetic'}),false));
+test('explicit false disables Wompi even with existing keys',()=>assert.equal(enabled({NEXT_PUBLIC_WOMPI_ENABLED:'false',NEXT_PUBLIC_WOMPI_PUBLIC_KEY:'pub_prod_synthetic'}),false));
+test('Wompi requires explicit opt-in and a public key',()=>{assert.equal(enabled({NEXT_PUBLIC_WOMPI_ENABLED:'true'}),false);assert.equal(enabled({NEXT_PUBLIC_WOMPI_ENABLED:'true',NEXT_PUBLIC_WOMPI_PUBLIC_KEY:'pub_prod_synthetic'}),true);});

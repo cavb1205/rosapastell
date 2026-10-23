@@ -2,26 +2,30 @@ import { getWooAuthHeader } from "@/lib/woocommerce";
 import type { OrderLineItem } from "@/types/order";
 
 /**
- * Validación de stock fresca (sin caché) contra WooCommerce. Es la única defensa
- * confiable contra la sobreventa: la REST API de WooCommerce NO valida stock al
- * crear órdenes (deja el inventario en negativo) y el cliente puede llegar con
- * una página/carrito cacheado de cuando aún había stock.
+ * Lectura fresca (sin caché) contra WooCommerce para detectar carritos obsoletos.
+ * No reemplaza la reserva atómica del endpoint privado de checkout.
  *
  * Las lecturas van EN LOTE para no golpear WooCommerce con una petición por ítem
  * (crítico en el pico de un lanzamiento): los productos simples se piden juntos
  * con `?include=`, y las variaciones se agrupan por producto padre. Así N ítems
  * se resuelven en (1 + nº de padres distintos) peticiones en vez de N.
  *
- * Todas las funciones son fail-open: si un ítem no se puede verificar (red caída,
- * lote fallido, etc.) no se bloquea, para no congelar ventas por un fallo
- * transitorio.
+ * Esta lectura es solo un aviso temprano. La reserva atómica se realiza en el
+ * backend al crear el pedido. Una lectura incompleta bloquea la compra.
  */
 
 interface StockData {
   stock_status?: "instock" | "outofstock" | "onbackorder";
   stock_quantity?: number | null;
-  manage_stock?: boolean;
+  manage_stock?: boolean | "parent";
   backorders_allowed?: boolean;
+}
+
+export class StockValidationError extends Error {
+  constructor() {
+    super("No pudimos verificar la disponibilidad. Tu pedido no se confirmó; intenta nuevamente.");
+    this.name = "StockValidationError";
+  }
 }
 
 // Campos mínimos que necesitamos, para aligerar el payload de WooCommerce.
@@ -38,17 +42,25 @@ async function fetchJson(url: string): Promise<(StockData & { id: number })[]> {
       headers: { Authorization: getWooAuthHeader() },
       cache: "no-store",
     });
-    if (!res.ok) return []; // fail-open: sin datos, no bloquea
-    return (await res.json()) as (StockData & { id: number })[];
+    if (!res.ok) throw new StockValidationError();
+    const rows: unknown = await res.json();
+    if (!Array.isArray(rows) || rows.some((row) => !row || !Number.isInteger(row.id) ||
+      !["instock", "outofstock", "onbackorder"].includes(row.stock_status) ||
+      typeof row.backorders_allowed !== "boolean" ||
+      ![true, false, "parent"].includes(row.manage_stock) ||
+      (row.manage_stock === true && !Number.isFinite(row.stock_quantity)))) {
+      throw new StockValidationError();
+    }
+    return rows;
   } catch {
-    return []; // fail-open
+    throw new StockValidationError();
   }
 }
 
 /**
  * Lee el estado de stock de todos los ítems en lote, sin caché.
  * Devuelve un mapa `product_id:variation_id` → StockData. Un ítem ausente en el
- * mapa (lote fallido, id inexistente) se trata como fail-open aguas arriba.
+ * mapa (lote fallido, id inexistente) hace fallar la validación.
  */
 async function fetchStockMap(
   lineItems: OrderLineItem[]
@@ -94,6 +106,7 @@ async function fetchStockMap(
   }
 
   await Promise.all(tasks);
+  if (lineItems.some((item) => !map.has(keyOf(item)))) throw new StockValidationError();
   return map;
 }
 
@@ -107,10 +120,12 @@ export async function findInsufficientStock(
 ): Promise<number[]> {
   const stockMap = await fetchStockMap(lineItems);
   const insufficient: number[] = [];
+  const quantities = new Map<string, number>();
+  for (const item of lineItems) quantities.set(keyOf(item), (quantities.get(keyOf(item)) ?? 0) + item.quantity);
 
   lineItems.forEach((item, index) => {
     const data = stockMap.get(keyOf(item));
-    if (!data) return; // fail-open
+    if (!data) throw new StockValidationError();
     if (data.backorders_allowed === true) return;
 
     if (data.stock_status === "outofstock") {
@@ -118,7 +133,7 @@ export async function findInsufficientStock(
       return;
     }
     if (data.manage_stock && typeof data.stock_quantity === "number") {
-      if (item.quantity > data.stock_quantity) insufficient.push(index);
+      if (quantities.get(keyOf(item))! > data.stock_quantity) insufficient.push(index);
     }
   });
 
@@ -140,7 +155,7 @@ export async function findOversold(
 
   lineItems.forEach((item, index) => {
     const data = stockMap.get(keyOf(item));
-    if (!data) return; // fail-open
+    if (!data) throw new StockValidationError();
     if (data.backorders_allowed === true) return;
     if (
       data.manage_stock &&

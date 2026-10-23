@@ -48,7 +48,7 @@ export const profileUpdateSchema = z.object({
 
 const lineItemSchema = z.object({
   product_id: z.number().int().positive(),
-  variation_id: z.number().int().optional(),
+  variation_id: z.number().int().nonnegative().optional(),
   quantity: z.number().int().min(1).max(99),
 });
 
@@ -76,7 +76,7 @@ export const orderSchema = z.object({
     country: z.string().max(2),
     phone: z.string().max(30).default(""),
   }),
-  line_items: z.array(lineItemSchema).min(1),
+  line_items: z.array(lineItemSchema).min(1).max(50),
   coupon_lines: z.array(z.object({ code: z.string().max(50) })).optional(),
   customer_note: z.string().max(500).optional(),
   _emailMeta: z.object({

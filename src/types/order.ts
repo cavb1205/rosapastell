@@ -56,6 +56,8 @@ export interface WooCoupon {
 
 export interface WooOrder {
   id: number;
+  order_key: string;
+  rp_checkout_replayed?: boolean;
   number: string;
   status: string;
   total: string;
@@ -65,6 +67,7 @@ export interface WooOrder {
   currency: string;
   date_created: string;
   date_modified: string;
+  date_paid?: string | null;
   customer_id: number;
   customer_note: string;
   payment_method: string;

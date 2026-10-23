@@ -120,9 +120,8 @@ const STORE_OPEN: StoreStatus = { paused: false, message: "" };
  * (`/wp-json/rosapastell/v1/store-status`, definido en el mu-plugin
  * `rosapastell-store-pause.php`).
  *
- * Fail-safe: ante cualquier error (endpoint caído, red, JSON inválido) se
- * asume tienda ABIERTA, para que un problema del backend nunca congele las
- * ventas. El bloqueo real es una decisión explícita del cliente, no un fallo.
+ * Las lecturas frescas del checkout fallan cerradas ante errores. El catálogo
+ * puede seguir mostrándose, pero nunca autoriza una compra sin verificarlo.
  *
  * @param opts.fresh  Salta la caché ISR (úsalo en la validación de `/api/orders`).
  */
@@ -133,13 +132,15 @@ export async function getStoreStatus(opts?: { fresh?: boolean }): Promise<StoreS
         ? { cache: "no-store" }
         : { next: { revalidate: 60, tags: ["store-status"] } }),
     });
-    if (!res.ok) return STORE_OPEN;
+    if (!res.ok) throw new Error("No se pudo comprobar el estado de la tienda.");
     const data = (await res.json()) as Partial<StoreStatus>;
+    if (typeof data.paused !== "boolean") throw new Error("Estado de tienda inválido.");
     return {
       paused: Boolean(data.paused),
       message: typeof data.message === "string" ? data.message : "",
     };
-  } catch {
+  } catch (error) {
+    if (opts?.fresh) throw error;
     return STORE_OPEN;
   }
 }
@@ -253,17 +254,33 @@ export async function getAllCategorySlugs(): Promise<string[]> {
 // Orders
 
 export async function createOrder(
-  orderData: CreateOrderPayload
+  orderData: CreateOrderPayload,
+  checkoutKey: string
 ): Promise<WooOrder> {
-  const { data } = await wooFetch<WooOrder>("orders", {}, {
+  const { data } = await wooFetch<WooOrder>("rp-checkout/orders", {}, {
     method: "POST",
+    headers: { "X-RP-Checkout-Key": checkoutKey },
     body: JSON.stringify(orderData),
   });
   return data;
 }
 
-export async function getOrder(orderId: number): Promise<WooOrder> {
-  const { data } = await wooFetch<WooOrder>(`orders/${orderId}`);
+export async function getPaymentReadiness(orderId: number, orderKey: string) {
+  const { data } = await wooFetch<{ amount_in_cents: number; currency: string; expiration_time: string }>(`rp-checkout/orders/${orderId}/readiness`, {}, {
+    method: "POST", cache: "no-store", body: JSON.stringify({ order_key: orderKey }),
+  });
+  return data;
+}
+
+export async function applyWompiPayment(orderId: number, event: { transaction_id: string; status: string; amount_in_cents: number; currency: string }) {
+  const { data } = await wooFetch<{ ok: boolean; review?: boolean }>(`rp-checkout/orders/${orderId}/payment`, {}, {
+    method: "POST", cache: "no-store", body: JSON.stringify(event),
+  });
+  return data;
+}
+
+export async function getOrder(orderId: number, fresh = false): Promise<WooOrder> {
+  const { data } = await wooFetch<WooOrder>(`orders/${orderId}`, {}, fresh ? { cache: "no-store" } : {});
   return data;
 }
 

@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHash } from "crypto";
-import { updateOrderStatus } from "@/lib/woocommerce";
+import { createHash, timingSafeEqual } from "crypto";
+import { applyWompiPayment } from "@/lib/woocommerce";
+import { getVerifiedWompiTransaction } from "@/lib/wompi";
+import { z } from "zod";
+
+const eventSchema = z.object({
+  event: z.string(),
+  data: z.record(z.string(), z.unknown()),
+  timestamp: z.number().int().nonnegative().safe(),
+  signature: z.object({ properties: z.array(z.string().regex(/^[A-Za-z0-9_.]+$/).max(128)).min(1).max(64), checksum: z.string().regex(/^[a-fA-F0-9]{64}$/) }),
+});
+const transactionSchema = z.object({
+  id: z.string().regex(/^[A-Za-z0-9_-]{1,150}$/),
+  reference: z.string().max(255),
+  status: z.string().max(50),
+  amount_in_cents: z.number().int().nonnegative().safe(),
+  currency: z.literal("COP"),
+});
 
 interface WompiEvent {
   event: string;
@@ -10,6 +26,7 @@ interface WompiEvent {
       reference: string;
       status: "APPROVED" | "DECLINED" | "VOIDED" | "ERROR";
       amount_in_cents: number;
+      currency: string;
       [key: string]: unknown;
     };
   };
@@ -29,7 +46,8 @@ interface WompiEvent {
  */
 function verifyWompiSignature(event: WompiEvent): boolean {
   const secret = process.env.WOMPI_EVENTS_SECRET;
-  if (!secret) return false;
+  if (!secret || !Array.isArray(event.signature?.properties) || !Number.isSafeInteger(event.timestamp)) return false;
+  if (!["transaction.id", "transaction.status", "transaction.amount_in_cents"].every((key) => event.signature.properties.includes(key))) return false;
 
   const values = event.signature.properties.map((prop) => {
     const keys = prop.split(".");
@@ -47,26 +65,20 @@ function verifyWompiSignature(event: WompiEvent): boolean {
   const chain = values.join("") + String(event.timestamp) + secret;
   const expected = createHash("sha256").update(chain).digest("hex");
 
-  return expected === event.signature.checksum;
+  return /^[a-fA-F0-9]{64}$/.test(event.signature.checksum) && timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(event.signature.checksum, "hex"));
 }
 
 // Idempotencia: evitar procesar el mismo webhook dos veces.
 // Wompi puede reenviar webhooks si no recibe respuesta a tiempo.
-const processedTransactions = new Map<string, number>();
-
-// Limpiar entradas viejas cada 10 minutos
-setInterval(() => {
-  const cutoff = Date.now() - 3_600_000; // 1 hora
-  for (const [key, ts] of processedTransactions) {
-    if (ts < cutoff) processedTransactions.delete(key);
-  }
-}, 600_000);
+// La idempotencia se guarda en WooCommerce, bajo bloqueo del pedido.
 
 export async function POST(request: NextRequest) {
   let event: WompiEvent;
 
   try {
-    event = await request.json();
+    const parsed = eventSchema.safeParse(await request.json());
+    if (!parsed.success) return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+    event = parsed.data as unknown as WompiEvent;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -85,13 +97,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const { id: transactionId, reference, status } = event.data.transaction;
-
-  // Idempotencia: si ya procesamos esta transacción, responder OK sin re-procesar
-  const idempotencyKey = `${transactionId}-${status}`;
-  if (processedTransactions.has(idempotencyKey)) {
-    return NextResponse.json({ ok: true });
-  }
+  const parsedTransaction = transactionSchema.safeParse(event.data.transaction);
+  if (!parsedTransaction.success) return NextResponse.json({ error: "Invalid transaction" }, { status: 400 });
+  const { id: transactionId, reference, status } = parsedTransaction.data;
 
   // reference = "rp-{wooOrderId}"
   const match = reference.match(/^rp-(\d+)$/);
@@ -116,9 +124,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await updateOrderStatus(wooOrderId, wooStatus);
-    processedTransactions.set(idempotencyKey, Date.now());
-    console.log(`[Wompi Webhook] Orden ${wooOrderId} actualizada a "${wooStatus}" (tx: ${transactionId})`);
+    // La firma habitual no incluye reference/currency. No confiar en esos
+    // campos hasta contrastarlos con la transacción consultada en Wompi.
+    const verified = await getVerifiedWompiTransaction(transactionId);
+    if (verified.reference !== reference || verified.status !== status ||
+      verified.amount_in_cents !== parsedTransaction.data.amount_in_cents || verified.currency !== parsedTransaction.data.currency) {
+      throw new Error("El evento no coincide con la transacción consultada en Wompi");
+    }
+    const applied = await applyWompiPayment(wooOrderId, {
+      transaction_id: transactionId,
+      status,
+      amount_in_cents: event.data.transaction.amount_in_cents,
+      currency: event.data.transaction.currency,
+    });
+    if (!applied.ok) throw new Error("El backend no confirmó el evento");
+    if (applied.review) console.error(`[Wompi Webhook] Orden ${wooOrderId}: pago guardado para revisión de inventario`);
+    if (!applied.review) console.log(`[Wompi Webhook] Orden ${wooOrderId}: evento confirmado (tx: ${transactionId})`);
   } catch (err) {
     console.error(
       `[Wompi Webhook] Error actualizando orden ${wooOrderId} a "${wooStatus}" (tx: ${transactionId}):`,

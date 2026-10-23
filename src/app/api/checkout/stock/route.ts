@@ -33,6 +33,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Índices (alineados con el array enviado) de los ítems sin stock suficiente.
-  const outOfStock = await findInsufficientStock(parsed.data.items);
-  return NextResponse.json({ outOfStock });
+  try {
+    const outOfStock = await findInsufficientStock(parsed.data.items);
+    return NextResponse.json({ outOfStock });
+  } catch {
+    return NextResponse.json({ error: "No pudimos verificar la disponibilidad." }, { status: 503 });
+  }
 }

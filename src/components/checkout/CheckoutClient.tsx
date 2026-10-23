@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/auth";
 import { formatPrice } from "@/lib/formatters";
 import { variantText, variantSummary } from "@/lib/variations";
 import { COLOMBIAN_DEPARTMENTS } from "@/lib/constants";
+import { isWompiCheckoutEnabled } from "@/lib/payment-methods";
 import { useHydration } from "@/hooks/useHydration";
 import Link from "next/link";
 import type { CreateOrderPayload, WooCoupon } from "@/types/order";
@@ -39,15 +40,14 @@ function calcDiscount(coupon: AppliedCoupon, subtotal: number): number {
   return 0;
 }
 
-const WOMPI_ENABLED =
-  !!process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY &&
-  !process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY.includes("xxx");
+const WOMPI_ENABLED = isWompiCheckoutEnabled();
 
 export function CheckoutClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [stockError, setStockError] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
+  const checkoutAttempt = useRef<{ payload: string; key: string } | null>(null);
   // Aviso temprano: nombres de ítems del carrito que ya están agotados (G5).
   const [unavailable, setUnavailable] = useState<string[]>([]);
 
@@ -226,9 +226,13 @@ export function CheckoutClient() {
         customer_note: data.notes,
       };
 
+      const attemptPayload = JSON.stringify(orderPayload);
+      if (checkoutAttempt.current?.payload !== attemptPayload) {
+        checkoutAttempt.current = { payload: attemptPayload, key: crypto.randomUUID() };
+      }
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": checkoutAttempt.current.key },
         body: JSON.stringify({
           ...orderPayload,
           _emailMeta: {
@@ -254,7 +258,7 @@ export function CheckoutClient() {
           setStockError(true);
           setError(errData.error || "Uno o más productos se agotaron justo antes de confirmar tu pedido.");
         } else {
-          setError("Ocurrió un error al procesar tu pedido. Por favor intenta de nuevo.");
+          setError(typeof errData.error === "string" ? errData.error : "Ocurrió un error al procesar tu pedido. Por favor intenta de nuevo.");
         }
         return;
       }
@@ -262,8 +266,8 @@ export function CheckoutClient() {
       const order = await res.json();
       clearCart();
 
-      if (isWompi) {
-        const amountInCents = Math.round(total * 100);
+      if (order.payment_method === "wompi") {
+        const amountInCents = Math.round(Number(order.total) * 100);
         const params = new URLSearchParams({
           orderId: String(order.id),
           order: order.number,
@@ -279,7 +283,7 @@ export function CheckoutClient() {
       const guestParams = !user
         ? `&guestEmail=${encodeURIComponent(data.email)}&guestName=${encodeURIComponent(data.firstName)}&guestLastName=${encodeURIComponent(data.lastName)}`
         : "";
-      router.push(`/checkout/whatsapp?order=${order.number}&total=${total}${guestParams}`);
+      router.push(`/checkout/whatsapp?order=${order.number}&total=${Number(order.total)}${guestParams}`);
     } catch {
       setError("Ocurrió un error de conexión. Por favor intenta de nuevo.");
     } finally {
@@ -494,8 +498,11 @@ export function CheckoutClient() {
               </div>
             </section>
           ) : (
-            // Mayoristas: solo WhatsApp, campo oculto
-            <input type="hidden" {...register("paymentMethod")} value="whatsapp" />
+            <section className="rounded-2xl border border-warm-200 bg-white px-7 py-6">
+              <input type="hidden" {...register("paymentMethod")} value="whatsapp" />
+              <h2 className="font-heading text-xl text-warm-900">Transferencia / WhatsApp</h2>
+              <p className="mt-2 text-sm text-warm-500">Al registrar tu pedido, continúa a WhatsApp para solicitar los datos de pago por transferencia. Los pagos en línea no están disponibles por ahora.</p>
+            </section>
           )}
         </div>
 

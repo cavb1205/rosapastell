@@ -404,7 +404,7 @@ export function orderConfirmationHtml(p: OrderConfirmationParams): string {
               <p style="margin:0 0 24px;font-size:14px;color:${mutedText};line-height:1.6;">
                 Recibimos tu pedido <strong style="color:${darkText};">#${p.orderNumber}</strong>.
                 ${p.paymentMethod === "wompi"
-                  ? "Tu pago fue procesado exitosamente. Pronto prepararemos tu envío."
+                  ? "Tu pedido está pendiente de pago. La disponibilidad quedó reservada temporalmente; la compra se confirma cuando recibamos la aprobación del pago y asignemos el inventario."
                   : "Escríbenos por WhatsApp con tu número de pedido para enviarte los datos de pago y confirmar tu compra."}
               </p>
 

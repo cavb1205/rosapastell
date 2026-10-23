@@ -22,20 +22,20 @@ declare global {
 
 export function WompiWidget({
   orderId,
-  orderNumber,
   amountInCents,
   customerEmail,
   customerName,
   customerPhone,
 }: WompiWidgetProps) {
   const [signature, setSignature] = useState<string | null>(null);
+  const [expirationTime, setExpirationTime] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [declined, setDeclined] = useState(false);
   const opened = useRef(false);
 
   const reference = `rp-${orderId}`;
   const publicKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY ?? "";
-  const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/confirmacion?id=${orderNumber}`;
+  const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/confirmacion?orderId=${orderId}`;
 
   // Obtener firma del servidor
   useEffect(() => {
@@ -44,15 +44,15 @@ export function WompiWidget({
     )
       .then((r) => r.json())
       .then((d) => {
-        if (d.signature) setSignature(d.signature);
-        else setError("No se pudo generar la firma de pago.");
+        if (d.signature && d.expirationTime) { setExpirationTime(d.expirationTime); setSignature(d.signature); }
+        else setError(d.error || "No se pudo generar la firma de pago.");
       })
       .catch(() => setError("Error al preparar el pago."));
   }, [reference, amountInCents]);
 
   // Cargar script de Wompi y abrir widget
   useEffect(() => {
-    if (!signature || !publicKey || opened.current) return;
+    if (!signature || !expirationTime || !publicKey || opened.current) return;
 
     function tryOpen() {
       if (opened.current) return;
@@ -66,6 +66,7 @@ export function WompiWidget({
         reference,
         publicKey,
         signature: { integrity: signature },
+        expirationTime,
         redirectUrl,
         customerData: {
           email: customerEmail,
@@ -117,12 +118,13 @@ export function WompiWidget({
     }, 15_000);
 
     return () => clearTimeout(timeout);
-  }, [signature, publicKey, amountInCents, reference, redirectUrl, customerEmail, customerName, customerPhone]);
+  }, [signature, expirationTime, publicKey, amountInCents, reference, redirectUrl, customerEmail, customerName, customerPhone]);
 
   function handleRetry() {
     setDeclined(false);
     opened.current = false;
     setSignature(null);
+    setExpirationTime(null);
     setError("");
     // Remover script previo para forzar recarga limpia
     const oldScript = document.getElementById("wompi-script");
@@ -133,8 +135,8 @@ export function WompiWidget({
     )
       .then((r) => r.json())
       .then((d) => {
-        if (d.signature) setSignature(d.signature);
-        else setError("No se pudo generar la firma de pago.");
+        if (d.signature && d.expirationTime) { setExpirationTime(d.expirationTime); setSignature(d.signature); }
+        else setError(d.error || "No se pudo generar la firma de pago.");
       })
       .catch(() => setError("Error al preparar el pago."));
   }

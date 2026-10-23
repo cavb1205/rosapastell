@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, getWooAuthHeader, getStoreStatus, parseWholesalePrice, updateOrder, OVERSOLD_AUTOCANCEL_META, WooCommerceError } from "@/lib/woocommerce";
-import { getUserFromCookie } from "@/lib/auth";
+import { createOrder, getWooAuthHeader, getStoreStatus, parseWholesalePrice, WooCommerceError } from "@/lib/woocommerce";
+import { getUserFromCookie, AUTH_COOKIE_NAME } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
 import { orderSchema } from "@/lib/validations";
-import { findInsufficientStock, findOversold } from "@/lib/stock";
+import { findInsufficientStock, StockValidationError } from "@/lib/stock";
 import type { OrderLineItem, CreateOrderPayload } from "@/types/order";
+import { isWompiCheckoutEnabled } from "@/lib/payment-methods";
 
 // Códigos de error de WooCommerce relacionados con stock insuficiente
 const STOCK_ERROR_CODES = [
   "woocommerce_not_enough_stock",
   "woocommerce_rest_insufficient_stock",
   "insufficient_stock",
+  "rp_insufficient_stock",
 ];
 
 function isStockError(error: WooCommerceError): boolean {
@@ -48,7 +50,7 @@ async function resolveWholesalePrices(
           next: { revalidate: 0 },
         });
 
-        if (!res.ok) return item; // Si falla, dejar sin modificar
+        if (!res.ok) throw new StockValidationError();
 
         const data = await res.json();
         const { wholesalePrice, wholesaleSalePrice } = parseWholesalePrice(
@@ -63,6 +65,7 @@ async function resolveWholesalePrices(
 
         // total = precio mayorista real que paga el cliente
         const unitPrice = wholesaleSalePrice ?? wholesalePrice;
+        if (!Number.isFinite(unitPrice) || !Number.isFinite(retailPrice)) throw new StockValidationError();
         const wholesaleLineTotal = (unitPrice * item.quantity).toFixed(2);
 
         return {
@@ -71,7 +74,7 @@ async function resolveWholesalePrices(
           total: wholesaleLineTotal,
         };
       } catch {
-        return item; // Si hay error de red, dejar sin modificar
+        throw new StockValidationError();
       }
     })
   );
@@ -90,7 +93,9 @@ export async function POST(request: NextRequest) {
   // Gate de pausa de tienda: aunque el frontend oculta los botones, esta es la
   // verificación real que impide crear pedidos durante un lanzamiento. Se lee
   // sin caché para que el bloqueo aplique al instante al activar el interruptor.
-  const storeStatus = await getStoreStatus({ fresh: true });
+  let storeStatus;
+  try { storeStatus = await getStoreStatus({ fresh: true }); }
+  catch { return NextResponse.json({ error: "No se pudo verificar la tienda. No se confirmó tu pedido." }, { status: 503 }); }
   if (storeStatus.paused) {
     return NextResponse.json(
       {
@@ -111,6 +116,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { _emailMeta: emailMeta, ...parsedPayload } = parsed.data;
+    if (parsedPayload.payment_method === "wompi" && !isWompiCheckoutEnabled()) {
+      return NextResponse.json({ error: "Los pagos en línea están temporalmente deshabilitados. Recarga el checkout y continúa por transferencia / WhatsApp.", paymentUnavailable: true }, { status: 409 });
+    }
+    const suppliedCheckoutKey = request.headers.get("Idempotency-Key");
+    const checkoutKey = suppliedCheckoutKey ?? crypto.randomUUID();
+    if (!/^[A-Za-z0-9-]{16,100}$/.test(checkoutKey)) return NextResponse.json({ error: "Identificador de compra inválido." }, { status: 400 });
 
     // Límite estricto por email: una misma persona/bot no puede crear muchos
     // pedidos por minuto, sin afectar a otras clientas que comparten su IP.
@@ -138,59 +149,48 @@ export async function POST(request: NextRequest) {
       };
     };
 
-    // 1) Pre-chequeo: impide la sobreventa de ítems agotados que pasaron el
-    //    filtro por venir de una página/carrito cacheado.
+    // La lectura debe funcionar incluso en un reintento. La decisión atómica
+    // corresponde al backend: un pedido mayorista repetido ya descontó stock,
+    // pero su misma clave debe recuperar ese pedido, no crear otro.
     const insufficient = await findInsufficientStock(parsedPayload.line_items);
-    if (insufficient.length > 0) {
+    if (insufficient.length > 0 && !suppliedCheckoutKey) {
       return NextResponse.json(stockErrorBody(insufficient), { status: 400 });
     }
 
     // Construir payload — puede agregar customer_id y precios mayoristas
-    const orderPayload: CreateOrderPayload = { ...parsedPayload };
+    const orderPayload: CreateOrderPayload = {
+      ...parsedPayload,
+      set_paid: false,
+      status: parsedPayload.payment_method === "wompi" ? "pending" : "on-hold",
+    };
 
     // Si el usuario está autenticado, asociar la orden y resolver precios mayoristas
     const user = await getUserFromCookie();
+    if (request.cookies.has(AUTH_COOKIE_NAME) && !user) {
+      return NextResponse.json({ error: "No se pudo validar tu sesión. Ingresa nuevamente antes de comprar." }, { status: 401 });
+    }
     if (user) {
       orderPayload.customer_id = user.id;
 
       if (user.isWholesale) {
+        orderPayload.payment_method = "whatsapp";
+        orderPayload.payment_method_title = "Transferencia / WhatsApp";
+        orderPayload.status = "on-hold";
         orderPayload.line_items = await resolveWholesalePrices(
           parsedPayload.line_items
         );
       }
     }
 
-    const order = await createOrder(orderPayload);
+    const order = await createOrder(orderPayload, checkoutKey);
 
-    // 2) Guarda post-creación contra la carrera de concurrencia: si el descuento
-    //    de stock dejó algún ítem en negativo, este pedido perdió la carrera por
-    //    la última unidad. Se cancela (WooCommerce restaura el stock) y se informa
-    //    al cliente, para no quedar con un pedido imposible de despachar.
-    //    (Solo aplica a pedidos que descuentan stock al crearse, p.ej. on-hold;
-    //    los pendientes de Wompi no descuentan, así que no disparan aquí.)
-    const oversold = await findOversold(parsedPayload.line_items);
-    if (oversold.length > 0) {
-      try {
-        // Cancela (restaura el stock) y marca la cancelación como automática por
-        // sobreventa, para que el webhook no envíe el email de "pedido cancelado".
-        await updateOrder(order.id, {
-          status: "cancelled",
-          meta_data: [{ key: OVERSOLD_AUTOCANCEL_META, value: "yes" }],
-        });
-      } catch (err) {
-        console.error(
-          `[Orders] No se pudo cancelar el pedido sobrevendido ${order.id}:`,
-          err instanceof Error ? err.message : err,
-        );
-      }
-      return NextResponse.json(stockErrorBody(oversold), { status: 409 });
-    }
+    // Solo el endpoint que reservó/descontó inventario puede responder éxito.
 
     // Enviar email de confirmación antes de responder
     // (await garantiza que la función no se cierre antes de enviar)
     const customerEmail = order.billing?.email;
     const firstName = order.billing?.first_name;
-    if (customerEmail && emailMeta) {
+    if (customerEmail && emailMeta && !order.rp_checkout_replayed) {
       try {
         await sendEmail({
           to: [{ email: customerEmail, name: firstName }],
@@ -213,8 +213,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(order, { status: 201 });
+    const response = NextResponse.json(order, { status: 201 });
+    if (order.payment_method === "wompi") {
+      response.cookies.set(`rp_pay_${order.id}`, order.order_key, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/checkout/wompi-signature", maxAge: 1800 });
+      response.cookies.set(`rp_receipt_${order.id}`, order.order_key, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/checkout/confirmacion", maxAge: 86400 });
+    }
+    return response;
   } catch (error) {
+    if (error instanceof StockValidationError || (error instanceof WooCommerceError && error.status >= 500)) {
+      return NextResponse.json({ error: "No pudimos asegurar el inventario. No se confirmó tu pedido; intenta nuevamente." }, { status: 503 });
+    }
     if (error instanceof WooCommerceError && isStockError(error)) {
       return NextResponse.json(
         {
@@ -223,6 +231,9 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 },
       );
+    }
+    if (error instanceof WooCommerceError && error.status === 409) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
 
     console.error("Orders API error:", error);
