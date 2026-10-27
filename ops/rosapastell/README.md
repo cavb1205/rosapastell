@@ -83,3 +83,13 @@ MU-plugins de stock, pausa o seguridad. Revertir retirando únicamente este
 archivo a un respaldo privado, sin modificar datos. Las pestañas del admin
 abiertas antes del cambio pueden seguir solicitando la gráfica hasta recargar.
 No equivale a habilitar ni reparar el servicio remoto de estadísticas.
+
+## Método de archivos PDF
+
+`wordpress/rosapastell-pdf-compat.php` se instala como MU-plugin independiente.
+Usa el filtro soportado del plugin PDF para seleccionar explícitamente `php`,
+sin modificar `FS_METHOD` global ni las opciones guardadas. Evita que el
+diagnóstico adopte un fallback WordPress/FTP distinto del método PHP real.
+No habilita acceso remoto, oculta advertencias, genera documentos ni cambia
+facturas automáticas o numeración. Detalles en
+`docs/despliegues/2026-10-27-pdf-compat.md`.
