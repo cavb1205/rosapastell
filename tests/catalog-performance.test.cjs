@@ -163,3 +163,38 @@ test('catalog links suppress viewport prefetch and show accessible pending feedb
   assert.equal(hint.props['aria-hidden'], false);
   assert.equal(hint.props.children.props.children, 'Cargando…');
 });
+
+test('not-found renders synchronously without data imports or network access', () => {
+  const { default: NotFound } = load('src/app/not-found.tsx', {
+    require: id => {
+      if (id === 'react/jsx-runtime') return {
+        jsx: (type, props) => ({ type, props }),
+        jsxs: (type, props) => ({ type, props }),
+      };
+      if (id === 'next/link') return { __esModule: true, default: 'Link' };
+      if (id === 'lucide-react') return { Search: 'Search' };
+      assert.fail(`Unexpected dependency in not-found: ${id}`);
+    },
+    fetch: () => assert.fail('The not-found boundary must not fetch data'),
+  });
+  const tree = NotFound();
+  assert.equal(tree.then, undefined);
+  const nodes = [];
+  function visit(node) {
+    if (Array.isArray(node)) return node.forEach(visit);
+    if (!node || typeof node !== 'object') return;
+    nodes.push(node);
+    visit(node.props?.children);
+  }
+  visit(tree);
+  const form = nodes.find(node => node.type === 'form');
+  assert.equal(form.props.action, '/buscar');
+  assert.equal(form.props.method, 'get');
+  const input = nodes.find(node => node.type === 'input');
+  assert.equal(input.props.name, 'q');
+  assert.equal(input.props['aria-label'], 'Buscar productos');
+  const links = nodes.filter(node => node.type === 'Link');
+  assert.deepEqual(Array.from(links, node => node.props.href), ['/', '/colecciones']);
+  assert.ok(links.every(node => node.props.prefetch === false));
+  assert.equal(nodes.some(node => node.type === 'img' || node.type === 'ProductCard'), false);
+});
