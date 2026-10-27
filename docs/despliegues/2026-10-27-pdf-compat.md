@@ -46,3 +46,12 @@ de archivos: ver `2026-10-27-checkout-diferido.md`. No cambia Resend ni permite
 afirmar que la demora histórica quedó resuelta sin medir compras posteriores.
 
 Referencia del proveedor: [código de PDF Invoices](https://github.com/wpovernight/woocommerce-pdf-invoices-packing-slips).
+
+## Aplicación verificada
+
+Código `42042ad75e1c524c25fd5754be5fedd821d0c99c`, subido antes de instalar
+el 27/10 a las 23:05:44 UTC. SHA-256 del MU-plugin:
+`0df08276b09c4695ca79f3f6a362736629b85d38a1f1680b89faf65b9a7fbc5f`.
+La pantalla autenticada mostró `php`, carpetas escribibles y acceso remoto
+todavía desactivado. El aviso de acceso remoto permanece visible, sin falsear
+el resultado. No se reiniciaron servicios ni se generaron documentos.

@@ -70,3 +70,27 @@ cola, restaurar bases o reenviar pedidos. El parche PDF de archivos es
 independiente; no retirar las guardas de inventario o pausa.
 
 Referencia primaria: [WC_Emails](https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/class-wc-emails.php).
+
+## Aplicación verificada
+
+Código `f69caf11fa557d9dfb253d971e28dc81408e1e0d`, subido y comprobado en
+la rama remota antes de instalar a las 23:18:53 UTC del 27/10. El MU-plugin
+instalado coincide por SHA-256:
+`b049b8b269d35a920bbbf3879d9eb07cefaa7cca8466a7bbe3f8f36084f1354f`.
+
+La consulta local FPM confirmó clase de cola disponible, diferimiento activo,
+callback de estado encolado registrado, callback inmediato ausente, entrega
+nativa todavía bloqueada, PDF en método PHP y acceso remoto desactivado. La
+sonda se movió al respaldo privado tras verificar, sin ruta pública nueva.
+
+48 pruebas Node, sintaxis PHP y prueba PHP aislada con la clase nativa
+instalada pasaron. Se validó globalmente logrotate y el archivo de tiempos
+se creó 0640 bajo el usuario PHP. Cron normal correcto y sin errores fatales
+nuevos en la ventana revisada. Los procesos principales y las guardas de
+stock/pausa se conservaron; no se crearon pedidos o documentos para probar.
+
+No había tareas nativas de email ni trazas de checkout nuevas al cerrar la
+comprobación. Eso no prueba la latencia de una compra real ni la entrega de
+una factura posterior. La siguiente compra normal y su procesamiento de cola
+deben usarse para confirmar tiempos y disponibilidad del documento, sin
+repetir pedidos o atribuir de antemano toda la demora histórica a los PDF.
