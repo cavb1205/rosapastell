@@ -93,3 +93,21 @@ diagnóstico adopte un fallback WordPress/FTP distinto del método PHP real.
 No habilita acceso remoto, oculta advertencias, genera documentos ni cambia
 facturas automáticas o numeración. Detalles en
 `docs/despliegues/2026-10-27-pdf-compat.md`.
+
+## Trabajo diferido y observador de checkout
+
+`wordpress/rosapastell-checkout-performance.php` usa el diferimiento nativo
+de WooCommerce autorizado por el propietario. Es código gestionado: no cambia
+el valor guardado de la casilla de funciones de WooCommerce. Mantiene las
+facturas automáticas y el bloqueo de envío nativo, sin cambiar Resend.
+
+El mismo archivo mide únicamente la ruta POST de checkout y escribe agregados
+sin datos personales en `/var/log/rosa-stage/checkout-timing.jsonl`. Preparar
+el archivo con 0640/usuario PHP y aplicar el rotador versionado, con respaldo
+previo. No se necesita recargar servicios. Las fases son inclusivas, no aditivas.
+
+La sonda `verify-checkout-performance.php` solo puede instalarse fuera del
+document root, dentro del directorio privado de configuración permitido por
+FPM. Consultarla por FastCGI local y retirar/mover al respaldo al terminar.
+No invoca rutas de pedido, no crea documentos ni procesa tareas.
+Detalles, límites y reversión en `docs/despliegues/2026-10-27-checkout-diferido.md`.

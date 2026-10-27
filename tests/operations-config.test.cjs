@@ -29,7 +29,7 @@ test('observability logs only controlled labels and performance values', () => {
 
 test('log rotation preserves private permissions and reopens instead of restarting services', () => {
   const config = read('observability.logrotate');
-  assert.equal((config.match(/rotate 7/g) || []).length, 2);
+  assert.equal((config.match(/rotate 7/g) || []).length, 3);
   assert.match(config, /create 0640 www-data adm/);
   assert.match(config, /create 0640 rp_rosa_stage rp_rosa_stage/);
   assert.match(config, /nginx -s reopen/);

@@ -25,3 +25,15 @@
         /bin/systemctl kill --kill-whom=main --signal=USR1 rosa-stage-php.service >/dev/null 2>&1
     endscript
 }
+/var/log/rosa-stage/checkout-timing.jsonl {
+    daily
+    maxsize 10M
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    su rp_rosa_stage rp_rosa_stage
+    create 0640 rp_rosa_stage rp_rosa_stage
+    # The PHP logger opens this file for each append; no signal is needed.
+}

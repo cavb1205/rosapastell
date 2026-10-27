@@ -32,14 +32,17 @@ comprobación no emite facturas ni valida por sí sola todo el documento final.
 
 ## Relación con la compra lenta
 
-Se observaron documentos creados como adjuntos de correos nativos durante
-compras grandes. El bloqueo de entrega mediante `pre_wp_mail` es posterior
-a preparar esos adjuntos, por lo que no elimina ese trabajo. Esto respalda
-investigar la generación síncrona; no proporciona un desglose exacto del
-tiempo de una petición histórica.
+Se observaron documentos creados como adjuntos de correos nativos asociados
+a pedidos grandes. El contraste posterior de fechas mostró que su creación
+fue posterior a las peticiones lentas: no debe atribuirse esa demora concreta
+a los PDF. El bloqueo de entrega mediante `pre_wp_mail` es posterior a preparar
+adjuntos/HTML, por lo que no elimina ese trabajo cuando se dispara. Se necesita
+medición por etapas para atribuir el tiempo, no solo correlación entre pedidos.
 
 Mover ese trabajo a segundo plano cambia cuándo está disponible la factura
-y necesita una decisión explícita. Este cambio de archivos no activa colas,
-no deshabilita facturas automáticas ni cambia el correo de Resend.
+y necesita una decisión explícita. El propietario lo autorizó después para
+la cola nativa de WooCommerce. Es una intervención independiente del método
+de archivos: ver `2026-10-27-checkout-diferido.md`. No cambia Resend ni permite
+afirmar que la demora histórica quedó resuelta sin medir compras posteriores.
 
 Referencia del proveedor: [código de PDF Invoices](https://github.com/wpovernight/woocommerce-pdf-invoices-packing-slips).
