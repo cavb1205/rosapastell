@@ -18,3 +18,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Los cambios de configuración productiva deben conservar una representación
   reproducible y sin secretos en su repositorio. Nunca subir credenciales,
   archivos de entorno, llaves privadas, respaldos o datos de clientes.
+- Este repositorio es público. Mantener privados los informes detallados de
+  seguridad/migración y la telemetría real; publicar solo código, fragmentos
+  reproducibles sin secretos y resúmenes operativos sanitizados.

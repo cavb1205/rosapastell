@@ -1,0 +1,27 @@
+/var/log/rosapastell-observability/nginx-timing.jsonl {
+    daily
+    maxsize 10M
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 www-data adm
+    postrotate
+        /usr/sbin/nginx -s reopen >/dev/null 2>&1
+    endscript
+}
+/var/log/rosa-stage/fpm-performance.log {
+    daily
+    maxsize 10M
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    su rp_rosa_stage rp_rosa_stage
+    create 0640 rp_rosa_stage rp_rosa_stage
+    postrotate
+        /bin/systemctl kill --kill-whom=main --signal=USR1 rosa-stage-php.service >/dev/null 2>&1
+    endscript
+}
