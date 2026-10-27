@@ -45,3 +45,33 @@ versionan el código verificable, la configuración sin secretos y este resumen.
 Wompi, almacenamiento externo, credenciales, parches de sistema y cambios del
 POS no forman parte de esta intervención. No contratar servicios, abrir
 destinos de red, rotar claves o tocar una caja como consecuencia de este commit.
+
+## Aplicación y comprobación
+
+Código operativo: commit `e7dc4be6a44072e3267466dd96e5b7e9a40c02a4`, subido y
+contrastado con `origin/main` antes de instalar. Aplicación del wrapper y el
+MU-plugin: 27/10/2026 a las 22:21:31 UTC, mediante sustitución atómica y
+respaldo privado. Los hashes instalados coincidieron con los versionados.
+
+La siguiente ejecución programada del cron terminó correctamente; no hubo
+nuevos avisos `SCRIPT_NAME` en la ventana revisada. No se ejecutó WordPress
+manualmente para forzar tareas. La lectura autenticada del administrador mostró
+el nuevo MU-plugin, HTTP 200 y la barra sin la minigráfica. No se cambiaron
+opciones de Jetpack, precios, stock, pausa o pagos. Los procesos principales
+se conservaron: no se reiniciaron servicios ni se pausaron tiendas.
+
+48 pruebas Node, ESLint dirigido, sintaxis PHP 8.4 y prueba PHP sintética del
+callback correctos. Se verificaron portada HTTP 200 y bloqueo público del
+estado FPM con HTTP 404. La configuración de logs versionada coincide con la
+activa; los fragmentos se documentan sin exponer registros reales.
+
+El push generó también el despliegue del frontend
+`dpl_3C95qig1dqwr6snzmQUVQDd9Gt2w`, READY, con los dominios productivos.
+Ese despliegue de Vercel no instala PHP en el VPS: la aplicación del backend
+se hizo de forma separada según el procedimiento anterior.
+
+Quedan para diagnóstico específico la lentitud de una petición histórica de
+checkout y una advertencia de requisitos PDF observada en el admin. No se
+ocultó el aviso, no se emitieron facturas ni se habilitaron capacidades de
+servidor para hacerlo desaparecer. No se certifica capacidad de lanzamiento
+sin una prueba de concurrencia representativa y aislada.
