@@ -53,8 +53,8 @@ actualizan solos.
 - No se aplicaron otras actualizaciones sin carácter de seguridad: Jetpack,
   Checkout Field Editor y JWT Auth. Tampoco PDF Invoices 6.0, que es una
   versión mayor y requiere prueba previa.
-- Siguen abiertos los pendientes de la auditoría anterior: correcciones ESM
-  de ImageMagick y servicios PHP 7.2/7.4 sin uso.
+- Sigue abierto el pendiente de la auditoría anterior: correcciones ESM de
+  ImageMagick (requiere Ubuntu Pro).
 
 ## Reinicio del sistema (16:19 UTC)
 
@@ -77,6 +77,23 @@ fallidas, PHP 8.4.28 en ambas tiendas, cron y temporizadores de respaldo
 activos, firewall activo y certificado vigente. En `www` funcionan la
 portada, una ficha, una categoría, el prechequeo de stock y el estado de la
 tienda. Licores y su POS responden 200.
+
+## PHP 7.2 y 7.4 apagados (16:25 UTC)
+
+Antes de apagarlos se confirmó que no tenían uso. El nginx cargado solo envía
+PHP al socket de Rosa; Licores usa su propio nginx aislado. La única mención
+a esas versiones está en el sitio `default`, que no se carga. Ningún servicio
+depende de ellos, no había conexiones activas y desde el arranque solo
+consumieron la CPU del propio inicio.
+
+Se detuvieron, deshabilitaron y enmascararon `php7.2-fpm` y `php7.4-fpm`,
+igual que `php8.4-fpm` genérico. Los paquetes siguen instalados y reciben
+actualizaciones; la unidad base de Rosa menciona el binario 7.4, aunque un
+override lo reemplaza por 8.4. `nginx -t` es correcto, no hay unidades
+fallidas, y Rosa y Licores responden con normalidad.
+
+Para revertir: `systemctl unmask php7.2-fpm php7.4-fpm` y luego
+`systemctl enable --now` de ambos.
 
 ## Reversión
 
