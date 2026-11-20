@@ -35,12 +35,20 @@ El cron local ejecuta tareas cada minuto; `wp-cron.php` público sigue bloqueado
 - Una vez aceptadas escrituras de clientes en el VPS nuevo, nunca volver a una
   base antigua como reversión: se perderían los pedidos posteriores.
 
-Pendientes operativos: renovación SSL automática en el nuevo VPS, política de
-respaldos periódicos/off-site, retiro controlado de legados y revisión de los
-otros sitios PHP del servidor anterior. El certificado actual vence el 17 de
-diciembre de 2026. No apagar el VPS anterior: mantiene el puente temporal y los
-otros sitios. La migración de Rosa Pastell no equivale a haber corregido todos
-los sitios ni a certificar ausencia de malware.
+SSL ya se renovó realmente en el nuevo VPS, conservando cuenta/clave, con
+renovación automática habilitada; vence el 21 de enero de 2027. Los respaldos
+locales cifrados están programados cada hora; se verificaron la copia inicial
+consistente de 81 tablas, recuperación parcial de archivos e integridad completa.
+Estado, horarios, recuperación y límites: ficha operativa privada del VPS.
+El almacenamiento externo, alertas, retiro controlado de legados y revisión de
+otros sitios PHP siguen pendientes. No apagar el VPS anterior: mantiene el
+puente temporal y los otros sitios. Migrar Rosa Pastell no equivale a haber
+corregido todos los sitios ni a certificar ausencia de malware.
+
+El 23 de octubre se encontró la opción de pausa activa; con autorización se
+desactivó, se verificó `paused:false` por ambas IP de la API y «Agregar al carrito»
+habilitado en producción. Se registró un guardado de Ajustes → General previo,
+pero no existe auditoría suficiente para atribuir el cambio con certeza.
 
 Las pruebas privadas utilizan datos sintéticos y verifican concurrencia de la
 última unidad, reintentos, tallas/colores, roles/precios y bloqueo de Wompi. No

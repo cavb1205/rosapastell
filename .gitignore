@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Fichas privadas de traspaso (este repositorio es público)
+/docs/privado/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
