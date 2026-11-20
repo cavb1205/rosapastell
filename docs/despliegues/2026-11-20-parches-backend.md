@@ -50,9 +50,11 @@ actualizan solos.
 
 ## Pendientes
 
-- No se aplicaron otras actualizaciones sin carácter de seguridad: Jetpack,
-  Checkout Field Editor y JWT Auth. Tampoco PDF Invoices 6.0, que es una
-  versión mayor y requiere prueba previa.
+- PDF Invoices 6.0 sigue pendiente, por decisión. Es una reescritura completa
+  publicada el 16-nov y elimina las traducciones incluidas en favor de los
+  paquetes de idioma de WordPress.org, que aquí no se instalan solos. Además
+  genera las facturas automáticas del checkout. 5.16.6 conserva los
+  endurecimientos de 5.16.5/5.16.6. Probarla aparte cuando haya una 6.0.x.
 - Sigue abierto el pendiente de la auditoría anterior: correcciones ESM de
   ImageMagick (requiere Ubuntu Pro).
 
@@ -94,6 +96,46 @@ fallidas, y Rosa y Licores responden con normalidad.
 
 Para revertir: `systemctl unmask php7.2-fpm php7.4-fpm` y luego
 `systemctl enable --now` de ambos.
+
+## Plugins restantes y Jetpack (16:46 UTC)
+
+| Plugin | Antes | Después |
+| --- | --- | --- |
+| Jetpack | 16.3.1 | 16.4 |
+| Checkout Field Editor | 2.2.0 | 2.2.1 |
+| JWT Authentication | 1.5.0 | 1.5.1 |
+
+Se usó el mismo método: checksums oficiales para lo instalado y lo nuevo
+(solo difieren `readme.txt` y `CHANGELOG.md` de Jetpack, también en el zip
+oficial), permisos de producción, respaldo cifrado previo (16:46:24) y
+reemplazo por renombrado. El modo mantenimiento duró 0,016 s.
+
+Jetpack 16.4 movió la minigráfica de la barra de administración de
+`admin_head` a un nodo de `admin_bar_menu`. Su imagen la pide el backend a
+WordPress.com, y la política de salida lo bloquea. Por eso se publicó primero
+el MU-plugin `rosapastell-admin-performance` 0.2.0 (commit `3c3ab30`, con
+SHA-256 instalado igual al del repositorio), que retira ambos callbacks.
+Se comprobó con el `WP_Hook` real y luego con Jetpack 16.4 en producción,
+armando la barra en memoria para un administrador. Sin el MU-plugin Jetpack
+agregaría la gráfica; con él no aparece, y el enlace a Stats se conserva.
+
+Verificación:
+- Versiones activas correctas; WooCommerce sin migraciones pendientes;
+  `paused:false` y reserva de stock en 30 min.
+- Sin errores PHP desde el cambio.
+- JWT (token y validación), `/users/me`, el prechequeo de stock con las
+  claves del frontend, el bloqueo de `/wp/v2/users` y de `wc/v3` anónimo, y
+  las páginas de `www` (incluidas checkout e ingreso) responden igual.
+- No se crearon pedidos ni facturas. El editor de campos no participa en la
+  creación de pedidos del frontend, que usa `wc/v3`.
+
+## Acción programada fallida
+
+La única acción fallida de Action Scheduler es del 21-ago-2026, anterior a la
+migración. Intentó actualizar el índice de atributos del producto 63450, que
+ya había sido borrado. Se comprobó que no quedan filas de ese producto ni
+filas huérfanas en ese índice. Es un registro histórico inofensivo: se
+conserva sin escribir en la base.
 
 ## Reversión
 
