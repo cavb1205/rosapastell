@@ -77,6 +77,11 @@ antes de que genere solicitudes automáticas. No desactiva Jetpack ni módulos,
 no cambia sus opciones, no toca el CDN o la página principal de estadísticas,
 y no modifica la política de salida del servidor. Si la clase no está cargada,
 no hace nada. Debe revisarse al actualizar Jetpack, pues depende de ese callback.
+Desde la versión 0.2.0 (20-nov-2026) también retira `Admin_Bar::maybe_add_chart_node`
+de `admin_bar_menu`: Jetpack 16.4 movió la gráfica a un nodo de la barra cuya
+imagen pide el backend a WordPress.com. Se comprobó con el `WP_Hook` real de
+WordPress 7.1.5 que el retiro funciona aunque ocurra durante el propio hook, y
+que se conserva el enlace a Stats del menú del sitio.
 
 Instalar solo después de validar y subir su commit en
 `wp-content/mu-plugins/rosapastell-admin-performance.php`. No sobrescribir los
