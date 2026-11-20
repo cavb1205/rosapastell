@@ -50,13 +50,33 @@ actualizan solos.
 
 ## Pendientes
 
-- Queda pendiente un reinicio del sistema por kernel y libc, que requiere
-  una ventana coordinada.
 - No se aplicaron otras actualizaciones sin carácter de seguridad: Jetpack,
   Checkout Field Editor y JWT Auth. Tampoco PDF Invoices 6.0, que es una
   versión mayor y requiere prueba previa.
 - Siguen abiertos los pendientes de la auditoría anterior: correcciones ESM
   de ImageMagick y servicios PHP 7.2/7.4 sin uso.
+
+## Reinicio del sistema (16:19 UTC)
+
+Se reinició el VPS para cargar el kernel 6.8.0-149 y la libc nueva. Antes se
+comprobó que todos los servicios estuvieran habilitados para arrancar, que SSH
+volviera por `ssh.socket` y que el respaldo programado de las 16:16 hubiera
+terminado bien (16:18:26). Rosa volvió en unos 30 segundos.
+
+**Licores no arrancó.** Sus servicios PHP y web declaran inaccesibles, dentro
+de su aislamiento de systemd, dos rutas en `/run` de bases QA/trabajo ya
+detenidas. `/run` se vacía al reiniciar, y systemd no arranca una unidad si
+falta una ruta obligatoria de `InaccessiblePaths=`. Estuvo caído unos 5
+minutos (502). Se recrearon esas rutas vacías y solo para root, y se agregó
+`ops/rosapastell/licores-isolation-paths.tmpfiles.conf` para que existan en
+cada arranque. Las unidades de Licores no se modificaron y el aislamiento
+sigue igual.
+
+Después del reinicio: kernel 6.8.0-149, sin reinicio pendiente, 0 unidades
+fallidas, PHP 8.4.28 en ambas tiendas, cron y temporizadores de respaldo
+activos, firewall activo y certificado vigente. En `www` funcionan la
+portada, una ficha, una categoría, el prechequeo de stock y el estado de la
+tienda. Licores y su POS responden 200.
 
 ## Reversión
 

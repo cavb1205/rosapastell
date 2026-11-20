@@ -14,6 +14,7 @@ secretos, respaldos, certificados, formularios o registros reales.
 | `php-fpm-observability.inc` | Directivas equivalentes dentro de `[rosa-stage]` en `/etc/rosa-stage/php-fpm.conf` |
 | `observability.logrotate` | `/etc/logrotate.d/rosapastell-observability` |
 | `production-cron.php` | `/etc/rosa-stage/production-cron.php`; lo ejecuta el temporizador existente, no una ruta pública |
+| `licores-isolation-paths.tmpfiles.conf` | `/etc/tmpfiles.d/licores-isolation-paths.conf`. Crea en cada arranque, vacías y solo para root, las rutas de `/run` que los servicios `licores-prod-*` declaran inaccesibles. Sin ellas, systemd no arranca esos servicios. VPS compartido; añadido el 20-nov-2026. |
 
 Los `.inc` documentan fragmentos: no añadir includes a ciegas si las directivas
 ya están integradas. Conservar las rutas, el socket, permisos y controles de
