@@ -15,6 +15,8 @@ secretos, respaldos, certificados, formularios o registros reales.
 | `observability.logrotate` | `/etc/logrotate.d/rosapastell-observability` |
 | `production-cron.php` | `/etc/rosa-stage/production-cron.php`; lo ejecuta el temporizador existente, no una ruta pública |
 | `licores-isolation-paths.tmpfiles.conf` | `/etc/tmpfiles.d/licores-isolation-paths.conf`. Crea en cada arranque, vacías y solo para root, las rutas de `/run` que los servicios `licores-prod-*` declaran inaccesibles. Sin ellas, systemd no arranca esos servicios. VPS compartido; añadido el 20-nov-2026. |
+| `api-routes.conf` | `/etc/rosapastell-production/api-routes.conf`, copia completa del archivo incluido en el bloque HTTPS de `api.rosapastell.com`. Desde el 24-nov-2026 la raíz `/` deja pasar `?rest_route=` a WordPress y, si no, sirve una página mínima no indexable con el enlace de descubrimiento REST antes de enviar a `www`. |
+| `../../wordpress/000-production-policy.php` | `wp-content/mu-plugins/000-production-policy.php`: política productiva (sin correo local, salida HTTP restringida, Jetpack en staging, checkout nativo cerrado). Desde el 24-nov-2026 permite contraseñas de aplicación solo a administradores. |
 
 Los `.inc` documentan fragmentos: no añadir includes a ciegas si las directivas
 ya están integradas. Conservar las rutas, el socket, permisos y controles de
@@ -117,3 +119,16 @@ document root, dentro del directorio privado de configuración permitido por
 FPM. Consultarla por FastCGI local y retirar/mover al respaldo al terminar.
 No invoca rutas de pedido, no crea documentos ni procesa tareas.
 Detalles, límites y reversión en `docs/despliegues/2026-10-27-checkout-diferido.md`.
+
+## App móvil de WooCommerce
+
+La app se conecta directo a `https://api.rosapastell.com` con "credenciales del
+sitio": inicia sesión en `wp-login.php` y crea una contraseña de aplicación por
+dispositivo. Solo los administradores pueden crearlas; se revocan en Usuarios →
+Perfil. XML-RPC sigue bloqueado y la salida hacia WordPress.com sigue cerrada, por
+lo que el ingreso con cuenta de WordPress.com (proxy de Jetpack) no funciona: esa
+ruta llega por `http`, y la firma no valida tras la redirección a HTTPS.
+Comprobación: `https://public-api.wordpress.com/rest/v1.1/connect/site-info?url=api.rosapastell.com`
+debe responder `isWordPress: true` y `urlAfterRedirects` en `api.rosapastell.com`.
+WordPress no envía correos, así que "olvidé mi contraseña" no funciona: otro
+administrador cambia la contraseña desde el escritorio.
